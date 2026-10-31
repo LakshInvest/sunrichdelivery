@@ -81,11 +81,44 @@ function LoadTrip() {
   const productName = (p: Row["products"]) =>
     lang === "hi" ? p?.name_hi || p?.name : lang === "mr" ? p?.name_mr || p?.name : p?.name;
 
+  // Finalizing creates invoices, so only dispatch supervisors (dispatch approve/edit) may do it.
+  // A plain loader just records counts and marks loading done.
+  const canFinalize = (staff?.permissions ?? []).some((p) => p === "dispatch:approve" || p === "dispatch:edit");
+
+  const markDone = async () => {
+    if (!staff || saving) return;
+    setSaving(true);
+    setError(null);
+    setMsg(null);
+    const res = await saveDrafts();
+    setSaving(false);
+    if (res) setError(res);
+    else setMsg(t("ld.loadingDone"));
+    await fetchAll();
+  };
+
   const finalize = async () => {
     if (!staff || saving) return;
     setSaving(true);
     setError(null);
     setMsg(null);
+    const res = await saveDrafts();
+    if (res) {
+      setSaving(false);
+      setError(res);
+      return;
+    }
+    const fin = await queueRpc("finalize_loading", { p_trip_id: tripId });
+    setSaving(false);
+    if (fin.error && !fin.queued) {
+      setError(fin.error);
+      return;
+    }
+    setMsg(fin.queued ? t("c.tryAgainOffline") : t("ld.finalized"));
+    await fetchAll();
+  };
+
+  const saveDrafts = async (): Promise<string | null> => {
     // save every unsaved row first
     const pending = rows.filter((r) => {
       const d = drafts[r.product_id];
@@ -101,20 +134,9 @@ function LoadTrip() {
         p_crates: d.crates === "" ? null : Number(d.crates),
         p_photo_url: d.photo,
       });
-      if (res.error && !res.queued) {
-        setError(res.error);
-        setSaving(false);
-        return;
-      }
+      if (res.error && !res.queued) return res.error;
     }
-    const fin = await queueRpc("finalize_loading", { p_trip_id: tripId });
-    setSaving(false);
-    if (fin.error && !fin.queued) {
-      setError(fin.error);
-      return;
-    }
-    setMsg(fin.queued ? t("c.tryAgainOffline") : t("ld.finalized"));
-    await fetchAll();
+    return null;
   };
 
   const shortRow = useMemo(
