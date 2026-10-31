@@ -180,11 +180,17 @@ export function StartTripPanel({
   };
 
   const err = localErr ?? error;
+  // Subtitle reflects the enabled steps instead of a fixed list.
+  const startSteps = [
+    settings.require_start_selfie ? t("dr.selfie") : null,
+    settings.require_start_odometer || settings.require_start_odometer_photo ? t("dr.odometer") : null,
+    settings.vehicle_check_enabled && settings.vehicle_check_items.length > 0 ? t("dr.vehicleCheck") : null,
+  ].filter(Boolean);
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <p className="text-sm font-bold text-foreground">{t("dr.startTrip")}</p>
-      <p className="mt-0.5 text-xs text-muted-foreground">{t("dr.startSub")}</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{startSteps.join(" · ")}</p>
       <div className="mt-4 grid gap-4">
         {settings.require_start_selfie && (
           <PhotoInput userId={staffId} kind="selfie" label={t("dr.selfie")} required value={selfie} onChange={setSelfie} />
