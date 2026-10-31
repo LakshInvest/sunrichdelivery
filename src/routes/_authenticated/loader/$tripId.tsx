@@ -81,11 +81,44 @@ function LoadTrip() {
   const productName = (p: Row["products"]) =>
     lang === "hi" ? p?.name_hi || p?.name : lang === "mr" ? p?.name_mr || p?.name : p?.name;
 
+  // Finalizing creates invoices, so only dispatch supervisors (dispatch approve/edit) may do it.
+  // A plain loader just records counts and marks loading done.
+  const canFinalize = (staff?.permissions ?? []).some((p) => p === "dispatch:approve" || p === "dispatch:edit");
+
+  const markDone = async () => {
+    if (!staff || saving) return;
+    setSaving(true);
+    setError(null);
+    setMsg(null);
+    const res = await saveDrafts();
+    setSaving(false);
+    if (res) setError(res);
+    else setMsg(t("ld.loadingDone"));
+    await fetchAll();
+  };
+
   const finalize = async () => {
     if (!staff || saving) return;
     setSaving(true);
     setError(null);
     setMsg(null);
+    const res = await saveDrafts();
+    if (res) {
+      setSaving(false);
+      setError(res);
+      return;
+    }
+    const fin = await queueRpc("finalize_loading", { p_trip_id: tripId });
+    setSaving(false);
+    if (fin.error && !fin.queued) {
+      setError(fin.error);
+      return;
+    }
+    setMsg(fin.queued ? t("c.tryAgainOffline") : t("ld.finalized"));
+    await fetchAll();
+  };
+
+  const saveDrafts = async (): Promise<string | null> => {
     // save every unsaved row first
     const pending = rows.filter((r) => {
       const d = drafts[r.product_id];
@@ -101,20 +134,9 @@ function LoadTrip() {
         p_crates: d.crates === "" ? null : Number(d.crates),
         p_photo_url: d.photo,
       });
-      if (res.error && !res.queued) {
-        setError(res.error);
-        setSaving(false);
-        return;
-      }
+      if (res.error && !res.queued) return res.error;
     }
-    const fin = await queueRpc("finalize_loading", { p_trip_id: tripId });
-    setSaving(false);
-    if (fin.error && !fin.queued) {
-      setError(fin.error);
-      return;
-    }
-    setMsg(fin.queued ? t("c.tryAgainOffline") : t("ld.finalized"));
-    await fetchAll();
+    return null;
   };
 
   const shortRow = useMemo(
@@ -200,13 +222,22 @@ function LoadTrip() {
       {msg && <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">{msg}</p>}
       {error && <div className="mt-4"><ErrorCard message={error} /></div>}
 
-      {!done && (
+      {!done && canFinalize && (
         <button
           onClick={() => void finalize()}
           disabled={saving || shortRow !== undefined}
           className="mt-6 w-full rounded-lg bg-primary py-3.5 text-base font-semibold text-primary-foreground active:opacity-80 disabled:opacity-50"
         >
           {saving ? t("c.loading") : t("ld.finalize")}
+        </button>
+      )}
+      {!done && !canFinalize && (
+        <button
+          onClick={() => void markDone()}
+          disabled={saving}
+          className="mt-6 w-full rounded-lg bg-primary py-3.5 text-base font-semibold text-primary-foreground active:opacity-80 disabled:opacity-50"
+        >
+          {saving ? t("c.loading") : t("ld.loadingDone")}
         </button>
       )}
 
