@@ -113,3 +113,25 @@ export const staffLogin = createServerFn({ method: "POST" })
     if (!token) return { ok: false, code: "login_failed" };
     return { ok: true, method: "sms", phone: mobile, token, staff };
   });
+
+/**
+ * Role codes for the signed-in staff member. Roles live in user_roles/roles
+ * whose codes are not readable by the user's own token, so this resolves them
+ * with the service client after verifying the caller's session.
+ */
+export const myRoleCodes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<string[]> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("user_roles")
+      .select("roles(code)")
+      .eq("user_id", context.userId);
+    if (error) {
+      console.error("[myRoleCodes] failed", error.message);
+      return [];
+    }
+    return (data ?? [])
+      .map((r) => (r as { roles?: { code: string } | null }).roles?.code)
+      .filter((c): c is string => Boolean(c));
+  });
