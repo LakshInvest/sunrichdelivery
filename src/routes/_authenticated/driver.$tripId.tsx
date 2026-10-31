@@ -91,7 +91,7 @@ function TripScreen() {
         .single(),
       supabase
         .from("trip_stops")
-        .select("id, seq, status, fail_reason, orders(id, order_no, business_name, customer_name, delivery_address_text, grand_total, amount_paid, payment_mode)")
+        .select("id, seq, status, fail_reason, orders(id, customer_id, order_no, business_name, customer_name, delivery_address_text, grand_total, amount_paid, payment_mode)")
         .eq("trip_id", tripId)
         .order("seq"),
       supabase.rpc("my_delivery_settings"),
@@ -151,7 +151,7 @@ function TripScreen() {
   );
 
   useEffect(() => {
-    if (stop) void refreshOutstanding(stop.id, stop.orders?.id ? stop.orders.id : stop.orders?.id);
+    if (stop?.orders?.customer_id) void refreshOutstanding(stop.id, stop.orders.customer_id);
   }, [stop, refreshOutstanding]);
 
   // Location tracking while on the road.
