@@ -331,7 +331,12 @@ export function StopDetailPanel({
 
   const submitDelivery = async () => {
     setLocalErr(null);
-    const linesOut = lines.map((l) => ({ line_id: l.id, delivered_qty: Number(qty[l.id] ?? l.qty) }));
+    // deliver_stop expects { order_line_id, delivered, short, ... } and the
+    // quantities of each line must add up to the ordered qty.
+    const linesOut = lines.map((l) => {
+      const d = Number(qty[l.id] ?? l.qty);
+      return { order_line_id: l.id, delivered: d, short: Math.max(0, l.qty - d) };
+    });
     if (!failMode) {
       if (settings.proof_photo_required && !photo) return setLocalErr(t("dr.needPhoto"));
       if (settings.proof_otp_required && otp === "") return setLocalErr(`${t("dr.verifyOtp")} — ${t("c.required")}`);
