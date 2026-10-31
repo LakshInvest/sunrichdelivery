@@ -12,6 +12,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { TeamAuthProvider, useTeamAuth } from "../lib/team-auth";
+import { LanguageProvider, type Lang } from "../lib/l10n";
+import { supabase } from "../integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -77,15 +80,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { title: "Sunrich Team" },
+      { name: "description", content: "Sunrich Team app for drivers, loaders and gate security." },
+      { name: "author", content: "Sunrich" },
+      { property: "og:title", content: "Sunrich Team" },
+      { property: "og:description", content: "Sunrich Team app for drivers, loaders and gate security." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:card", content: "summary" },
     ],
     links: [
       {
@@ -107,11 +109,27 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="bg-background text-foreground antialiased">
         {children}
         <Scripts />
       </body>
     </html>
+  );
+}
+
+/** Bridges the signed-in staff member's language into the translation provider. */
+function TeamLocale({ children }: { children: ReactNode }) {
+  const { staff } = useTeamAuth();
+  return (
+    <LanguageProvider
+      initialLang={staff?.lang ?? null}
+      onPersist={(lang: Lang) => {
+        if (!staff) return;
+        void supabase.rpc("update_my_profile", { p_full_name: staff.fullName, p_language: lang });
+      }}
+    >
+      {children}
+    </LanguageProvider>
   );
 }
 
@@ -120,8 +138,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <TeamAuthProvider>
+        <TeamLocale>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </TeamLocale>
+      </TeamAuthProvider>
     </QueryClientProvider>
   );
 }
