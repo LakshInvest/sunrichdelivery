@@ -1,6 +1,7 @@
 // Panels used by the driver trip screen.
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/l10n";
+import { UpiQrCode } from "@/components/team/upi-qr";
 import { PhotoInput, StatusBadge } from "@/components/team/ui";
 import { uploadDataUrl } from "@/lib/photo";
 
@@ -301,7 +302,7 @@ export function StopDetailPanel({
   settings: Settings;
   staffId: string;
   outstanding: number | null;
-  upi?: { id: string; payee: string | null; qrUrl: string | null } | null;
+  upi?: { id: string; payee: string | null } | null;
   onSubmitDelivery: (v: { lines: { order_line_id: string; delivered: number; short: number; damaged: number; refused: number; empties: number }[]; fail: boolean; failReason: string; failNote: string; photo: string | null; signature: string | null; otp: string }) => Promise<void>;
   onSubmitCollection: (v: { mode: string; amount: string; reference: string; photo: string | null }) => Promise<void>;
   onSubmitDueCollection: (v: { amount: string; mode: string; reference: string; photo: string | null }) => Promise<void>;
@@ -472,6 +473,11 @@ export function StopDetailPanel({
               {settings.allow_cheque && <option value="cheque">Cheque</option>}
             </select>
           </div>
+          {dueMode === "upi" && upi && upi.id && (
+            <div className="mt-2 rounded-lg border border-border bg-muted/40 p-3 text-center">
+              <UpiQrCode pa={upi.id} pn={upi.payee} amount={Number(dueAmount || outstanding) || null} tn={o?.order_no ?? null} />
+            </div>
+          )}
           <input value={dueReference} onChange={(e) => setDueReference(e.target.value)} placeholder={t("dr.reference")} className="mt-2 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
           <button
             onClick={() => void onSubmitDueCollection({ amount: dueAmount, mode: dueMode, reference: dueReference, photo: payPhoto })}
@@ -523,9 +529,9 @@ export function StopDetailPanel({
             </select>
           </div>
           <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t("dr.reference")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-          {mode === "upi" && upi && (
+          {mode === "upi" && upi && upi.id && (
             <div className="rounded-lg border border-border bg-muted/40 p-3 text-center">
-              {upi.qrUrl && <img src={upi.qrUrl} alt="UPI QR" className="mx-auto h-36 w-36 rounded-lg bg-white object-contain" />}
+              <UpiQrCode pa={upi.id} pn={upi.payee} amount={Number(amount || due) || null} tn={o?.order_no ?? null} />
               <p className="mt-1 text-xs text-muted-foreground">{upi.payee ?? ""}</p>
               <p className="font-mono text-sm font-semibold text-foreground">{upi.id || "—"}</p>
             </div>
