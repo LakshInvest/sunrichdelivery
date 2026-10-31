@@ -62,7 +62,7 @@ type GoogleMap = {
 
 type GoogleMarker = { addListener?: (event: string, handler: () => void) => void };
 
-export function StopMap({ stops, tripId }: { stops: MapStop[]; tripId: string }) {
+export function StopMap({ stops }: { stops: MapStop[] }) {
   const { t, lang } = useLang();
   const holder = useRef<HTMLDivElement>(null);
   const map = useRef<GoogleMap | null>(null);
@@ -106,6 +106,16 @@ export function StopMap({ stops, tripId }: { stops: MapStop[]; tripId: string })
         });
         const iw = new google.maps.InfoWindow({ content: `<div style="font-family:Inter,sans-serif;font-size:13px;font-weight:600">${s.seq}. ${s.label}</div>` });
         marker.addListener?.("click", () => iw.open(mapObj, marker));
+      }
+      if (pts.length > 1) {
+        new google.maps.Polyline({
+          path: pts.map(({ pos }) => pos),
+          map: mapObj,
+          strokeColor: "#0AAAED",
+          strokeOpacity: 0.9,
+          strokeWeight: 3,
+        });
+      }
       if (ext) {
         const CORNER = 0.004;
         mapObj.fitBounds({
