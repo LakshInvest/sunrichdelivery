@@ -222,6 +222,14 @@ const en: Dict = {
   // office fallback
   "of.title": "Office screens",
   "of.sub": "Office and management screens are part of the Sunrich admin app.",
+  // profile
+  "profile.title": "Profile",
+  "profile.name": "Name",
+  "profile.mobile": "Mobile number",
+  "profile.language": "Language",
+  "profile.roles": "Roles",
+  "profile.device": "This device",
+  "profile.appVersion": "App version",
 };
 
 const hi: Dict = {
@@ -428,6 +436,13 @@ const hi: Dict = {
   "dr.deliveredStops": "{done}/{total} स्टॉप डिलीवर",
   "of.title": "ऑफिस स्क्रीन",
   "of.sub": "ऑफिस और मैनेजमेंट स्क्रीन सनरिच एडमिन ऐप में हैं।",
+  "profile.title": "प्रोफ़ाइल",
+  "profile.name": "नाम",
+  "profile.mobile": "मोबाइल नंबर",
+  "profile.language": "भाषा",
+  "profile.roles": "भूमिकाएँ",
+  "profile.device": "यह डिवाइस",
+  "profile.appVersion": "ऐप वर्शन",
 };
 
 const mr: Dict = {
@@ -634,6 +649,13 @@ const mr: Dict = {
   "dr.deliveredStops": "{done}/{total} स्टॉप डिलिव्हर",
   "of.title": "ऑफिस स्क्रीन",
   "of.sub": "ऑफिस आणि व्यवस्थापन स्क्रीन सनरिच अ‍ॅडमिन अ‍ॅपमध्ये आहेत.",
+  "profile.title": "प्रोफाइल",
+  "profile.name": "नाव",
+  "profile.mobile": "मोबाइल नंबर",
+  "profile.language": "भाषा",
+  "profile.roles": "भूमिका",
+  "profile.device": "हे डिव्हाइस",
+  "profile.appVersion": "अ‍ॅप आवृत्ती",
 };
 
 const dicts: Record<Lang, Dict> = { en, hi, mr };

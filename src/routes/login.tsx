@@ -8,7 +8,6 @@ import { getDeviceId, getDeviceLabel } from "@/lib/device";
 import { checkDeviceStatus, staffLogin, staffOtpLogin } from "@/lib/staff-login.functions";
 import { haptic } from "@/lib/native";
 import { WaterLoader, BrandLogo } from "@/components/team/ui";
-import logoWhiteAsset from "@/assets/sunrich-logo-white.png.asset.json";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -542,6 +541,14 @@ function Login() {
         )}
       </div>
     </main>
+  );
+}
+
+function WhatsAppIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden>
+      <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 2a8 8 0 1 1-4.2 14.8l-.4-.2-2.6.7.7-2.5-.3-.4A8 8 0 0 1 12 4zm-2.5 3.8c-.2 0-.5 0-.7.3-.3.3-.9.9-.9 2.1s.9 2.4 1 2.6c.2.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3l-2-1c-.3-.1-.5-.1-.7.1l-.9 1.1c-.2.2-.3.2-.6.1a7.4 7.4 0 0 1-2.2-1.3 8 8 0 0 1-1.5-1.9c-.2-.3 0-.4.1-.6l.5-.6c.1-.2.2-.3.3-.5v-.5l-.9-2.1c-.2-.5-.4-.5-.6-.5h-.6z" />
+    </svg>
   );
 }
 
