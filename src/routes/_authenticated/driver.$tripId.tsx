@@ -499,7 +499,7 @@ function TripScreen() {
                 <select value={pickupCustomer} onChange={(e) => setPickupCustomer(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
                   <option value="">{t("dr.customer")}</option>
                   {stops.filter((s) => s.orders).map((s) => (
-                    <option key={s.id} value={s.orders!.id}>{s.orders!.business_name || s.orders!.customer_name}</option>
+                    <option key={s.id} value={s.orders!.customer_id}>{s.orders!.business_name || s.orders!.customer_name}</option>
                   ))}
                 </select>
                 <select value={pickupProduct} onChange={(e) => setPickupProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
