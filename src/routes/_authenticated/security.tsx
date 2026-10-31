@@ -75,15 +75,23 @@ function SecurityGate() {
         .select("id, pass_no, qr_token, issued_at, trips(trip_no, gate_out_at, gate_in_at, vehicles(reg_no))")
         .order("issued_at", { ascending: false })
         .limit(25),
+      supabase
+        .from("orders")
+        .select("id, order_no, delivery_otp, grand_total, payment_status, customers(business_name, customer_name)")
+        .eq("delivery_mode", "pickup")
+        .in("status", ["approved", "processing"])
+        .order("order_no"),
     ]);
-    if (tripsRes.error || logRes.error) {
-      setListError(tripsRes.error?.message ?? logRes.error?.message ?? t("c.error"));
+    if (tripsRes.error || logRes.error || pickRes.error) {
+      setListError(tripsRes.error?.message ?? logRes.error?.message ?? pickRes.error?.message ?? t("c.error"));
       setOutTrips([]);
       setLog([]);
+      setPickups([]);
       return;
     }
     setOutTrips((tripsRes.data ?? []) as unknown as OutTrip[]);
     setLog((logRes.data ?? []) as unknown as LogRow[]);
+    setPickups((pickRes.data ?? []) as unknown as PickupOrder[]);
   }, [t]);
 
   useEffect(() => {
