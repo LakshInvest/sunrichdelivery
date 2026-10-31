@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
-import { ErrorCard, Screen, Spinner, StatusBadge } from "@/components/team/ui";
+import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge, ActionDock, DockButton } from "@/components/team/ui";
 import { queueRpc } from "@/lib/offline";
 import { haptic, isNative, scanQr } from "@/lib/native";
 import { ScanLine } from "lucide-react";
@@ -30,7 +30,7 @@ type PickupOrder = {
   delivery_otp: string | null;
   grand_total: number | null;
   payment_status: string;
-  customers: { business_name: string | null; customer_name: string | null } | null;
+  customers: { business_name: string | null; contact_name: string | null } | null;
 };
 type LogRow = {
   id: string;
@@ -61,6 +61,7 @@ function SecurityGate() {
   const [pickupOrder, setPickupOrder] = useState("");
   const [pickupOtp, setPickupOtp] = useState("");
   const [listError, setListError] = useState<string | null>(null);
+  const tokenInput = useRef<HTMLInputElement>(null);
 
   const fetchLists = useCallback(async () => {
     setListError(null);
@@ -120,6 +121,7 @@ function SecurityGate() {
       setError(res.error);
       return;
     }
+    void haptic("success");
     setMsg(t("sec.gateOutDone"));
     setToken("");
     setOdo("");
@@ -135,6 +137,7 @@ function SecurityGate() {
     });
     if (res.queued) return t("c.tryAgainOffline");
     if (res.error) throw new Error(res.error);
+    void haptic("success");
     await fetchLists();
     return t("sec.gateInDone");
   };
@@ -158,9 +161,44 @@ function SecurityGate() {
       setError(res.error);
       return;
     }
+    void haptic("success");
     setMsg(`${t("sec.pickupDone")}: ${pickupOrder.trim()}`);
     setPickupOrder("");
     setPickupOtp("");
+    await fetchLists();
+  };
+
+  const startScan = async () => {
+    if (isNative()) {
+      const v = await scanQr();
+      if (v) {
+        void haptic("success");
+        setToken(v.trim());
+        void gateOutWith(v.trim());
+      }
+    } else {
+      tokenInput.current?.focus();
+    }
+  };
+
+  const gateOutWith = async (tok: string) => {
+    if (busy) return;
+    setMsg(null);
+    setError(null);
+    setBusy(true);
+    const res = await queueRpc("gate_out", { p_qr_token: tok, p_odometer: odo === "" ? null : Number(odo) });
+    setBusy(false);
+    if (res.queued) {
+      setMsg(t("c.tryAgainOffline"));
+      return;
+    }
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
+    void haptic("success");
+    setMsg(t("sec.gateOutDone"));
+    setToken("");
     await fetchLists();
   };
 
@@ -172,135 +210,147 @@ function SecurityGate() {
   ];
 
   return (
-    <Screen title={t("sec.title")}>
-      <div className="mb-4 flex rounded-lg bg-muted p-1">
-        {tabs.map((x) => (
-          <button
-            key={x.id}
-            onClick={() => {
-              setTab(x.id);
-              setMsg(null);
-              setError(null);
-            }}
-            className={`flex-1 rounded-md px-2 py-2 text-sm font-semibold transition-colors ${
-              tab === x.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-            }`}
-          >
-            {x.label}
-          </button>
-        ))}
-      </div>
-
-      {msg && <p className="mb-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">{msg}</p>}
-      {error && <div className="mb-4"><ErrorCard message={error} /></div>}
-
-      {tab === "out" && (
-        <div className="rounded-xl border border-border bg-card p-4">
-          <label className="mb-1 block text-sm font-medium text-foreground">{t("sec.scanToken")}</label>
-          <input
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder={t("sec.tokenPlaceholder")}
-            className="w-full rounded-lg border border-input bg-background px-3 py-3 font-mono text-sm outline-none focus:ring-2 focus:ring-ring"
-          />
-          <label className="mb-1 mt-3 block text-sm font-medium text-foreground">{t("sec.odometerOptional")}</label>
-          <input
-            inputMode="numeric"
-            value={odo}
-            onChange={(e) => setOdo(e.target.value.replace(/\D/g, ""))}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-          />
-          <button
-            onClick={() => void gateOut()}
-            disabled={busy}
-            className="mt-4 w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground active:opacity-80 disabled:opacity-60"
-          >
-            {busy ? t("c.loading") : t("sec.gateOut")}
-          </button>
-        </div>
-      )}
-
-      {tab === "in" && (
-        <div className="grid gap-3">
-          {listError && <ErrorCard message={listError} onRetry={() => void fetchLists()} />}
-          {outTrips === null && <Spinner label={t("c.loading")} />}
-          {outTrips && outTrips.length === 0 && <p className="py-4 text-sm text-muted-foreground">{t("sec.noTrips")}</p>}
-          {outTrips?.map((r) => (
-            <GateInCard key={r.id} trip={r} onConfirm={gateIn} />
-          ))}
-        </div>
-      )}
-
-      {tab === "log" && (
-        <div className="grid gap-2">
-          {listError && <ErrorCard message={listError} onRetry={() => void fetchLists()} />}
-          {log === null && <Spinner label={t("c.loading")} />}
-          {log && log.length === 0 && <p className="py-4 text-sm text-muted-foreground">{t("c.none")}</p>}
-          {log?.map((r) => (
-            <div key={r.id} className="rounded-xl border border-border bg-card p-3 text-sm">
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-semibold text-foreground">{r.pass_no}</span>
-                <StatusBadge status={r.trips?.gate_in_at ? "settled" : "in_progress"} />
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t("sec.logTrip")}: {r.trips?.trip_no ?? "—"}
-                {r.trips?.vehicles?.reg_no ? ` · ${r.trips.vehicles.reg_no}` : ""}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t("sec.logOut")}: {fmt(r.trips?.gate_out_at)} · {t("sec.logIn")}: {fmt(r.trips?.gate_in_at)}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === "pickup" && (
-        <div className="grid gap-3">
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-sm font-bold text-foreground">{t("sec.pickup")}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">{t("sec.pickupSub")}</p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <input value={pickupOrder} onChange={(e) => setPickupOrder(e.target.value)} placeholder={t("sec.pickupOrder")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <input inputMode="numeric" maxLength={6} value={pickupOtp} onChange={(e) => setPickupOtp(e.target.value.replace(/\D/g, ""))} placeholder={t("sec.passCode")} className="rounded-lg border border-input bg-background px-3 py-2 text-center text-sm tracking-[0.3em] outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-            {isNative() && (
-              <button
-                type="button"
-                onClick={() =>
-                  void scanQr().then((v) => {
-                    if (!v) return;
-                    void haptic("success");
-                    const code = v.match(/\b(\d{6})\b/)?.[1] ?? v.replace(/\D/g, "").slice(-6);
-                    const ord = v.match(/order[=:]([^&\s]+)/i)?.[1];
-                    if (ord) setPickupOrder(decodeURIComponent(ord));
-                    if (code) setPickupOtp(code);
-                  })
-                }
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background py-2.5 text-sm font-medium text-foreground active:bg-accent"
-              >
-                <ScanLine className="h-4 w-4" /> {t("sec.scanPass")}
-              </button>
-            )}
-            <button onClick={() => void pickupHandover()} disabled={busy} className="mt-3 w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground active:opacity-80 disabled:opacity-60">
-              {busy ? t("c.loading") : t("sec.pickupDone")}
+    <>
+      <Screen title={t("sec.title")} right={<SyncBadge />}>
+        {tab === "out" && (
+          <>
+            {/* The one big action, right at the top: scan the gate pass. */}
+            <button
+              onClick={() => void startScan()}
+              className="mb-5 flex w-full flex-col items-center gap-3 rounded-xl bg-primary px-6 py-8 text-primary-foreground shadow-soft transition-transform active:scale-[0.99]"
+            >
+              <ScanLine className="h-10 w-10" />
+              <span className="font-display text-xl font-bold">{t("sec.gateOut")}</span>
+              <span className="text-xs font-medium text-primary-foreground/70">{t("sec.scanToken")}</span>
             </button>
-          </div>
-          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("sec.pickupList")}</p>
-          {pickups === null && <Spinner label={t("c.loading")} />}
-          {pickups && pickups.length === 0 && <p className="py-2 text-sm text-muted-foreground">{t("c.none")}</p>}
-          {pickups?.map((o) => (
-            <div key={o.id} className="rounded-xl border border-border bg-card p-3 text-sm">
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-semibold text-foreground">{o.order_no}</span>
-                <span className="text-xs text-muted-foreground">₹{o.grand_total ?? 0}</span>
-              </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">{o.customers?.business_name || o.customers?.customer_name || "—"}</p>
-              <p className="mt-1 font-mono text-xs text-foreground">{t("sec.passCode")}: {o.delivery_otp ?? "—"}</p>
+
+            <div className="rounded-xl border border-border bg-card p-4 shadow-card">
+              <label className="mb-1 block text-sm font-medium text-foreground">{t("sec.scanToken")}</label>
+              <input
+                ref={tokenInput}
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                placeholder={t("sec.tokenPlaceholder")}
+                className="w-full rounded-md border border-input bg-background px-3 py-3 font-mono text-sm outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30"
+              />
+              <label className="mb-1 mt-3 block text-sm font-medium text-foreground">{t("sec.odometerOptional")}</label>
+              <input
+                inputMode="numeric"
+                value={odo}
+                onChange={(e) => setOdo(e.target.value.replace(/\D/g, ""))}
+                className="w-full rounded-md border border-input bg-background px-3 py-3 text-lg font-semibold outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30"
+              />
+              <DockButton onClick={() => void gateOut()} disabled={busy}>
+                {busy ? t("c.loading") : t("sec.gateOut")}
+              </DockButton>
             </div>
+          </>
+        )}
+
+        {tab === "in" && (
+          <div className="grid gap-3">
+            {listError && <ErrorCard message={listError} onRetry={() => void fetchLists()} />}
+            {outTrips === null && <Spinner label={t("c.loading")} />}
+            {outTrips && outTrips.length === 0 && <p className="py-4 text-sm text-muted-foreground">{t("sec.noTrips")}</p>}
+            {outTrips?.map((r) => (
+              <GateInCard key={r.id} trip={r} onConfirm={gateIn} />
+            ))}
+          </div>
+        )}
+
+        {tab === "log" && (
+          <div className="grid gap-2">
+            {listError && <ErrorCard message={listError} onRetry={() => void fetchLists()} />}
+            {log === null && <Spinner label={t("c.loading")} />}
+            {log && log.length === 0 && <p className="py-4 text-sm text-muted-foreground">{t("c.none")}</p>}
+            {log?.map((r) => (
+              <div key={r.id} className="rounded-xl border border-border bg-card p-4 text-sm shadow-card">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-display font-bold text-foreground">{r.pass_no}</span>
+                  <StatusBadge status={r.trips?.gate_in_at ? "settled" : "in_progress"} />
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t("sec.logTrip")}: {r.trips?.trip_no ?? "—"}
+                  {r.trips?.vehicles?.reg_no ? ` · ${r.trips.vehicles.reg_no}` : ""}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t("sec.logOut")}: {fmt(r.trips?.gate_out_at)} · {t("sec.logIn")}: {fmt(r.trips?.gate_in_at)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === "pickup" && (
+          <div className="grid gap-3">
+            <div className="rounded-xl border border-border bg-card p-4 shadow-card">
+              <p className="font-display text-base font-bold text-foreground">{t("sec.pickup")}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{t("sec.pickupSub")}</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <input value={pickupOrder} onChange={(e) => setPickupOrder(e.target.value)} placeholder={t("sec.pickupOrder")} className="rounded-md border border-input bg-background px-3 py-3 text-sm outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+                <input inputMode="numeric" maxLength={6} value={pickupOtp} onChange={(e) => setPickupOtp(e.target.value.replace(/\D/g, ""))} placeholder={t("sec.passCode")} className="rounded-md border border-input bg-background px-3 py-3 text-center text-lg font-semibold tracking-[0.3em] outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+              </div>
+              {isNative() && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    void scanQr().then((v) => {
+                      if (!v) return;
+                      void haptic("success");
+                      const code = v.match(/\b(\d{6})\b/)?.[1] ?? v.replace(/\D/g, "").slice(-6);
+                      const ord = v.match(/order[=:]([^&\s]+)/i)?.[1];
+                      if (ord) setPickupOrder(decodeURIComponent(ord));
+                      if (code) setPickupOtp(code);
+                    })
+                  }
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background py-3 text-sm font-semibold text-foreground active:bg-accent"
+                >
+                  <ScanLine className="h-4 w-4" /> {t("sec.scanPass")}
+                </button>
+              )}
+            </div>
+            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("sec.pickupList")}</p>
+            {pickups === null && <Spinner label={t("c.loading")} />}
+            {pickups && pickups.length === 0 && <p className="py-2 text-sm text-muted-foreground">{t("c.none")}</p>}
+            {pickups?.map((o) => (
+              <div key={o.id} className="rounded-xl border border-border bg-card p-4 text-sm shadow-card">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-display font-bold text-foreground">{o.order_no}</span>
+                  <span className="text-xs text-muted-foreground">₹{o.grand_total ?? 0}</span>
+                </div>
+                <p className="mt-0.5 text-xs text-muted-foreground">{o.customers?.business_name || o.customers?.contact_name || "—"}</p>
+                <p className="mt-1 font-mono text-xs text-foreground">{t("sec.passCode")}: {o.delivery_otp ?? "—"}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {msg && <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">{msg}</p>}
+        {error && <div className="mt-4"><ErrorCard message={error} /></div>}
+      </Screen>
+
+      {/* Tab switcher docked at the bottom, thumb-reachable */}
+      <ActionDock tone="plain">
+        <div className="flex rounded-full bg-navy p-1 shadow-soft">
+          {tabs.map((x) => (
+            <button
+              key={x.id}
+              onClick={() => {
+                void haptic("light");
+                setTab(x.id);
+                setMsg(null);
+                setError(null);
+              }}
+              className={`flex-1 rounded-full px-2 py-2.5 text-xs font-bold transition-colors ${
+                tab === x.id ? "bg-card text-navy shadow-soft" : "text-white/80"
+              }`}
+            >
+              {x.label}
+            </button>
           ))}
         </div>
-      )}
-    </Screen>
+      </ActionDock>
+    </>
   );
 }
 
@@ -334,10 +384,10 @@ function GateInCard({
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-card">
       <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-2 text-left">
         <div>
-          <span className="text-sm font-semibold text-foreground">{t("ld.trip", { no: trip.trip_no })}</span>
+          <span className="font-display font-bold text-foreground">{t("ld.trip", { no: trip.trip_no })}</span>
           {trip.vehicles?.reg_no && <span className="ml-2 text-xs text-muted-foreground">{trip.vehicles.reg_no}</span>}
         </div>
         <StatusBadge status={trip.status} />
@@ -346,23 +396,23 @@ function GateInCard({
         <div className="mt-3 grid gap-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">{t("sec.odometer")}</label>
-            <input inputMode="numeric" value={odo} onChange={(e) => setOdo(e.target.value.replace(/\D/g, ""))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            <input inputMode="numeric" value={odo} onChange={(e) => setOdo(e.target.value.replace(/\D/g, ""))} className="w-full rounded-md border border-input bg-background px-3 py-3 text-base font-semibold outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-foreground">{t("sec.fuelLitres")}</label>
-              <input inputMode="decimal" value={fuelL} onChange={(e) => setFuelL(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input inputMode="decimal" value={fuelL} onChange={(e) => setFuelL(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-foreground">{t("sec.fuelAmount")}</label>
-              <input inputMode="decimal" value={fuelA} onChange={(e) => setFuelA(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input inputMode="decimal" value={fuelA} onChange={(e) => setFuelA(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
             </div>
           </div>
           {msg && <p className="text-xs font-medium text-emerald-600">{msg}</p>}
           {error && <p className="text-xs font-medium text-destructive">{error}</p>}
-          <button onClick={() => void confirm()} disabled={busy} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground active:opacity-80 disabled:opacity-60">
+          <DockButton onClick={() => void confirm()} disabled={busy}>
             {busy ? t("c.loading") : t("sec.gateIn")}
-          </button>
+          </DockButton>
         </div>
       )}
     </div>
