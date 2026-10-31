@@ -497,6 +497,7 @@ function TripScreen() {
             {settings.expenses_enabled && toolBtn("expense", t("dr.expenses"))}
             {settings.allow_extra_load && toolBtn("extras", t("dr.extras"))}
             {toolBtn("pickup", t("dr.pickup"))}
+            {settings.allow_spot_sale && toolBtn("spot", t("dr.spotSale"))}
             {settings.sos_enabled && toolBtn("sos", t("dr.sos"), true)}
             {toolBtn("end", t("dr.endTrip"))}
           </div>
@@ -556,6 +557,34 @@ function TripScreen() {
                 </select>
                 <input inputMode="numeric" value={pickupQty} onChange={(e) => setPickupQty(e.target.value.replace(/\D/g, ""))} placeholder={t("dr.pickupQty")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
                 <button onClick={() => void addPickup()} disabled={busy || !pickupCustomer || !pickupProduct || pickupQty === ""} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                  {t("c.submit")}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {showTools === "spot" && (
+            <div className="mb-4 rounded-xl border border-border bg-card p-4">
+              <p className="mb-2 text-sm font-bold text-foreground">{t("dr.spotSale")}</p>
+              <div className="grid gap-2">
+                <select value={spotCustomer} onChange={(e) => setSpotCustomer(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                  <option value="">{t("dr.customer")}</option>
+                  {stops.filter((s) => s.orders).map((s) => (
+                    <option key={s.id} value={s.orders!.customer_id}>{s.orders!.business_name || s.orders!.customer_name}</option>
+                  ))}
+                </select>
+                <select value={spotProduct} onChange={(e) => setSpotProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                  <option value="">{t("dr.pickupProduct")}</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <input inputMode="numeric" value={spotQty} onChange={(e) => setSpotQty(e.target.value.replace(/\D/g, ""))} placeholder={t("c.qty")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <input type="checkbox" checked={spotPaid} onChange={(e) => setSpotPaid(e.target.checked)} className="h-4 w-4 rounded border-input" />
+                  {t("dr.paidNow")}
+                </label>
+                <button onClick={() => void addSpotSale()} disabled={busy || !spotCustomer || !spotProduct || spotQty === ""} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
                   {t("c.submit")}
                 </button>
               </div>
