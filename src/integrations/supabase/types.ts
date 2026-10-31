@@ -5422,6 +5422,10 @@ export type Database = {
         Args: { p_odometer?: number; p_qr_token: string }
         Returns: string
       }
+      gate_pickup_handover: {
+        Args: { p_order_no: string; p_otp: string }
+        Returns: string
+      }
       has_perm: {
         Args: { p_action: string; p_module: string }
         Returns: boolean
