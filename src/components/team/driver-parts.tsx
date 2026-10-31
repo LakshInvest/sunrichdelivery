@@ -346,10 +346,12 @@ export function StopDetailPanel({
     // Short = whatever is not delivered, damaged or refused (goes back to stock).
     const linesOut = lines.map((l) => {
       const d = qty[l.id] ?? { delivered: String(l.qty), damaged: "", refused: "", empties: "" };
+      const empties = Number(d.empties || 0);
+      // A failed stop records nothing as delivered — everything goes back as short.
+      if (failMode) return { order_line_id: l.id, delivered: 0, short: l.qty, damaged: 0, refused: 0, empties };
       const delivered = Number(d.delivered || 0);
       const damaged = Number(d.damaged || 0);
       const refused = Number(d.refused || 0);
-      const empties = Number(d.empties || 0);
       return { order_line_id: l.id, delivered, short: Math.max(0, l.qty - delivered - damaged - refused), damaged, refused, empties };
     });
     if (!failMode) {
