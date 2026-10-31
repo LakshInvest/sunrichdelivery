@@ -137,6 +137,31 @@ function SecurityGate() {
     return t("sec.gateInDone");
   };
 
+  const pickupHandover = async () => {
+    if (busy) return;
+    setMsg(null);
+    setError(null);
+    if (!pickupOrder.trim() || !pickupOtp.trim()) {
+      setError(t("sec.pickupSub"));
+      return;
+    }
+    setBusy(true);
+    const res = await queueRpc("gate_pickup_handover", { p_order_no: pickupOrder.trim(), p_otp: pickupOtp.trim() });
+    setBusy(false);
+    if (res.queued) {
+      setMsg(t("c.tryAgainOffline"));
+      return;
+    }
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
+    setMsg(`${t("sec.pickupDone")}: ${pickupOrder.trim()}`);
+    setPickupOrder("");
+    setPickupOtp("");
+    await fetchLists();
+  };
+
   const tabs: { id: Tab; label: string }[] = [
     { id: "out", label: t("sec.gateOut") },
     { id: "in", label: t("sec.gateIn") },
