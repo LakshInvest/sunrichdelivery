@@ -206,7 +206,7 @@ function TripScreen() {
   };
 
   const deliverStop = async (v: {
-    lines: { line_id: string; delivered_qty: number }[];
+    lines: { order_line_id: string; delivered: number; short: number }[];
     fail: boolean;
     failReason: string;
     failNote: string;

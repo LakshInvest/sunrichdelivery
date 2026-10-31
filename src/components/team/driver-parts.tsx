@@ -296,7 +296,7 @@ export function StopDetailPanel({
   settings: Settings;
   staffId: string;
   outstanding: number | null;
-  onSubmitDelivery: (v: { lines: { line_id: string; delivered_qty: number }[]; fail: boolean; failReason: string; failNote: string; photo: string | null; signature: string | null; otp: string }) => Promise<void>;
+  onSubmitDelivery: (v: { lines: { order_line_id: string; delivered: number; short: number }[]; fail: boolean; failReason: string; failNote: string; photo: string | null; signature: string | null; otp: string }) => Promise<void>;
   onSubmitCollection: (v: { mode: string; amount: string; reference: string; photo: string | null }) => Promise<void>;
   onSubmitDueCollection: (v: { amount: string; mode: string; reference: string; photo: string | null }) => Promise<void>;
   busy: boolean;
