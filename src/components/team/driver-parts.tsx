@@ -249,6 +249,7 @@ export type StopRow = {
     grand_total: number | null;
     amount_paid: number | null;
     payment_mode: string | null;
+    firm_id?: string | null;
   } | null;
 };
 
