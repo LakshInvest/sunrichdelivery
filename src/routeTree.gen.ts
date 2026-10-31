@@ -17,7 +17,8 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedDriverTripIdRouteImport } from './routes/_authenticated/driver.$tripId'
-import { Route as AuthenticatedLoaderTripIdRouteImport } from './routes/_authenticated/loader.$tripId'
+import { Route as AuthenticatedLoaderIndexRouteImport } from './routes/_authenticated/loader/index'
+import { Route as AuthenticatedLoaderTripIdRouteImport } from './routes/_authenticated/loader/$tripId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -51,6 +52,12 @@ const AuthenticatedDriverTripIdRoute =
     path: '/$tripId',
     getParentRoute: () => AuthenticatedDriverRoute,
   } as any)
+const AuthenticatedLoaderIndexRoute =
+  AuthenticatedLoaderIndexRouteImport.update({
+    id: '/loader/',
+    path: '/loader/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedLoaderTripIdRoute =
   AuthenticatedLoaderTripIdRouteImport.update({
     id: '/loader/$tripId',
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/security': typeof AuthenticatedSecurityRoute
   '/driver/$tripId': typeof AuthenticatedDriverTripIdRoute
   '/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
+  '/loader/': typeof AuthenticatedLoaderIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -73,6 +81,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/driver/$tripId': typeof AuthenticatedDriverTripIdRoute
   '/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
+  '/loader': typeof AuthenticatedLoaderIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -83,6 +92,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/driver/$tripId': typeof AuthenticatedDriverTripIdRoute
   '/_authenticated/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
+  '/_authenticated/loader/': typeof AuthenticatedLoaderIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -93,6 +103,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/driver/$tripId'
     | '/loader/$tripId'
+    | '/loader/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -101,6 +112,7 @@ export interface FileRouteTypes {
     | '/'
     | '/driver/$tripId'
     | '/loader/$tripId'
+    | '/loader'
   id:
     | '__root__'
     | '/_authenticated'
@@ -110,6 +122,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/driver/$tripId'
     | '/_authenticated/loader/$tripId'
+    | '/_authenticated/loader/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -161,6 +174,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDriverTripIdRouteImport
       parentRoute: typeof AuthenticatedDriverRoute
     }
+    '/_authenticated/loader/': {
+      id: '/_authenticated/loader/'
+      path: '/loader'
+      fullPath: '/loader/'
+      preLoaderRoute: typeof AuthenticatedLoaderIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/loader/$tripId': {
       id: '/_authenticated/loader/$tripId'
       path: '/loader/$tripId'
@@ -187,6 +207,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedLoaderTripIdRoute: typeof AuthenticatedLoaderTripIdRoute
+  AuthenticatedLoaderIndexRoute: typeof AuthenticatedLoaderIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -194,6 +215,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedLoaderTripIdRoute: AuthenticatedLoaderTripIdRoute,
+  AuthenticatedLoaderIndexRoute: AuthenticatedLoaderIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
