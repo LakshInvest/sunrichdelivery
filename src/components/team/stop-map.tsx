@@ -63,7 +63,7 @@ type GoogleMap = {
 type GoogleMarker = { addListener?: (event: string, handler: () => void) => void };
 
 export function StopMap({ stops }: { stops: MapStop[] }) {
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const holder = useRef<HTMLDivElement>(null);
   const map = useRef<GoogleMap | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
@@ -245,7 +245,6 @@ export function StopMap({ stops }: { stops: MapStop[] }) {
           </button>
         </div>
       )}
-      <span className="sr-only">{lang}</span>
     </div>
   );
 }

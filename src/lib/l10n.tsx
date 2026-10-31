@@ -219,6 +219,9 @@ const en: Dict = {
   "dr.allStopsDone": "All stops done. Return to the plant.",
   "dr.tripSummary": "Trip summary",
   "dr.deliveredStops": "{done}/{total} stops delivered",
+  "dr.mapUnavailable": "Map is not available right now.",
+  "dr.nextStop": "Next stop",
+  "dr.navigate": "Navigate",
   // office fallback
   "of.title": "Office screens",
   "of.sub": "Office and management screens are part of the Sunrich admin app.",
