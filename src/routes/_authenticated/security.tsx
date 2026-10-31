@@ -19,9 +19,17 @@ export const Route = createFileRoute("/_authenticated/security")({
   component: SecurityGate,
 });
 
-type Tab = "out" | "in" | "log";
+type Tab = "out" | "in" | "log" | "pickup";
 
 type OutTrip = { id: string; trip_no: string; gate_out_at: string | null; gate_in_at: string | null; status: string; vehicles: { reg_no: string } | null };
+type PickupOrder = {
+  id: string;
+  order_no: string;
+  delivery_otp: string | null;
+  grand_total: number | null;
+  payment_status: string;
+  customers: { business_name: string | null; customer_name: string | null } | null;
+};
 type LogRow = {
   id: string;
   pass_no: string;
@@ -47,11 +55,14 @@ function SecurityGate() {
 
   const [outTrips, setOutTrips] = useState<OutTrip[] | null>(null);
   const [log, setLog] = useState<LogRow[] | null>(null);
+  const [pickups, setPickups] = useState<PickupOrder[] | null>(null);
+  const [pickupOrder, setPickupOrder] = useState("");
+  const [pickupOtp, setPickupOtp] = useState("");
   const [listError, setListError] = useState<string | null>(null);
 
   const fetchLists = useCallback(async () => {
     setListError(null);
-    const [tripsRes, logRes] = await Promise.all([
+    const [tripsRes, logRes, pickRes] = await Promise.all([
       supabase
         .from("trips")
         .select("id, trip_no, status, gate_out_at, gate_in_at, vehicles(reg_no)")
