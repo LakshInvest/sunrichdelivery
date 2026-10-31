@@ -83,7 +83,7 @@ function TripScreen() {
   const [endOdoPhoto, setEndOdoPhoto] = useState<string | null>(null);
   const [settleAmount, setSettleAmount] = useState("");
   const [settleNote, setSettleNote] = useState("");
-  const [firmUpi, setFirmUpi] = useState<{ id: string; payee: string | null; qrUrl: string | null } | null>(null);
+  const [firmUpi, setFirmUpi] = useState<{ id: string; payee: string | null } | null>(null);
 
   const locTimer = useRef<number | null>(null);
 
@@ -127,13 +127,12 @@ function TripScreen() {
     // Firm UPI details for the QR shown at collection time.
     const firmId = stopRows.find((s) => s.orders?.firm_id)?.orders?.firm_id;
     if (firmId) {
-      const fRes = await supabase.from("firms").select("upi_id, upi_payee_name, upi_qr_path").eq("id", firmId).single();
+      const fRes = await supabase.from("firms").select("upi_id, upi_payee_name").eq("id", firmId).single();
       if (!fRes.error && fRes.data) {
-        const f = fRes.data as { upi_id: string | null; upi_payee_name: string | null; upi_qr_path: string | null };
+        const f = fRes.data as { upi_id: string | null; upi_payee_name: string | null };
         setFirmUpi({
           id: f.upi_id ?? "",
           payee: f.upi_payee_name,
-          qrUrl: f.upi_qr_path ? supabase.storage.from("operations").getPublicUrl(f.upi_qr_path).data.publicUrl : null,
         });
       }
     }
