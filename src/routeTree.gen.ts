@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
+import { Route as AuthenticatedDriverTripIdRouteImport } from './routes/_authenticated/driver.$tripId'
 import { Route as AuthenticatedLoaderTripIdRouteImport } from './routes/_authenticated/loader.$tripId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -44,6 +45,12 @@ const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
   path: '/security',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDriverTripIdRoute =
+  AuthenticatedDriverTripIdRouteImport.update({
+    id: '/$tripId',
+    path: '/$tripId',
+    getParentRoute: () => AuthenticatedDriverRoute,
+  } as any)
 const AuthenticatedLoaderTripIdRoute =
   AuthenticatedLoaderTripIdRouteImport.update({
     id: '/loader/$tripId',
@@ -54,31 +61,46 @@ const AuthenticatedLoaderTripIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
-  '/driver': typeof AuthenticatedDriverRoute
+  '/driver': typeof AuthenticatedDriverRouteWithChildren
   '/security': typeof AuthenticatedSecurityRoute
+  '/driver/$tripId': typeof AuthenticatedDriverTripIdRoute
   '/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
-  '/driver': typeof AuthenticatedDriverRoute
+  '/driver': typeof AuthenticatedDriverRouteWithChildren
   '/security': typeof AuthenticatedSecurityRoute
   '/': typeof AuthenticatedIndexRoute
+  '/driver/$tripId': typeof AuthenticatedDriverTripIdRoute
   '/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/_authenticated/driver': typeof AuthenticatedDriverRoute
+  '/_authenticated/driver': typeof AuthenticatedDriverRouteWithChildren
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/driver/$tripId': typeof AuthenticatedDriverTripIdRoute
   '/_authenticated/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/driver' | '/security' | '/loader/$tripId'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/driver'
+    | '/security'
+    | '/driver/$tripId'
+    | '/loader/$tripId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/driver' | '/security' | '/' | '/loader/$tripId'
+  to:
+    | '/login'
+    | '/driver'
+    | '/security'
+    | '/'
+    | '/driver/$tripId'
+    | '/loader/$tripId'
   id:
     | '__root__'
     | '/_authenticated'
@@ -86,6 +108,7 @@ export interface FileRouteTypes {
     | '/_authenticated/driver'
     | '/_authenticated/security'
     | '/_authenticated/'
+    | '/_authenticated/driver/$tripId'
     | '/_authenticated/loader/$tripId'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +154,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSecurityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/driver/$tripId': {
+      id: '/_authenticated/driver/$tripId'
+      path: '/$tripId'
+      fullPath: '/driver/$tripId'
+      preLoaderRoute: typeof AuthenticatedDriverTripIdRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
+    }
     '/_authenticated/loader/$tripId': {
       id: '/_authenticated/loader/$tripId'
       path: '/loader/$tripId'
@@ -141,15 +171,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedDriverRouteChildren {
+  AuthenticatedDriverTripIdRoute: typeof AuthenticatedDriverTripIdRoute
+}
+
+const AuthenticatedDriverRouteChildren: AuthenticatedDriverRouteChildren = {
+  AuthenticatedDriverTripIdRoute: AuthenticatedDriverTripIdRoute,
+}
+
+const AuthenticatedDriverRouteWithChildren =
+  AuthenticatedDriverRoute._addFileChildren(AuthenticatedDriverRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedDriverRoute: typeof AuthenticatedDriverRoute
+  AuthenticatedDriverRoute: typeof AuthenticatedDriverRouteWithChildren
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedLoaderTripIdRoute: typeof AuthenticatedLoaderTripIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedDriverRoute: AuthenticatedDriverRoute,
+  AuthenticatedDriverRoute: AuthenticatedDriverRouteWithChildren,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedLoaderTripIdRoute: AuthenticatedLoaderTripIdRoute,
