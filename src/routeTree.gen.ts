@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
+import { Route as AuthenticatedDriverIndexRouteImport } from './routes/_authenticated/driver.index'
 import { Route as AuthenticatedDriverTripIdRouteImport } from './routes/_authenticated/driver.$tripId'
 import { Route as AuthenticatedLoaderIndexRouteImport } from './routes/_authenticated/loader/index'
 import { Route as AuthenticatedLoaderTripIdRouteImport } from './routes/_authenticated/loader/$tripId'
@@ -42,6 +43,12 @@ const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
   path: '/security',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDriverIndexRoute =
+  AuthenticatedDriverIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDriverRoute,
+  } as any)
 const AuthenticatedDriverTripIdRoute =
   AuthenticatedDriverTripIdRouteImport.update({
     id: '/$tripId',
@@ -68,15 +75,16 @@ export interface FileRoutesByFullPath {
   '/security': typeof AuthenticatedSecurityRoute
   '/driver/$tripId': typeof AuthenticatedDriverTripIdRoute
   '/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
+  '/driver/': typeof AuthenticatedDriverIndexRoute
   '/loader/': typeof AuthenticatedLoaderIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
-  '/driver': typeof AuthenticatedDriverRouteWithChildren
   '/security': typeof AuthenticatedSecurityRoute
   '/': typeof AuthenticatedIndexRoute
   '/driver/$tripId': typeof AuthenticatedDriverTripIdRoute
   '/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
+  '/driver': typeof AuthenticatedDriverIndexRoute
   '/loader': typeof AuthenticatedLoaderIndexRoute
 }
 export interface FileRoutesById {
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/driver/$tripId': typeof AuthenticatedDriverTripIdRoute
   '/_authenticated/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
+  '/_authenticated/driver/': typeof AuthenticatedDriverIndexRoute
   '/_authenticated/loader/': typeof AuthenticatedLoaderIndexRoute
 }
 export interface FileRouteTypes {
@@ -99,15 +108,16 @@ export interface FileRouteTypes {
     | '/security'
     | '/driver/$tripId'
     | '/loader/$tripId'
+    | '/driver/'
     | '/loader/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
-    | '/driver'
     | '/security'
     | '/'
     | '/driver/$tripId'
     | '/loader/$tripId'
+    | '/driver'
     | '/loader'
   id:
     | '__root__'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/driver/$tripId'
     | '/_authenticated/loader/$tripId'
+    | '/_authenticated/driver/'
     | '/_authenticated/loader/'
   fileRoutesById: FileRoutesById
 }
@@ -163,6 +174,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSecurityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/driver/': {
+      id: '/_authenticated/driver/'
+      path: '/'
+      fullPath: '/driver/'
+      preLoaderRoute: typeof AuthenticatedDriverIndexRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
+    }
     '/_authenticated/driver/$tripId': {
       id: '/_authenticated/driver/$tripId'
       path: '/$tripId'
@@ -189,10 +207,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedDriverRouteChildren {
   AuthenticatedDriverTripIdRoute: typeof AuthenticatedDriverTripIdRoute
+  AuthenticatedDriverIndexRoute: typeof AuthenticatedDriverIndexRoute
 }
 
 const AuthenticatedDriverRouteChildren: AuthenticatedDriverRouteChildren = {
   AuthenticatedDriverTripIdRoute: AuthenticatedDriverTripIdRoute,
+  AuthenticatedDriverIndexRoute: AuthenticatedDriverIndexRoute,
 }
 
 const AuthenticatedDriverRouteWithChildren =
