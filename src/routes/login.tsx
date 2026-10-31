@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeamAuth } from "@/lib/team-auth";
 import { LANGS, useLang, type Lang } from "@/lib/l10n";
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/login")({
     ],
   }),
   beforeLoad: async () => {
-    // Only meaningful client-side; the layout below runs after hydration.
+    // Only meaningful client-side; the session lives in browser storage.
     if (typeof window !== "undefined") {
       const { data } = await supabase.auth.getSession();
       if (data.session) throw redirect({ to: "/" });
@@ -27,17 +27,18 @@ export const Route = createFileRoute("/login")({
 
 function Login() {
   const { t, lang, setLang } = useLang();
-  const { signIn, staff } = useTeamAuth();
-  const router = Route.useRouter();
+  const { signIn } = useTeamAuth();
   const [mobile, setMobile] = useState("");
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // If a session exists (e.g. back navigation), go home.
-  useState(() => {
-    if (staff) void router.navigate({ to: "/" });
-  });
+  useEffect(() => {
+    void supabase.auth.getSession().then(({ data }) => {
+      if (data.session) void window.location.assign("/");
+    });
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
