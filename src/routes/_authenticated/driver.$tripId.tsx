@@ -351,6 +351,27 @@ function TripScreen() {
     });
   };
 
+  const addSpotSale = async () => {
+    if (!spotCustomer) return;
+    await run(async () => {
+      const coords = await getCoords();
+      const res = await queueRpc("spot_sale", {
+        p_trip_id: tripId,
+        p_customer_id: spotCustomer,
+        p_lines: [{ product_id: spotProduct, qty: Number(spotQty) }],
+        p_paid_now: spotPaid,
+        ...(coords ? { p_latitude: coords.latitude, p_longitude: coords.longitude } : {}),
+      });
+      if (res.error && !res.queued) {
+        setError(res.error);
+        return;
+      }
+      setShowTools(null);
+      setMessage(res.queued ? t("c.tryAgainOffline") : t("dr.spotSold"));
+      setSpotQty("");
+    });
+  };
+
   const sendSos = async () => {
     await run(async () => {
       const coords = await getCoords();
