@@ -173,6 +173,18 @@ function TripScreen() {
     if (stop?.orders?.customer_id) void refreshOutstanding(stop.id, stop.orders.customer_id);
   }, [stop, refreshOutstanding]);
 
+  // Arrival at a stop: record the timestamp and a 'stop' location ping once.
+  useEffect(() => {
+    if (!stop || trip?.status !== "in_progress" || stop.arrived_at) return;
+    void (async () => {
+      const c = await getCoords();
+      await queueRpc("mark_arrived", {
+        p_stop_id: stop.id,
+        ...(c ? { p_latitude: c.latitude, p_longitude: c.longitude } : {}),
+      });
+    })();
+  }, [stop, trip?.status]);
+
   // Location tracking while on the road.
   useEffect(() => {
     if (!trip || trip.status !== "in_progress" || !settings.location_tracking_enabled) return;
