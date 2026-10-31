@@ -5,6 +5,6 @@ import { createServerFn } from "@tanstack/react-start";
 export type MapsConfig = { key: string | null };
 
 export const getGoogleMapsKey = createServerFn({ method: "GET" }).handler(async (): Promise<MapsConfig> => {
-  const key = process.env.GOOGLE_MAPS_API_KEY ?? null;
+  const key = process.env["GOOGLE_MAPS_API_KEY"] ?? null;
   return { key: key && key.trim() ? key.trim() : null };
 });

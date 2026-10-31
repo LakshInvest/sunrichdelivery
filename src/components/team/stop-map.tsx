@@ -6,7 +6,7 @@ import { useLang } from "@/lib/l10n";
 import { getGoogleMapsKey } from "@/lib/maps.functions";
 import { getCoords } from "@/components/team/driver-parts";
 import { openExternal, haptic } from "@/lib/native";
-import { Navigation, LoaderPin } from "lucide-react";
+import { Navigation, Loader } from "lucide-react";
 
 type MapStop = {
   id: string;
@@ -172,7 +172,7 @@ export function StopMap({ stops }: { stops: MapStop[] }) {
     if (state !== "ready") return;
     const tick = async () => {
       const c = await getCoords();
-      if (c) setMe(c);
+      if (c) setMe({ lat: c.latitude, lng: c.longitude });
     };
     void tick();
     if (typeof navigator !== "undefined" && navigator.geolocation) {
@@ -226,7 +226,7 @@ export function StopMap({ stops }: { stops: MapStop[] }) {
       <div ref={holder} className="h-56 w-full bg-muted" style={{ display: state === "ready" ? "block" : "none" }} />
       {state !== "ready" && (
         <div className="grid h-56 place-items-center gap-2 bg-muted">
-          <LoaderPin className="h-6 w-6 animate-pulse text-muted-foreground" />
+          <Loader className="h-6 w-6 animate-pulse text-muted-foreground" />
         </div>
       )}
       {nextStop && (

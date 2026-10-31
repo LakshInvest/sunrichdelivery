@@ -177,14 +177,17 @@ function Login() {
   // Brand tagline from public_app_info() so Command Center edits apply here too.
   useEffect(() => {
     let alive = true;
-    void supabase
-      .rpc("public_app_info")
-      .then(({ data }: { data: Record<string, unknown> | null }) => {
+    void (async () => {
+      try {
+        const { data } = await supabase.rpc("public_app_info");
         if (!alive || !data) return;
+        const info = data as Record<string, unknown>;
         const key = lang === "hi" ? "login_tagline_hi" : lang === "mr" ? "login_tagline_mr" : "login_tagline";
-        setTagline((data[key] as string) || (data.login_tagline as string) || null);
-      })
-      .catch(() => {});
+        setTagline((info[key] as string) || (info["login_tagline"] as string) || null);
+      } catch {
+        // branding stays on the bundled logo/tagline fallback
+      }
+    })();
     return () => {
       alive = false;
     };
@@ -209,8 +212,8 @@ function Login() {
     const check = async () => {
       try {
         const text = await navigator.clipboard.readText();
-        const m = text.match(/\b(\d{6})\b/);
-        if (m && m[1] !== code) setClipboardCode(m[1]);
+        const c = text.match(/\b(\d{6})\b/)?.[1];
+        if (c && c !== code) setClipboardCode(c);
         else setClipboardCode(null);
       } catch {
         setClipboardCode(null);
