@@ -1,6 +1,7 @@
 // Mobile + PIN login. Runs server-side: check_pin is not callable by anonymous
 // clients, so PIN verification and the session-minting link happen here.
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type LoginInput = { mobile: string; pin: string; deviceId: string; deviceLabel?: string };
 
