@@ -77,7 +77,7 @@ function SecurityGate() {
         .limit(25),
       supabase
         .from("orders")
-        .select("id, order_no, delivery_otp, grand_total, payment_status, customers(business_name, customer_name)")
+        .select("id, order_no, delivery_otp, grand_total, payment_status, customers!orders_customer_id_fkey(business_name, customer_name)")
         .eq("delivery_mode", "pickup")
         .in("status", ["approved", "processing"])
         .order("order_no"),
