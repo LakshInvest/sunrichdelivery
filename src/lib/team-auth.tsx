@@ -42,20 +42,18 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
   const [staff, setStaff] = useState<Staff | null>(null);
 
   const loadStaff = useCallback(async (userId: string): Promise<Staff | null> => {
-    const [profileRes, rolesRes, permRes] = await Promise.all([
+    const [profileRes, permRes, roleCodes] = await Promise.all([
       supabase
         .from("user_profiles")
         .select("id, full_name, mobile, email, preferred_language, unit_id, firm_id")
         .eq("id", userId)
         .single(),
-      supabase.from("user_roles").select("roles(code)").eq("user_id", userId),
       supabase.rpc("my_permissions"),
+      myRoleCodes(),
     ]);
     const p = profileRes.data;
     if (!p) return null;
-    const roles = (rolesRes.data ?? [])
-      .map((r) => (r as { roles?: { code: string } | null }).roles?.code)
-      .filter((c): c is string => Boolean(c));
+    const roles = roleCodes;
     const permissions = ((permRes.data ?? []) as { module: string; action: string }[]).map(
       (x) => `${x.module}:${x.action}`,
     );
