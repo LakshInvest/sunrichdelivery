@@ -315,7 +315,9 @@ export function StopDetailPanel({
   const [otp, setOtp] = useState("");
   const [localErr, setLocalErr] = useState<string | null>(null);
 
-  const [mode, setMode] = useState(o?.payment_mode ?? "cash");
+  // Collection mode must be a payment channel (cash/upi/cheque), not the
+  // order's payment_mode (cod/credit/prepaid) — trip_collections validates it.
+  const [mode, setMode] = useState("cash");
   const [amount, setAmount] = useState("");
   const [reference, setReference] = useState("");
   const [payPhoto, setPayPhoto] = useState<string | null>(null);
