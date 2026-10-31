@@ -37,7 +37,7 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchShowDuration: 1500,
       launchAutoHide: true,
-      backgroundColor: "#ffffff",
+      backgroundColor: "#0D3278",
       showSpinner: false,
     },
     PushNotifications: {
@@ -45,7 +45,7 @@ const config: CapacitorConfig = {
     },
     LocalNotifications: {
       smallIcon: "ic_stat_sunrich",
-      iconColor: "#16a34a",
+      iconColor: "#0AAAED",
     },
     Keyboard: {
       resize: "body",
