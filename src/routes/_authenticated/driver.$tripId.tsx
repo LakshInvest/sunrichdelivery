@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { useTeamAuth } from "@/lib/team-auth";
 import { ErrorCard, PhotoInput, Screen, Spinner, StatusBadge } from "@/components/team/ui";
+import { StopMap } from "@/components/team/stop-map";
 import {
   DEFAULT_SETTINGS,
   StartTripPanel,
@@ -99,7 +100,7 @@ function TripScreen() {
         .single(),
       supabase
         .from("trip_stops")
-        .select("id, seq, status, fail_reason, arrived_at, orders(id, customer_id, order_no, business_name, customer_name, delivery_address_text, grand_total, amount_paid, payment_mode, firm_id)")
+        .select("id, seq, status, fail_reason, arrived_at, orders(id, customer_id, order_no, business_name, customer_name, delivery_address_text, grand_total, amount_paid, payment_mode, delivery_latitude, delivery_longitude, firm_id)")
         .eq("trip_id", tripId)
         .order("seq"),
       supabase.rpc("my_delivery_settings"),
@@ -492,11 +493,20 @@ function TripScreen() {
     <button
       key={id}
       onClick={() => setShowTools((s) => (s === id ? null : id))}
-      className={`rounded-lg border px-3 py-2 text-xs font-semibold active:bg-accent ${danger ? "border-destructive/50 text-destructive" : "border-input text-foreground"}`}
+      className={`rounded-full border px-4 py-3 text-sm font-bold active:bg-accent ${danger ? "border-destructive/50 text-destructive" : "border-input bg-card text-foreground shadow-card"}`}
     >
       {label}
     </button>
   );
+
+  const mapStops = stops.map((s) => ({
+    id: s.id,
+    seq: s.seq,
+    status: s.status,
+    lat: s.orders?.delivery_latitude ?? null,
+    lng: s.orders?.delivery_longitude ?? null,
+    label: s.orders?.business_name || s.orders?.customer_name || "",
+  }));
 
   return (
     <Screen
@@ -540,6 +550,9 @@ function TripScreen() {
 
       {onRoad && !endedAwaitingGateIn && (
         <>
+          <div className="mb-3">
+            <StopMap stops={mapStops} />
+          </div>
           <div className="mb-3 flex flex-wrap gap-2">
             {settings.expenses_enabled && toolBtn("expense", t("dr.expenses"))}
             {settings.allow_extra_load && toolBtn("extras", t("dr.extras"))}
