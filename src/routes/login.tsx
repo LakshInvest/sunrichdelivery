@@ -48,8 +48,7 @@ function Login() {
     const res = await signIn(mobile, pin);
     setBusy(false);
     if (res.ok) {
-      await router.invalidate();
-      void router.navigate({ to: "/" });
+      window.location.assign("/");
       return;
     }
     if (res.code === "wrong_pin") {
