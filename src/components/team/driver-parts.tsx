@@ -377,9 +377,6 @@ export function StopDetailPanel({
             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("dr.deliveredQty")}</p>
             {lines.map((l) => {
               const d = qty[l.id] ?? { delivered: String(l.qty), damaged: "", refused: "", empties: "" };
-              const num = (k: "delivered" | "damaged" | "refused" | "empties") =>
-                setQty((s) => ({ ...s, [l.id]: { ...d, [k]: e.target.value.replace(/\D/g, "") } }));
-              void num;
               const set = (k: "delivered" | "damaged" | "refused" | "empties", raw: string) =>
                 setQty((s) => ({ ...s, [l.id]: { ...d, [k]: raw.replace(/\D/g, "") } }));
               return (
