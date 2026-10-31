@@ -514,7 +514,7 @@ function TripScreen() {
       {error && <div className="mb-4"><ErrorCard message={error} /></div>}
 
       {startedAwaitingGateOut && (
-        <div className="mb-4 rounded-xl border border-border bg-card p-4">
+        <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-card">
           <p className="text-sm font-semibold text-foreground">{t("dr.awaitingGateOut")}</p>
         </div>
       )}
@@ -550,18 +550,18 @@ function TripScreen() {
           </div>
 
           {showTools === "expense" && (
-            <div className="mb-4 rounded-xl border border-border bg-card p-4">
+            <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-card">
               <p className="mb-2 text-sm font-bold text-foreground">{t("dr.expenses")}</p>
               <div className="grid gap-2">
-                <select value={expType} onChange={(e) => setExpType(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                <select value={expType} onChange={(e) => setExpType(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
                   {(settings.expense_types.length ? settings.expense_types : ["other"]).map((x) => (
                     <option key={x} value={x}>{x}</option>
                   ))}
                 </select>
-                <input inputMode="decimal" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder={t("dr.expenseAmount")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-                <input value={expNote} onChange={(e) => setExpNote(e.target.value)} placeholder={t("c.notes")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <input inputMode="decimal" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder={t("dr.expenseAmount")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+                <input value={expNote} onChange={(e) => setExpNote(e.target.value)} placeholder={t("c.notes")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
                 <PhotoInput userId={staff?.id ?? "anon"} kind="expense-bill" label={t("dr.expenseBill")} required={settings.expense_bill_photo_required} value={expPhoto} onChange={setExpPhoto} />
-                <button onClick={() => void addExpense()} disabled={busy || expAmount === ""} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                <button onClick={() => void addExpense()} disabled={busy || expAmount === ""} className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-50">
                   {t("c.submit")}
                 </button>
               </div>
@@ -569,17 +569,17 @@ function TripScreen() {
           )}
 
           {showTools === "extras" && (
-            <div className="mb-4 rounded-xl border border-border bg-card p-4">
+            <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-card">
               <p className="mb-2 text-sm font-bold text-foreground">{t("dr.extras")}</p>
               <div className="grid gap-2">
-                <select value={extraProduct} onChange={(e) => setExtraProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                <select value={extraProduct} onChange={(e) => setExtraProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
                   <option value="">{t("dr.pickupProduct")}</option>
                   {products.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
-                <input inputMode="numeric" value={extraQty} onChange={(e) => setExtraQty(e.target.value.replace(/\D/g, ""))} placeholder={t("c.qty")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-                <button onClick={() => void addExtra()} disabled={busy || !extraProduct || extraQty === ""} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                <input inputMode="numeric" value={extraQty} onChange={(e) => setExtraQty(e.target.value.replace(/\D/g, ""))} placeholder={t("c.qty")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+                <button onClick={() => void addExtra()} disabled={busy || !extraProduct || extraQty === ""} className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-50">
                   {t("c.submit")}
                 </button>
               </div>
@@ -587,23 +587,23 @@ function TripScreen() {
           )}
 
           {showTools === "pickup" && (
-            <div className="mb-4 rounded-xl border border-border bg-card p-4">
+            <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-card">
               <p className="mb-2 text-sm font-bold text-foreground">{t("dr.pickup")}</p>
               <div className="grid gap-2">
-                <select value={pickupCustomer} onChange={(e) => setPickupCustomer(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                <select value={pickupCustomer} onChange={(e) => setPickupCustomer(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
                   <option value="">{t("dr.customer")}</option>
                   {stops.filter((s) => s.orders).map((s) => (
                     <option key={s.id} value={s.orders!.customer_id}>{s.orders!.business_name || s.orders!.customer_name}</option>
                   ))}
                 </select>
-                <select value={pickupProduct} onChange={(e) => setPickupProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                <select value={pickupProduct} onChange={(e) => setPickupProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
                   <option value="">{t("dr.pickupProduct")}</option>
                   {products.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
-                <input inputMode="numeric" value={pickupQty} onChange={(e) => setPickupQty(e.target.value.replace(/\D/g, ""))} placeholder={t("dr.pickupQty")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-                <button onClick={() => void addPickup()} disabled={busy || !pickupCustomer || !pickupProduct || pickupQty === ""} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                <input inputMode="numeric" value={pickupQty} onChange={(e) => setPickupQty(e.target.value.replace(/\D/g, ""))} placeholder={t("dr.pickupQty")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+                <button onClick={() => void addPickup()} disabled={busy || !pickupCustomer || !pickupProduct || pickupQty === ""} className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-50">
                   {t("c.submit")}
                 </button>
               </div>
@@ -611,27 +611,27 @@ function TripScreen() {
           )}
 
           {showTools === "spot" && (
-            <div className="mb-4 rounded-xl border border-border bg-card p-4">
+            <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-card">
               <p className="mb-2 text-sm font-bold text-foreground">{t("dr.spotSale")}</p>
               <div className="grid gap-2">
-                <select value={spotCustomer} onChange={(e) => setSpotCustomer(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                <select value={spotCustomer} onChange={(e) => setSpotCustomer(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
                   <option value="">{t("dr.customer")}</option>
                   {stops.filter((s) => s.orders).map((s) => (
                     <option key={s.id} value={s.orders!.customer_id}>{s.orders!.business_name || s.orders!.customer_name}</option>
                   ))}
                 </select>
-                <select value={spotProduct} onChange={(e) => setSpotProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                <select value={spotProduct} onChange={(e) => setSpotProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
                   <option value="">{t("dr.pickupProduct")}</option>
                   {products.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
-                <input inputMode="numeric" value={spotQty} onChange={(e) => setSpotQty(e.target.value.replace(/\D/g, ""))} placeholder={t("c.qty")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <input inputMode="numeric" value={spotQty} onChange={(e) => setSpotQty(e.target.value.replace(/\D/g, ""))} placeholder={t("c.qty")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
                 <label className="flex items-center gap-2 text-sm text-foreground">
                   <input type="checkbox" checked={spotPaid} onChange={(e) => setSpotPaid(e.target.checked)} className="h-4 w-4 rounded border-input" />
                   {t("dr.paidNow")}
                 </label>
-                <button onClick={() => void addSpotSale()} disabled={busy || !spotCustomer || !spotProduct || spotQty === ""} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                <button onClick={() => void addSpotSale()} disabled={busy || !spotCustomer || !spotProduct || spotQty === ""} className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-50">
                   {t("c.submit")}
                 </button>
               </div>
@@ -641,21 +641,21 @@ function TripScreen() {
           {showTools === "sos" && (
             <div className="mb-4 rounded-xl border border-destructive/40 bg-destructive/5 p-4">
               <p className="mb-2 text-sm font-bold text-destructive">{t("dr.sos")}</p>
-              <input value={sosNote} onChange={(e) => setSosNote(e.target.value)} placeholder={t("dr.sosNote")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <button onClick={() => void sendSos()} disabled={busy} className="mt-2 w-full rounded-lg bg-destructive py-3 text-sm font-semibold text-white active:opacity-80 disabled:opacity-60">
+              <input value={sosNote} onChange={(e) => setSosNote(e.target.value)} placeholder={t("dr.sosNote")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+              <button onClick={() => void sendSos()} disabled={busy} className="mt-2 w-full rounded-lg bg-destructive py-4 text-base font-bold text-white active:opacity-80 disabled:opacity-60">
                 {t("dr.sos")}
               </button>
             </div>
           )}
 
           {showTools === "end" && (
-            <div className="mb-4 rounded-xl border border-border bg-card p-4">
+            <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-card">
               <p className="mb-1 text-sm font-bold text-foreground">{t("dr.endTrip")}</p>
               <p className="mb-2 text-xs text-muted-foreground">{t("dr.gateInFirst")}</p>
               <div className="grid gap-2">
-                <input inputMode="numeric" value={endOdo} onChange={(e) => setEndOdo(e.target.value.replace(/\D/g, ""))} placeholder={t("dr.odometer")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <input inputMode="numeric" value={endOdo} onChange={(e) => setEndOdo(e.target.value.replace(/\D/g, ""))} placeholder={t("dr.odometer")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
                 <PhotoInput userId={staff?.id ?? "anon"} kind="odo-end" label={t("dr.odometerPhoto")} required={settings.require_end_odometer_photo} value={endOdoPhoto} onChange={setEndOdoPhoto} />
-                <button onClick={() => void endTrip()} disabled={busy} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                <button onClick={() => void endTrip()} disabled={busy} className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-50">
                   {t("dr.endTrip")}
                 </button>
               </div>
@@ -697,14 +697,14 @@ function TripScreen() {
       )}
 
       {returned && (
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-card">
           <p className="text-sm font-bold text-foreground">{t("dr.settle")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t("dr.cashExpected")}: ₹{trip.cash_expected ?? 0}</p>
           {canSettle ? (
             <div className="mt-3 grid gap-2">
-              <input inputMode="decimal" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} placeholder={t("dr.cashReceived")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <input value={settleNote} onChange={(e) => setSettleNote(e.target.value)} placeholder={t("dr.settleNote")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <button onClick={() => void settle()} disabled={busy} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+              <input inputMode="decimal" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} placeholder={t("dr.cashReceived")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+              <input value={settleNote} onChange={(e) => setSettleNote(e.target.value)} placeholder={t("dr.settleNote")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+              <button onClick={() => void settle()} disabled={busy} className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-50">
                 {t("dr.settle")}
               </button>
             </div>
