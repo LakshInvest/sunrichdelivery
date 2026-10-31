@@ -55,7 +55,8 @@ export const staffLogin = createServerFn({ method: "POST" })
       const raw = String(row?.out_result ?? "not_registered");
       if (raw.startsWith("wrong_pin")) {
         const left = Number(raw.split(":")[1]);
-        return { ok: false, code: "wrong_pin", attemptsLeft: Number.isFinite(left) ? left : undefined };
+        if (Number.isFinite(left)) return { ok: false, code: "wrong_pin", attemptsLeft: left };
+        return { ok: false, code: "wrong_pin" };
       }
       return { ok: false, code: PIN_RESULT_CODES[raw] ?? raw };
     }

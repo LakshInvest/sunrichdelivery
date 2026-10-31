@@ -30,7 +30,7 @@ type LogRow = {
   trips: { trip_no: string; gate_out_at: string | null; gate_in_at: string | null; vehicles: { reg_no: string } | null } | null;
 };
 
-function fmt(dt: string | null): string {
+function fmt(dt: string | null | undefined): string {
   if (!dt) return "—";
   const d = new Date(dt);
   return d.toLocaleString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });

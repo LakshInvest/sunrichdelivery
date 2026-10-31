@@ -93,6 +93,7 @@ function LoadTrip() {
     });
     for (const r of pending) {
       const d = drafts[r.product_id];
+      if (!d) continue;
       const res = await queueRpc("record_loading", {
         p_trip_id: tripId,
         p_product_id: r.product_id,

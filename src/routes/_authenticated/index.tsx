@@ -49,7 +49,7 @@ function Home() {
 
   return (
     <Screen
-      title={t("home.greeting", { name: staff.fullName.split(" ")[0] })}
+      title={t("home.greeting", { name: staff.fullName.split(" ")[0] ?? staff.fullName })}
       right={<LanguageChips />}
     >
       <div className="mb-5 flex flex-wrap items-center gap-2">

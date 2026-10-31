@@ -111,7 +111,11 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(
     async (mobile: string, pin: string): Promise<SignInResult> => {
       const res = await staffLogin({ data: { mobile, pin, deviceId: getDeviceId(), deviceLabel: getDeviceLabel() } });
-      if (!res.ok) return { ok: false, code: res.code, attemptsLeft: "attemptsLeft" in res ? res.attemptsLeft : undefined };
+      if (!res.ok) {
+        const out: SignInResult = { ok: false, code: res.code };
+        if (typeof res.attemptsLeft === "number") out.attemptsLeft = res.attemptsLeft;
+        return out;
+      }
       const verify =
         res.method === "sms"
           ? await supabase.auth.verifyOtp({ phone: res.phone!, token: res.token, type: "sms" })
