@@ -36,6 +36,7 @@ type Trip = {
   trip_no: string;
   status: string;
   trip_date: string;
+  ended_at: string | null;
   cash_expected: number | null;
   cash_received: number | null;
   vehicles: { reg_no: string } | null;
@@ -86,7 +87,7 @@ function TripScreen() {
     const [tripRes, stopsRes, settingsRes] = await Promise.all([
       supabase
         .from("trips")
-        .select("id, trip_no, status, trip_date, cash_expected, cash_received, vehicles(reg_no)")
+        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, vehicles(reg_no)")
         .eq("id", tripId)
         .single(),
       supabase
@@ -184,7 +185,7 @@ function TripScreen() {
   if (loading) return <Screen title={t("dr.trip", { no: "…" })}><Spinner label={t("c.loading")} /></Screen>;
   if (!trip) return <Screen title={t("dr.title")}><ErrorCard message={error ?? t("c.error")} onRetry={() => void fetchAll()} /></Screen>;
 
-  const startTrip = async (v: { selfie: string | null; odometer: string; odoPhoto: string | null; checkPhoto: string | null; checks: string[] }) => {
+  const startTrip = async (v: { selfie: string | null; odometer: string; odoPhoto: string | null; checkPhoto: string | null; checkItems: { item: string; ok: boolean }[] }) => {
     await run(async () => {
       const coords = await getCoords();
       const res = await queueRpc("start_trip", {
@@ -193,7 +194,7 @@ function TripScreen() {
         p_odometer: Number(v.odometer),
         p_odometer_photo_url: v.odoPhoto,
         p_check_photo_url: v.checkPhoto,
-        p_vehicle_check: settings.vehicle_check_enabled ? { items: v.checks } : null,
+        p_vehicle_check: v.checkItems,
         ...(coords ? { p_latitude: coords.latitude, p_longitude: coords.longitude } : {}),
       });
       if (res.error && !res.queued) {
