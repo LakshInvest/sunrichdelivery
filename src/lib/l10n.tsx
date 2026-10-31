@@ -96,6 +96,7 @@ const en: Dict = {
   "st.failed": "Failed",
   "st.skipped": "Skipped",
   "st.approved": "Approved",
+  "st.partial": "Partly delivered",
   // loader
   "ld.title": "Loading bay",
   "ld.toLoad": "Trips to load",
@@ -317,6 +318,7 @@ const hi: Dict = {
   "st.failed": "असफल",
   "st.skipped": "छोड़ा",
   "st.approved": "स्वीकृत",
+  "st.partial": "आंशिक डिलीवर",
   "ld.title": "लोडिंग बे",
   "ld.toLoad": "लोड करने की ट्रिप",
   "ld.loadedToday": "लोड हो चुकी ट्रिप",
@@ -533,6 +535,7 @@ const mr: Dict = {
   "st.failed": "अयशस्वी",
   "st.skipped": "वगळले",
   "st.approved": "मंजूर",
+  "st.partial": "आंशिक डिलिव्हर",
   "ld.title": "लोडिंग बे",
   "ld.toLoad": "लोड करायच्या ट्रिप",
   "ld.loadedToday": "लोड झालेल्या ट्रिप",
