@@ -102,18 +102,10 @@ export const staffLogin = createServerFn({ method: "POST" })
       return { ok: true, method: "email", email, token, staff };
     }
 
-    // Fallback: phone-based link for accounts without an email.
-    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: "sms",
-      phone: mobile,
-    });
-    if (error || !link) {
-      console.error("[staffLogin] generateLink(sms) failed", error?.message);
-      return { ok: false, code: "login_failed" };
-    }
-    const token = link.properties?.email_otp ?? "";
-    if (!token) return { ok: false, code: "login_failed" };
-    return { ok: true, method: "sms", phone: mobile, token, staff };
+    // All staff accounts carry a confirmed synthetic email (created at setup),
+    // so the email magic-link path above always applies. Phone-only fallback is
+    // intentionally not supported by the admin link API.
+    return { ok: false, code: "login_failed" };
   });
 
 /**
