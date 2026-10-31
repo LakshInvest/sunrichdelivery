@@ -24,6 +24,7 @@ export type Settings = {
   expense_bill_photo_required: boolean;
   allow_partial_delivery: boolean;
   allow_extra_load: boolean;
+  allow_spot_sale: boolean;
   collect_old_dues: boolean;
   allow_cash: boolean;
   allow_upi: boolean;
@@ -54,6 +55,7 @@ export const DEFAULT_SETTINGS: Settings = {
   expense_bill_photo_required: false,
   allow_partial_delivery: true,
   allow_extra_load: false,
+  allow_spot_sale: false,
   collect_old_dues: false,
   allow_cash: true,
   allow_upi: true,
@@ -349,9 +351,9 @@ export function StopDetailPanel({
       return { order_line_id: l.id, delivered, short: Math.max(0, l.qty - delivered - damaged - refused), damaged, refused, empties };
     });
     if (!failMode) {
-      for (let i = 0; i < linesOut.length; i++) {
+      for (const [i, v] of linesOut.entries()) {
         const l = lines[i];
-        const v = linesOut[i];
+        if (!l) continue;
         if (v.delivered + v.damaged + v.refused > l.qty) {
           return setLocalErr(`${l.product_name}: ${t("dr.qtyOverflow")}`);
         }
