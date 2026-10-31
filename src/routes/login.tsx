@@ -35,7 +35,7 @@ function Login() {
 
   // If a session exists (e.g. back navigation), go home.
   useEffect(() => {
-    void supabase.auth.getSession().then(({ data }) => {
+    void supabase.auth.getSession().then(({ data }: { data: { session: unknown } }) => {
       if (data.session) void window.location.assign("/");
     });
   }, []);
