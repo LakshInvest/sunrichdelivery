@@ -47,7 +47,7 @@ function loadMaps(key: string): Promise<void> {
 declare const google: {
   maps: {
     Map: new (el: HTMLElement, opts: Record<string, unknown>) => GoogleMap;
-    Marker: new (opts: Record<string, unknown>) => unknown;
+    Marker: new (opts: Record<string, unknown>) => GoogleMarker;
     Polyline: new (opts: Record<string, unknown>) => unknown;
     InfoWindow: new (opts?: Record<string, unknown>) => { setContent: (html: string) => void; open: (map: GoogleMap, marker?: unknown) => void };
     SymbolPath: { CIRCLE: symbol };
@@ -59,6 +59,8 @@ type GoogleMap = {
   setZoom: (z: number) => void;
   fitBounds: (b: unknown) => void;
 };
+
+type GoogleMarker = { addListener?: (event: string, handler: () => void) => void };
 
 export function StopMap({ stops, tripId }: { stops: MapStop[]; tripId: string }) {
   const { t, lang } = useLang();
@@ -75,8 +77,6 @@ export function StopMap({ stops, tripId }: { stops: MapStop[]; tripId: string })
       const pts = stops
         .filter((s) => s.lat != null && s.lng != null)
         .map((s) => ({ s, pos: { lat: s.lat as number, lng: s.lng as number } }));
-      const bounds: (typeof google.maps) | null = null;
-      void bounds;
       const ext: { minLat: number; maxLat: number; minLng: number; maxLng: number } | null = pts.length
         ? pts.reduce(
             (a, { pos }) => ({
@@ -106,16 +106,6 @@ export function StopMap({ stops, tripId }: { stops: MapStop[]; tripId: string })
         });
         const iw = new google.maps.InfoWindow({ content: `<div style="font-family:Inter,sans-serif;font-size:13px;font-weight:600">${s.seq}. ${s.label}</div>` });
         marker.addListener?.("click", () => iw.open(mapObj, marker));
-      }
-      if (pts.length > 1) {
-        new google.maps.Polyline({
-          path: pts.map(({ pos }) => pos),
-          map: mapObj,
-          strokeColor: "#0AAAED",
-          strokeOpacity: 0.9,
-          strokeWeight: 3,
-        });
-      }
       if (ext) {
         const CORNER = 0.004;
         mapObj.fitBounds({
