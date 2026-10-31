@@ -24,6 +24,7 @@ export type Settings = {
   expense_bill_photo_required: boolean;
   allow_partial_delivery: boolean;
   allow_extra_load: boolean;
+  allow_spot_sale: boolean;
   collect_old_dues: boolean;
   allow_cash: boolean;
   allow_upi: boolean;
@@ -54,6 +55,7 @@ export const DEFAULT_SETTINGS: Settings = {
   expense_bill_photo_required: false,
   allow_partial_delivery: true,
   allow_extra_load: false,
+  allow_spot_sale: false,
   collect_old_dues: false,
   allow_cash: true,
   allow_upi: true,
@@ -239,6 +241,7 @@ export type StopRow = {
   seq: number;
   status: string;
   fail_reason: string | null;
+  arrived_at: string | null;
   orders: {
     id: string;
     customer_id: string;
@@ -249,6 +252,7 @@ export type StopRow = {
     grand_total: number | null;
     amount_paid: number | null;
     payment_mode: string | null;
+    firm_id?: string | null;
   } | null;
 };
 
@@ -290,13 +294,15 @@ export function StopDetailPanel({
   busy,
   error,
   message,
+  upi,
 }: {
   stop: StopRow;
   lines: LineRow[];
   settings: Settings;
   staffId: string;
   outstanding: number | null;
-  onSubmitDelivery: (v: { lines: { order_line_id: string; delivered: number; short: number }[]; fail: boolean; failReason: string; failNote: string; photo: string | null; signature: string | null; otp: string }) => Promise<void>;
+  upi?: { id: string; payee: string | null; qrUrl: string | null } | null;
+  onSubmitDelivery: (v: { lines: { order_line_id: string; delivered: number; short: number; damaged: number; refused: number; empties: number }[]; fail: boolean; failReason: string; failNote: string; photo: string | null; signature: string | null; otp: string }) => Promise<void>;
   onSubmitCollection: (v: { mode: string; amount: string; reference: string; photo: string | null }) => Promise<void>;
   onSubmitDueCollection: (v: { amount: string; mode: string; reference: string; photo: string | null }) => Promise<void>;
   busy: boolean;
@@ -306,7 +312,9 @@ export function StopDetailPanel({
   const { t } = useLang();
   const o = stop.orders;
   const delivered = stop.status === "delivered";
-  const [qty, setQty] = useState<Record<string, string>>({});
+  // Partial stops also allow collecting the remaining payment.
+  const canCollect = delivered || stop.status === "partial";
+  const [qty, setQty] = useState<Record<string, { delivered: string; damaged: string; refused: string; empties: string }>>({});
   const [failMode, setFailMode] = useState(false);
   const [failReason, setFailReason] = useState(settings.failed_reasons[0] ?? "");
   const [failNote, setFailNote] = useState("");
@@ -326,20 +334,34 @@ export function StopDetailPanel({
   const [dueReference, setDueReference] = useState("");
 
   useEffect(() => {
-    setQty(Object.fromEntries(lines.map((l) => [l.id, String(l.qty)])));
+    setQty(Object.fromEntries(lines.map((l) => [l.id, { delivered: String(l.qty), damaged: "", refused: "", empties: "" }])));
   }, [lines]);
 
   const due = Math.max(0, Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0));
 
   const submitDelivery = async () => {
     setLocalErr(null);
-    // deliver_stop expects { order_line_id, delivered, short, ... } and the
-    // quantities of each line must add up to the ordered qty.
+    // deliver_stop expects { order_line_id, delivered, short, damaged, refused,
+    // empties } and the outcome quantities must add up to the ordered qty.
+    // Short = whatever is not delivered, damaged or refused (goes back to stock).
     const linesOut = lines.map((l) => {
-      const d = Number(qty[l.id] ?? l.qty);
-      return { order_line_id: l.id, delivered: d, short: Math.max(0, l.qty - d) };
+      const d = qty[l.id] ?? { delivered: String(l.qty), damaged: "", refused: "", empties: "" };
+      const empties = Number(d.empties || 0);
+      // A failed stop records nothing as delivered — everything goes back as short.
+      if (failMode) return { order_line_id: l.id, delivered: 0, short: l.qty, damaged: 0, refused: 0, empties };
+      const delivered = Number(d.delivered || 0);
+      const damaged = Number(d.damaged || 0);
+      const refused = Number(d.refused || 0);
+      return { order_line_id: l.id, delivered, short: Math.max(0, l.qty - delivered - damaged - refused), damaged, refused, empties };
     });
     if (!failMode) {
+      for (const [i, v] of linesOut.entries()) {
+        const l = lines[i];
+        if (!l) continue;
+        if (v.delivered + v.damaged + v.refused > l.qty) {
+          return setLocalErr(`${l.product_name}: ${t("dr.qtyOverflow")}`);
+        }
+      }
       if (settings.proof_photo_required && !photo) return setLocalErr(t("dr.needPhoto"));
       if (settings.proof_otp_required && otp === "") return setLocalErr(`${t("dr.verifyOtp")} — ${t("c.required")}`);
     }
@@ -363,21 +385,44 @@ export function StopDetailPanel({
         <>
           <div className="mt-4 grid gap-2">
             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("dr.deliveredQty")}</p>
-            {lines.map((l) => (
-              <div key={l.id} className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 px-3 py-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm text-foreground">{l.product_name}</p>
-                  {l.pack_label && <p className="text-xs text-muted-foreground">{l.pack_label}</p>}
+            {lines.map((l) => {
+              const d = qty[l.id] ?? { delivered: String(l.qty), damaged: "", refused: "", empties: "" };
+              const set = (k: "delivered" | "damaged" | "refused" | "empties", raw: string) =>
+                setQty((s) => ({ ...s, [l.id]: { ...d, [k]: raw.replace(/\D/g, "") } }));
+              return (
+                <div key={l.id} className="rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm text-foreground">{l.product_name}</p>
+                      {l.pack_label && <p className="text-xs text-muted-foreground">{l.pack_label}</p>}
+                    </div>
+                    <input
+                      inputMode="numeric"
+                      value={d.delivered}
+                      onChange={(e) => set("delivered", e.target.value)}
+                      disabled={!settings.allow_partial_delivery}
+                      className="w-16 rounded-md border border-input bg-background px-2 py-1.5 text-center text-sm outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
+                    />
+                  </div>
+                  {settings.allow_partial_delivery && (
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-medium uppercase text-muted-foreground">{t("dr.damaged")}</label>
+                        <input inputMode="numeric" value={d.damaged} onChange={(e) => set("damaged", e.target.value)} placeholder="0" className="w-full rounded-md border border-input bg-background px-2 py-1 text-center text-sm outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-medium uppercase text-muted-foreground">{t("dr.refused")}</label>
+                        <input inputMode="numeric" value={d.refused} onChange={(e) => set("refused", e.target.value)} placeholder="0" className="w-full rounded-md border border-input bg-background px-2 py-1 text-center text-sm outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-medium uppercase text-muted-foreground">{t("dr.empties")}</label>
+                        <input inputMode="numeric" value={d.empties} onChange={(e) => set("empties", e.target.value)} placeholder="0" className="w-full rounded-md border border-input bg-background px-2 py-1 text-center text-sm outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <input
-                  inputMode="numeric"
-                  value={qty[l.id] ?? ""}
-                  onChange={(e) => setQty((s) => ({ ...s, [l.id]: e.target.value.replace(/\D/g, "") }))}
-                  disabled={!settings.allow_partial_delivery}
-                  className="w-16 rounded-md border border-input bg-background px-2 py-1.5 text-center text-sm outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
-                />
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {settings.proof_photo_enabled && (
@@ -410,7 +455,7 @@ export function StopDetailPanel({
         </>
       )}
 
-      {delivered && due > 0 && (
+      {canCollect && due > 0 && (
         <div className="mt-4 rounded-lg bg-muted/60 p-3">
           <p className="text-sm font-medium text-foreground">{t("dr.amountDue")}: ₹{due}</p>
         </div>
@@ -466,7 +511,7 @@ export function StopDetailPanel({
         </>
       )}
 
-      {delivered && due > 0 && (
+      {canCollect && due > 0 && (
         <div className="mt-4 grid gap-2">
           <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("dr.recordCollection")}</p>
           <div className="grid grid-cols-2 gap-2">
@@ -478,6 +523,13 @@ export function StopDetailPanel({
             </select>
           </div>
           <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t("dr.reference")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+          {mode === "upi" && upi && (
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-center">
+              {upi.qrUrl && <img src={upi.qrUrl} alt="UPI QR" className="mx-auto h-36 w-36 rounded-lg bg-white object-contain" />}
+              <p className="mt-1 text-xs text-muted-foreground">{upi.payee ?? ""}</p>
+              <p className="font-mono text-sm font-semibold text-foreground">{upi.id || "—"}</p>
+            </div>
+          )}
           <PhotoInput userId={staffId} kind={`pay-${stop.id}`} label={t("c.camera")} value={payPhoto} onChange={setPayPhoto} />
           <button
             onClick={() => void onSubmitCollection({ mode, amount: amount === "" ? String(due) : amount, reference, photo: payPhoto })}

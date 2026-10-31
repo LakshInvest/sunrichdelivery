@@ -73,11 +73,16 @@ function TripScreen() {
   const [pickupCustomer, setPickupCustomer] = useState("");
   const [pickupProduct, setPickupProduct] = useState("");
   const [pickupQty, setPickupQty] = useState("");
+  const [spotCustomer, setSpotCustomer] = useState("");
+  const [spotProduct, setSpotProduct] = useState("");
+  const [spotQty, setSpotQty] = useState("");
+  const [spotPaid, setSpotPaid] = useState(true);
   const [sosNote, setSosNote] = useState("");
   const [endOdo, setEndOdo] = useState("");
   const [endOdoPhoto, setEndOdoPhoto] = useState<string | null>(null);
   const [settleAmount, setSettleAmount] = useState("");
   const [settleNote, setSettleNote] = useState("");
+  const [firmUpi, setFirmUpi] = useState<{ id: string; payee: string | null; qrUrl: string | null } | null>(null);
 
   const locTimer = useRef<number | null>(null);
 
@@ -92,7 +97,7 @@ function TripScreen() {
         .single(),
       supabase
         .from("trip_stops")
-        .select("id, seq, status, fail_reason, orders(id, customer_id, order_no, business_name, customer_name, delivery_address_text, grand_total, amount_paid, payment_mode)")
+        .select("id, seq, status, fail_reason, arrived_at, orders(id, customer_id, order_no, business_name, customer_name, delivery_address_text, grand_total, amount_paid, payment_mode, firm_id)")
         .eq("trip_id", tripId)
         .order("seq"),
       supabase.rpc("my_delivery_settings"),
@@ -117,6 +122,19 @@ function TripScreen() {
       setLines(map);
     } else {
       setLines({});
+    }
+    // Firm UPI details for the QR shown at collection time.
+    const firmId = stopRows.find((s) => s.orders?.firm_id)?.orders?.firm_id;
+    if (firmId) {
+      const fRes = await supabase.from("firms").select("upi_id, upi_payee_name, upi_qr_path").eq("id", firmId).single();
+      if (!fRes.error && fRes.data) {
+        const f = fRes.data as { upi_id: string | null; upi_payee_name: string | null; upi_qr_path: string | null };
+        setFirmUpi({
+          id: f.upi_id ?? "",
+          payee: f.upi_payee_name,
+          qrUrl: f.upi_qr_path ? supabase.storage.from("operations").getPublicUrl(f.upi_qr_path).data.publicUrl : null,
+        });
+      }
     }
     if (!settingsRes.error && settingsRes.data) {
       setSettings({ ...DEFAULT_SETTINGS, ...(settingsRes.data as unknown as Settings) });
@@ -154,6 +172,18 @@ function TripScreen() {
   useEffect(() => {
     if (stop?.orders?.customer_id) void refreshOutstanding(stop.id, stop.orders.customer_id);
   }, [stop, refreshOutstanding]);
+
+  // Arrival at a stop: record the timestamp and a 'stop' location ping once.
+  useEffect(() => {
+    if (!stop || trip?.status !== "in_progress" || stop.arrived_at) return;
+    void (async () => {
+      const c = await getCoords();
+      await queueRpc("mark_arrived", {
+        p_stop_id: stop.id,
+        ...(c ? { p_latitude: c.latitude, p_longitude: c.longitude } : {}),
+      });
+    })();
+  }, [stop, trip?.status]);
 
   // Location tracking while on the road.
   useEffect(() => {
@@ -206,7 +236,7 @@ function TripScreen() {
   };
 
   const deliverStop = async (v: {
-    lines: { order_line_id: string; delivered: number; short: number }[];
+    lines: { order_line_id: string; delivered: number; short: number; damaged: number; refused: number; empties: number }[];
     fail: boolean;
     failReason: string;
     failNote: string;
@@ -347,6 +377,27 @@ function TripScreen() {
     });
   };
 
+  const addSpotSale = async () => {
+    if (!spotCustomer) return;
+    await run(async () => {
+      const coords = await getCoords();
+      const res = await queueRpc("spot_sale", {
+        p_trip_id: tripId,
+        p_customer_id: spotCustomer,
+        p_lines: [{ product_id: spotProduct, qty: Number(spotQty) }],
+        p_paid_now: spotPaid,
+        ...(coords ? { p_latitude: coords.latitude, p_longitude: coords.longitude } : {}),
+      });
+      if (res.error && !res.queued) {
+        setError(res.error);
+        return;
+      }
+      setShowTools(null);
+      setMessage(res.queued ? t("c.tryAgainOffline") : t("dr.spotSold"));
+      setSpotQty("");
+    });
+  };
+
   const sendSos = async () => {
     await run(async () => {
       const coords = await getCoords();
@@ -472,6 +523,7 @@ function TripScreen() {
             {settings.expenses_enabled && toolBtn("expense", t("dr.expenses"))}
             {settings.allow_extra_load && toolBtn("extras", t("dr.extras"))}
             {toolBtn("pickup", t("dr.pickup"))}
+            {settings.allow_spot_sale && toolBtn("spot", t("dr.spotSale"))}
             {settings.sos_enabled && toolBtn("sos", t("dr.sos"), true)}
             {toolBtn("end", t("dr.endTrip"))}
           </div>
@@ -537,6 +589,34 @@ function TripScreen() {
             </div>
           )}
 
+          {showTools === "spot" && (
+            <div className="mb-4 rounded-xl border border-border bg-card p-4">
+              <p className="mb-2 text-sm font-bold text-foreground">{t("dr.spotSale")}</p>
+              <div className="grid gap-2">
+                <select value={spotCustomer} onChange={(e) => setSpotCustomer(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                  <option value="">{t("dr.customer")}</option>
+                  {stops.filter((s) => s.orders).map((s) => (
+                    <option key={s.id} value={s.orders!.customer_id}>{s.orders!.business_name || s.orders!.customer_name}</option>
+                  ))}
+                </select>
+                <select value={spotProduct} onChange={(e) => setSpotProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                  <option value="">{t("dr.pickupProduct")}</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <input inputMode="numeric" value={spotQty} onChange={(e) => setSpotQty(e.target.value.replace(/\D/g, ""))} placeholder={t("c.qty")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <input type="checkbox" checked={spotPaid} onChange={(e) => setSpotPaid(e.target.checked)} className="h-4 w-4 rounded border-input" />
+                  {t("dr.paidNow")}
+                </label>
+                <button onClick={() => void addSpotSale()} disabled={busy || !spotCustomer || !spotProduct || spotQty === ""} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                  {t("c.submit")}
+                </button>
+              </div>
+            </div>
+          )}
+
           {showTools === "sos" && (
             <div className="mb-4 rounded-xl border border-destructive/40 bg-destructive/5 p-4">
               <p className="mb-2 text-sm font-bold text-destructive">{t("dr.sos")}</p>
@@ -582,6 +662,7 @@ function TripScreen() {
                 settings={settings}
                 staffId={staff?.id ?? "anon"}
                 outstanding={outstanding[stop.id] ?? null}
+                upi={firmUpi}
                 onSubmitDelivery={deliverStop}
                 onSubmitCollection={collectForStop}
                 onSubmitDueCollection={collectDue}

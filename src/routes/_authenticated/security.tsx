@@ -19,9 +19,17 @@ export const Route = createFileRoute("/_authenticated/security")({
   component: SecurityGate,
 });
 
-type Tab = "out" | "in" | "log";
+type Tab = "out" | "in" | "log" | "pickup";
 
 type OutTrip = { id: string; trip_no: string; gate_out_at: string | null; gate_in_at: string | null; status: string; vehicles: { reg_no: string } | null };
+type PickupOrder = {
+  id: string;
+  order_no: string;
+  delivery_otp: string | null;
+  grand_total: number | null;
+  payment_status: string;
+  customers: { business_name: string | null; customer_name: string | null } | null;
+};
 type LogRow = {
   id: string;
   pass_no: string;
@@ -47,11 +55,14 @@ function SecurityGate() {
 
   const [outTrips, setOutTrips] = useState<OutTrip[] | null>(null);
   const [log, setLog] = useState<LogRow[] | null>(null);
+  const [pickups, setPickups] = useState<PickupOrder[] | null>(null);
+  const [pickupOrder, setPickupOrder] = useState("");
+  const [pickupOtp, setPickupOtp] = useState("");
   const [listError, setListError] = useState<string | null>(null);
 
   const fetchLists = useCallback(async () => {
     setListError(null);
-    const [tripsRes, logRes] = await Promise.all([
+    const [tripsRes, logRes, pickRes] = await Promise.all([
       supabase
         .from("trips")
         .select("id, trip_no, status, gate_out_at, gate_in_at, vehicles(reg_no)")
@@ -64,15 +75,23 @@ function SecurityGate() {
         .select("id, pass_no, qr_token, issued_at, trips(trip_no, gate_out_at, gate_in_at, vehicles(reg_no))")
         .order("issued_at", { ascending: false })
         .limit(25),
+      supabase
+        .from("orders")
+        .select("id, order_no, delivery_otp, grand_total, payment_status, customers!orders_customer_id_fkey(business_name, contact_name)")
+        .eq("delivery_mode", "pickup")
+        .in("status", ["approved", "processing"])
+        .order("order_no"),
     ]);
-    if (tripsRes.error || logRes.error) {
-      setListError(tripsRes.error?.message ?? logRes.error?.message ?? t("c.error"));
+    if (tripsRes.error || logRes.error || pickRes.error) {
+      setListError(tripsRes.error?.message ?? logRes.error?.message ?? pickRes.error?.message ?? t("c.error"));
       setOutTrips([]);
       setLog([]);
+      setPickups([]);
       return;
     }
     setOutTrips((tripsRes.data ?? []) as unknown as OutTrip[]);
     setLog((logRes.data ?? []) as unknown as LogRow[]);
+    setPickups((pickRes.data ?? []) as unknown as PickupOrder[]);
   }, [t]);
 
   useEffect(() => {
@@ -118,10 +137,36 @@ function SecurityGate() {
     return t("sec.gateInDone");
   };
 
+  const pickupHandover = async () => {
+    if (busy) return;
+    setMsg(null);
+    setError(null);
+    if (!pickupOrder.trim() || !pickupOtp.trim()) {
+      setError(t("sec.pickupSub"));
+      return;
+    }
+    setBusy(true);
+    const res = await queueRpc("gate_pickup_handover", { p_order_no: pickupOrder.trim(), p_otp: pickupOtp.trim() });
+    setBusy(false);
+    if (res.queued) {
+      setMsg(t("c.tryAgainOffline"));
+      return;
+    }
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
+    setMsg(`${t("sec.pickupDone")}: ${pickupOrder.trim()}`);
+    setPickupOrder("");
+    setPickupOtp("");
+    await fetchLists();
+  };
+
   const tabs: { id: Tab; label: string }[] = [
     { id: "out", label: t("sec.gateOut") },
     { id: "in", label: t("sec.gateIn") },
     { id: "log", label: t("sec.gateLog") },
+    { id: "pickup", label: t("sec.pickup") },
   ];
 
   return (
@@ -202,6 +247,35 @@ function SecurityGate() {
               <p className="mt-1 text-xs text-muted-foreground">
                 {t("sec.logOut")}: {fmt(r.trips?.gate_out_at)} · {t("sec.logIn")}: {fmt(r.trips?.gate_in_at)}
               </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "pickup" && (
+        <div className="grid gap-3">
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-sm font-bold text-foreground">{t("sec.pickup")}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t("sec.pickupSub")}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <input value={pickupOrder} onChange={(e) => setPickupOrder(e.target.value)} placeholder={t("sec.pickupOrder")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input inputMode="numeric" maxLength={6} value={pickupOtp} onChange={(e) => setPickupOtp(e.target.value.replace(/\D/g, ""))} placeholder={t("sec.passCode")} className="rounded-lg border border-input bg-background px-3 py-2 text-center text-sm tracking-[0.3em] outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <button onClick={() => void pickupHandover()} disabled={busy} className="mt-3 w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground active:opacity-80 disabled:opacity-60">
+              {busy ? t("c.loading") : t("sec.pickupDone")}
+            </button>
+          </div>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("sec.pickupList")}</p>
+          {pickups === null && <Spinner label={t("c.loading")} />}
+          {pickups && pickups.length === 0 && <p className="py-2 text-sm text-muted-foreground">{t("c.none")}</p>}
+          {pickups?.map((o) => (
+            <div key={o.id} className="rounded-xl border border-border bg-card p-3 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-semibold text-foreground">{o.order_no}</span>
+                <span className="text-xs text-muted-foreground">₹{o.grand_total ?? 0}</span>
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">{o.customers?.business_name || o.customers?.customer_name || "—"}</p>
+              <p className="mt-1 font-mono text-xs text-foreground">{t("sec.passCode")}: {o.delivery_otp ?? "—"}</p>
             </div>
           ))}
         </div>
