@@ -92,7 +92,7 @@ function TripScreen() {
     const [tripRes, stopsRes, settingsRes] = await Promise.all([
       supabase
         .from("trips")
-        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, vehicles(reg_no)")
+        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, start_odometer, vehicles(reg_no)")
         .eq("id", tripId)
         .single(),
       supabase
