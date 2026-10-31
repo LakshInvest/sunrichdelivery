@@ -299,7 +299,7 @@ export function StopDetailPanel({
   staffId: string;
   outstanding: number | null;
   upi?: { id: string; payee: string | null; qrUrl: string | null } | null;
-  onSubmitDelivery: (v: { lines: { order_line_id: string; delivered: number; short: number }[]; fail: boolean; failReason: string; failNote: string; photo: string | null; signature: string | null; otp: string }) => Promise<void>;
+  onSubmitDelivery: (v: { lines: { order_line_id: string; delivered: number; short: number; damaged: number; refused: number; empties: number }[]; fail: boolean; failReason: string; failNote: string; photo: string | null; signature: string | null; otp: string }) => Promise<void>;
   onSubmitCollection: (v: { mode: string; amount: string; reference: string; photo: string | null }) => Promise<void>;
   onSubmitDueCollection: (v: { amount: string; mode: string; reference: string; photo: string | null }) => Promise<void>;
   busy: boolean;
@@ -516,6 +516,13 @@ export function StopDetailPanel({
             </select>
           </div>
           <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t("dr.reference")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+          {mode === "upi" && upi && (
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-center">
+              {upi.qrUrl && <img src={upi.qrUrl} alt="UPI QR" className="mx-auto h-36 w-36 rounded-lg bg-white object-contain" />}
+              <p className="mt-1 text-xs text-muted-foreground">{upi.payee ?? ""}</p>
+              <p className="font-mono text-sm font-semibold text-foreground">{upi.id || "—"}</p>
+            </div>
+          )}
           <PhotoInput userId={staffId} kind={`pay-${stop.id}`} label={t("c.camera")} value={payPhoto} onChange={setPayPhoto} />
           <button
             onClick={() => void onSubmitCollection({ mode, amount: amount === "" ? String(due) : amount, reference, photo: payPhoto })}
