@@ -186,9 +186,11 @@ export function StartTripPanel({
       <p className="text-sm font-bold text-foreground">{t("dr.startTrip")}</p>
       <p className="mt-0.5 text-xs text-muted-foreground">{t("dr.startSub")}</p>
       <div className="mt-4 grid gap-4">
-        {(settings.require_start_selfie || settings.require_start_odometer_photo || settings.require_start_odometer) && (
+        {settings.require_start_selfie && (
+          <PhotoInput userId={staffId} kind="selfie" label={t("dr.selfie")} required value={selfie} onChange={setSelfie} />
+        )}
+        {(settings.require_start_odometer || settings.require_start_odometer_photo) && (
           <>
-            <PhotoInput userId={staffId} kind="selfie" label={t("dr.selfie")} required={settings.require_start_selfie} value={selfie} onChange={setSelfie} />
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">
                 {t("dr.odometer")} {settings.require_start_odometer && <span className="text-destructive">*</span>}
@@ -200,7 +202,9 @@ export function StartTripPanel({
                 className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
-            <PhotoInput userId={staffId} kind="odo-start" label={t("dr.odometerPhoto")} required={settings.require_start_odometer_photo} value={odoPhoto} onChange={setOdoPhoto} />
+            {settings.require_start_odometer_photo && (
+              <PhotoInput userId={staffId} kind="odo-start" label={t("dr.odometerPhoto")} required value={odoPhoto} onChange={setOdoPhoto} />
+            )}
           </>
         )}
         {settings.vehicle_check_enabled && settings.vehicle_check_items.length > 0 && (
