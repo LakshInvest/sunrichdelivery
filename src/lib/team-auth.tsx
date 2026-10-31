@@ -80,10 +80,12 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
         const s = await loadStaff(uid);
         if (s && !cancelled) setStaff(s);
         if (data.session) {
-          void supabase.rpc("record_login", {
+          // Record the session before anything gated on has_perm/my_session_is_valid runs.
+          const { error: loginErr } = await supabase.rpc("record_login", {
             p_login_method: "pin",
             p_user_agent: navigator.userAgent,
           });
+          if (loginErr) console.warn("[auth] record_login failed", loginErr.message);
         }
       }
       if (!cancelled) setReady(true);
@@ -127,7 +129,8 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
       const s = await loadStaff(res.staff.id);
       if (!s) return { ok: false, code: "verify_failed" };
       setStaff(s);
-      void supabase.rpc("record_login", { p_login_method: "pin", p_user_agent: navigator.userAgent });
+      const { error: loginErr } = await supabase.rpc("record_login", { p_login_method: "pin", p_user_agent: navigator.userAgent });
+      if (loginErr) console.warn("[auth] record_login failed", loginErr.message);
       return { ok: true };
     },
     [loadStaff],

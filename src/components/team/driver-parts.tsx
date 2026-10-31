@@ -148,7 +148,7 @@ export function StartTripPanel({
   tripId: string;
   settings: Settings;
   checkPhotoRequired: boolean;
-  onSubmit: (v: { selfie: string | null; odometer: string; odoPhoto: string | null; checkPhoto: string | null; checks: string[] }) => Promise<void>;
+  onSubmit: (v: { selfie: string | null; odometer: string; odoPhoto: string | null; checkPhoto: string | null; checkItems: { item: string; ok: boolean }[] }) => Promise<void>;
   busy: boolean;
   error: string | null;
 }) {
@@ -172,7 +172,6 @@ export function StartTripPanel({
       odometer,
       odoPhoto,
       checkPhoto,
-      checks: settings.vehicle_check_enabled ? [] : [], // unused; payload built below
       checkItems: settings.vehicle_check_items.map((item) => ({ item, ok: checks.includes(item) })),
     });
   };

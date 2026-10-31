@@ -36,6 +36,7 @@ type Trip = {
   trip_no: string;
   status: string;
   trip_date: string;
+  ended_at: string | null;
   cash_expected: number | null;
   cash_received: number | null;
   vehicles: { reg_no: string } | null;
@@ -86,7 +87,7 @@ function TripScreen() {
     const [tripRes, stopsRes, settingsRes] = await Promise.all([
       supabase
         .from("trips")
-        .select("id, trip_no, status, trip_date, cash_expected, cash_received, vehicles(reg_no)")
+        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, vehicles(reg_no)")
         .eq("id", tripId)
         .single(),
       supabase
@@ -184,7 +185,7 @@ function TripScreen() {
   if (loading) return <Screen title={t("dr.trip", { no: "…" })}><Spinner label={t("c.loading")} /></Screen>;
   if (!trip) return <Screen title={t("dr.title")}><ErrorCard message={error ?? t("c.error")} onRetry={() => void fetchAll()} /></Screen>;
 
-  const startTrip = async (v: { selfie: string | null; odometer: string; odoPhoto: string | null; checkPhoto: string | null; checks: string[] }) => {
+  const startTrip = async (v: { selfie: string | null; odometer: string; odoPhoto: string | null; checkPhoto: string | null; checkItems: { item: string; ok: boolean }[] }) => {
     await run(async () => {
       const coords = await getCoords();
       const res = await queueRpc("start_trip", {
@@ -193,7 +194,7 @@ function TripScreen() {
         p_odometer: Number(v.odometer),
         p_odometer_photo_url: v.odoPhoto,
         p_check_photo_url: v.checkPhoto,
-        p_vehicle_check: settings.vehicle_check_enabled ? { items: v.checks } : null,
+        p_vehicle_check: v.checkItems,
         ...(coords ? { p_latitude: coords.latitude, p_longitude: coords.longitude } : {}),
       });
       if (res.error && !res.queued) {
@@ -413,6 +414,14 @@ function TripScreen() {
   const onRoad = trip.status === "in_progress";
   const returned = trip.status === "returned";
   const settled = trip.status === "settled";
+  // The driver records the closing odometer, but the vehicle is only "returned"
+  // once security records gate-in at the plant.
+  const endedAwaitingGateIn = onRoad && Boolean(trip.ended_at);
+  // Cash settlement is an office action (dispatch:approve / finance:create);
+  // drivers see the handover summary only.
+  const canSettle =
+    !!staff &&
+    (staff.permissions.includes("dispatch:approve") || staff.permissions.includes("finance:create"));
 
   const toolBtn = (id: string, label: string, danger = false) => (
     <button
@@ -451,7 +460,14 @@ function TripScreen() {
         />
       )}
 
-      {onRoad && (
+      {endedAwaitingGateIn && (
+        <div className="mb-4 rounded-xl border border-border bg-card p-4 text-center">
+          <p className="text-sm font-semibold text-foreground">{t("dr.tripEnded")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("dr.gateInFirst")}</p>
+        </div>
+      )}
+
+      {onRoad && !endedAwaitingGateIn && (
         <>
           <div className="mb-3 flex flex-wrap gap-2">
             {settings.expenses_enabled && toolBtn("expense", t("dr.expenses"))}
@@ -583,13 +599,17 @@ function TripScreen() {
         <div className="rounded-xl border border-border bg-card p-4">
           <p className="text-sm font-bold text-foreground">{t("dr.settle")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t("dr.cashExpected")}: ₹{trip.cash_expected ?? 0}</p>
-          <div className="mt-3 grid gap-2">
-            <input inputMode="decimal" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} placeholder={t("dr.cashReceived")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-            <input value={settleNote} onChange={(e) => setSettleNote(e.target.value)} placeholder={t("dr.settleNote")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-            <button onClick={() => void settle()} disabled={busy} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-              {t("dr.settle")}
-            </button>
-          </div>
+          {canSettle ? (
+            <div className="mt-3 grid gap-2">
+              <input inputMode="decimal" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} placeholder={t("dr.cashReceived")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={settleNote} onChange={(e) => setSettleNote(e.target.value)} placeholder={t("dr.settleNote")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <button onClick={() => void settle()} disabled={busy} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                {t("dr.settle")}
+              </button>
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-muted-foreground">{t("dr.settleOffice")}</p>
+          )}
         </div>
       )}
 

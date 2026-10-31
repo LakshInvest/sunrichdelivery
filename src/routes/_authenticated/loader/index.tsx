@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { ErrorCard, Screen, Spinner, StatusBadge } from "@/components/team/ui";
 
-export const Route = createFileRoute("/_authenticated")({
+export const Route = createFileRoute("/_authenticated/loader/")({
   head: () => ({
     meta: [
       { title: "Loading bay · Sunrich Team" },

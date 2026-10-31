@@ -228,3 +228,5 @@ function LoadTrip() {
     </Screen>
   );
 }
+
+// loader trip detail route
