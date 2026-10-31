@@ -97,7 +97,7 @@ function TripScreen() {
         .single(),
       supabase
         .from("trip_stops")
-        .select("id, seq, status, fail_reason, orders(id, customer_id, order_no, business_name, customer_name, delivery_address_text, grand_total, amount_paid, payment_mode, firm_id)")
+        .select("id, seq, status, fail_reason, arrived_at, orders(id, customer_id, order_no, business_name, customer_name, delivery_address_text, grand_total, amount_paid, payment_mode, firm_id)")
         .eq("trip_id", tripId)
         .order("seq"),
       supabase.rpc("my_delivery_settings"),
