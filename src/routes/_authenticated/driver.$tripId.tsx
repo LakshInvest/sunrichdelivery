@@ -460,7 +460,14 @@ function TripScreen() {
         />
       )}
 
-      {onRoad && (
+      {endedAwaitingGateIn && (
+        <div className="mb-4 rounded-xl border border-border bg-card p-4 text-center">
+          <p className="text-sm font-semibold text-foreground">{t("dr.tripEnded")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("dr.gateInFirst")}</p>
+        </div>
+      )}
+
+      {onRoad && !endedAwaitingGateIn && (
         <>
           <div className="mb-3 flex flex-wrap gap-2">
             {settings.expenses_enabled && toolBtn("expense", t("dr.expenses"))}
