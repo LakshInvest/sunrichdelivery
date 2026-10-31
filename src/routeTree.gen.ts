@@ -8,8 +8,6 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { lazyFn } from '@tanstack/react-router'
-
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as LoginRouteImport } from './routes/login'
@@ -23,9 +21,7 @@ import { Route as AuthenticatedLoaderTripIdRouteImport } from './routes/_authent
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
-} as any).updateLoader({
-  loader: lazyFn(() => import('./routes/_authenticated/loader'), 'loader'),
-})
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
