@@ -1,6 +1,8 @@
 // Offline-first queue for staff RPC mutations. When the phone is offline (or a
 // call fails with a network error) the call is stored locally and replayed when
 // connectivity returns. UI reads pendingCount()/subscribe() for the sync badge.
+import { supabase } from "@/integrations/supabase/client";
+
 type QueuedCall = { id: string; rpc: string; args: Record<string, unknown>; createdAt: number };
 
 const KEY = "sunrich_rpc_queue";
@@ -45,41 +47,36 @@ function isNetworkError(err: unknown): boolean {
 
 export type QueueResult = { data?: unknown; error?: string; queued?: boolean };
 
-/** Call a DB RPC with automatic offline queueing. */
-export async function queueRpc(
-  rpc: (args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>,
-  args: Record<string, unknown>,
-): Promise<QueueResult> {
+/** Call a DB RPC by name with automatic offline queueing. */
+export async function queueRpc(name: string, args: Record<string, unknown>): Promise<QueueResult> {
   if (typeof navigator !== "undefined" && navigator.onLine === false) {
-    enqueue(rpc.name, args);
+    enqueue(name, args);
     return { queued: true };
   }
   try {
-    const res = await rpc(args);
-    if (res.error) {
-      if (isNetworkError(new Error(res.error.message))) {
-        enqueue(rpc.name, args);
+    const { data, error } = await supabase.rpc(name as never, args as never);
+    if (error) {
+      if (isNetworkError(new Error(error.message))) {
+        enqueue(name, args);
         return { queued: true };
       }
-      return { error: res.error.message };
+      return { error: error.message };
     }
-    return { data: res.data };
+    return { data };
   } catch (err) {
     if (isNetworkError(err)) {
-      enqueue(rpc.name, args);
+      enqueue(name, args);
       return { queued: true };
     }
     throw err;
   }
 }
 
-function enqueue(rpcName: string, args: Record<string, unknown>) {
+function enqueue(name: string, args: Record<string, unknown>) {
   const q = read();
-  q.push({ id: crypto.randomUUID(), rpc: rpcName, args, createdAt: Date.now() });
+  q.push({ id: crypto.randomUUID(), rpc: name, args, createdAt: Date.now() });
   write(q);
 }
-
-import { supabase } from "@/integrations/supabase/client";
 
 /** Replay every queued call, in order. Returns how many succeeded. */
 export async function replayQueue(): Promise<{ ok: number; failed: number }> {
