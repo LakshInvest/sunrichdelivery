@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { ErrorCard, Screen, Spinner, StatusBadge } from "@/components/team/ui";
 import { queueRpc } from "@/lib/offline";
+import { haptic, isNative, scanQr } from "@/lib/native";
+import { ScanLine } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/security")({
   head: () => ({
@@ -261,6 +263,24 @@ function SecurityGate() {
               <input value={pickupOrder} onChange={(e) => setPickupOrder(e.target.value)} placeholder={t("sec.pickupOrder")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
               <input inputMode="numeric" maxLength={6} value={pickupOtp} onChange={(e) => setPickupOtp(e.target.value.replace(/\D/g, ""))} placeholder={t("sec.passCode")} className="rounded-lg border border-input bg-background px-3 py-2 text-center text-sm tracking-[0.3em] outline-none focus:ring-2 focus:ring-ring" />
             </div>
+            {isNative() && (
+              <button
+                type="button"
+                onClick={() =>
+                  void scanQr().then((v) => {
+                    if (!v) return;
+                    void haptic("success");
+                    const code = v.match(/\b(\d{6})\b/)?.[1] ?? v.replace(/\D/g, "").slice(-6);
+                    const ord = v.match(/order[=:]([^&\s]+)/i)?.[1];
+                    if (ord) setPickupOrder(decodeURIComponent(ord));
+                    if (code) setPickupOtp(code);
+                  })
+                }
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background py-2.5 text-sm font-medium text-foreground active:bg-accent"
+              >
+                <ScanLine className="h-4 w-4" /> {t("sec.scanPass")}
+              </button>
+            )}
             <button onClick={() => void pickupHandover()} disabled={busy} className="mt-3 w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground active:opacity-80 disabled:opacity-60">
               {busy ? t("c.loading") : t("sec.pickupDone")}
             </button>
