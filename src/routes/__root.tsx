@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { TeamAuthProvider, useTeamAuth } from "../lib/team-auth";
 import { LanguageProvider, type Lang } from "../lib/l10n";
 import { supabase } from "../integrations/supabase/client";
+import { initNative, registerPush } from "../lib/native";
 
 function NotFoundComponent() {
   return (
@@ -133,6 +134,19 @@ function TeamLocale({ children }: { children: ReactNode }) {
   );
 }
 
+/** Android app wiring: back button, deep links, splash, channels and push registration. */
+function NativeBridge() {
+  const router = useRouter();
+  const { staff } = useTeamAuth();
+  useEffect(() => {
+    void initNative((path) => void router.navigate({ to: path }));
+  }, [router]);
+  useEffect(() => {
+    if (staff) void registerPush(staff.lang);
+  }, [staff]);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -140,6 +154,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <TeamAuthProvider>
         <TeamLocale>
+          <NativeBridge />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </TeamLocale>

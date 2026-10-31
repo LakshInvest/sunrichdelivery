@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { startTripMode } from "@/lib/native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
@@ -195,8 +196,19 @@ function TripScreen() {
       await queueRpc("log_location", { p_trip_id: tripId, p_latitude: c.latitude, p_longitude: c.longitude });
     };
     void tick();
-    locTimer.current = window.setInterval(() => void tick(), intervalMs);
+    // In the Android app: background tracking + screen on. In a browser: foreground timer.
+    let stopNative: (() => void) | null = null;
+    let cancelled = false;
+    void startTripMode(intervalMs, (c) => {
+      void queueRpc("log_location", { p_trip_id: tripId, p_latitude: c.latitude, p_longitude: c.longitude });
+    }).then((stop) => {
+      if (cancelled) stop?.();
+      else if (stop) stopNative = stop;
+      else locTimer.current = window.setInterval(() => void tick(), intervalMs);
+    });
     return () => {
+      cancelled = true;
+      stopNative?.();
       if (locTimer.current) window.clearInterval(locTimer.current);
     };
   }, [trip?.status, settings.location_tracking_enabled, settings.location_interval_minutes, tripId, trip]);

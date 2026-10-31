@@ -1,4 +1,5 @@
 // Panels used by the driver trip screen.
+import { nativeCoords } from "@/lib/native";
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/l10n";
 import { UpiQrCode } from "@/components/team/upi-qr";
@@ -68,6 +69,8 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 export async function getCoords(): Promise<{ latitude: number; longitude: number } | null> {
+  const native = await nativeCoords();
+  if (native) return native;
   if (typeof navigator === "undefined" || !navigator.geolocation) return null;
   return new Promise((resolve) => {
     navigator.geolocation.getCurrentPosition(

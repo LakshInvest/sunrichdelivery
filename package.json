@@ -11,7 +11,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "android:patch": "node scripts/patch-android.mjs",
+    "android:sync": "npx cap sync android && node scripts/patch-android.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"
