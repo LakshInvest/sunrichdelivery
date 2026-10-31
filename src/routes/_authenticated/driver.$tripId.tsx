@@ -134,7 +134,7 @@ function TripScreen() {
       .select("id, name")
       .eq("is_active", true)
       .order("name")
-      .then(({ data }) => setProducts((data ?? []) as ExtraProduct[]));
+      .then(({ data }: { data: { id: string; name: string }[] | null }) => setProducts((data ?? []) as ExtraProduct[]));
   }, []);
 
   const stop = stops.find((s) => s.id === selected) ?? null;
