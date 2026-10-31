@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTeamAuth } from "@/lib/team-auth";
 import { useLang } from "@/lib/l10n";
-import { LanguageChips, Screen, Spinner, SyncBadge } from "@/components/team/ui";
+import { BrandLogo, LanguageChips, Screen, Spinner, SyncBadge, hapticsSafe } from "@/components/team/ui";
+import { Truck, Boxes, ShieldCheck, ChevronRight, UserRound } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -18,13 +18,15 @@ export const Route = createFileRoute("/_authenticated/")({
   component: Home,
 });
 
-type RoleCard = { to: "/driver" | "/loader" | "/security"; title: string; sub: string; icon: string };
+type RoleCard = { to: "/driver" | "/loader" | "/security"; titleKey: string; icon: React.ReactNode };
 
-const ROLE_CARDS: Record<string, Omit<RoleCard, "title" | "sub"> & { key: string }> = {
-  DRIVER: { to: "/driver", key: "home.driverCard", icon: "truck" },
-  LOADER: { to: "/loader", key: "home.loaderCard", icon: "boxes" },
-  SECURITY: { to: "/security", key: "home.securityCard", icon: "shield" },
+const ROLE_CARDS: Record<string, Omit<RoleCard, "title">> = {
+  DRIVER: { to: "/driver", titleKey: "home.driverCard", icon: <Truck className="h-7 w-7" /> },
+  LOADER: { to: "/loader", titleKey: "home.loaderCard", icon: <Boxes className="h-7 w-7" /> },
+  SECURITY: { to: "/security", titleKey: "home.securityCard", icon: <ShieldCheck className="h-7 w-7" /> },
 };
+
+const TILE_TONES = ["bg-aqua-soft text-navy", "bg-primary text-primary-foreground", "bg-emerald-500/15 text-emerald-700"];
 
 function Home() {
   const { ready, staff, signOut } = useTeamAuth();
@@ -35,8 +37,9 @@ function Home() {
   if (!staff) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6">
+        <BrandLogo />
         <p className="text-center text-sm text-muted-foreground">{t("home.noRoles")}</p>
-        <button onClick={() => void signOut()} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+        <button onClick={() => void signOut()} className="rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-soft">
           {t("c.signOut")}
         </button>
       </main>
@@ -46,36 +49,52 @@ function Home() {
   const cards = staff.roles
     .map((r) => ROLE_CARDS[r])
     .filter((c): c is (typeof ROLE_CARDS)[string] => Boolean(c));
+  const initials = staff.fullName
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0] ?? "")
+    .join("")
+    .toUpperCase();
 
   return (
     <Screen
       title={t("home.greeting", { name: staff.fullName.split(" ")[0] ?? staff.fullName })}
-      right={<LanguageChips />}
+      right={
+        <Link
+          to="/profile"
+          aria-label={t("home.profile")}
+          className="grid h-11 w-11 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-soft"
+        >
+          {initials || <UserRound className="h-5 w-5" />}
+        </Link>
+      }
     >
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <SyncBadge />
-        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-          {staff.roles.join(" · ")}
-        </span>
+        <div className="flex-1" />
+        <LanguageChips />
       </div>
 
       {cards.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card p-5 text-center">
+        <div className="rounded-xl border border-border bg-card p-5 text-center shadow-card">
           <p className="text-sm text-muted-foreground">{t("home.noRoles")}</p>
         </div>
       ) : (
         <div className="grid gap-3">
-          {cards.map((c) => (
+          {cards.map((c, i) => (
             <Link
-              key={c.key}
+              key={c.titleKey}
               to={c.to}
-              className="flex items-center justify-between rounded-xl border border-border bg-card p-5 transition-colors active:bg-accent"
+              className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card transition-transform active:scale-[0.99]"
             >
-              <div>
-                <p className="text-base font-semibold text-foreground">{t(c.key)}</p>
-                <p className="mt-0.5 text-sm text-muted-foreground">{t(`${c.key}Sub`)}</p>
-              </div>
-              <span aria-hidden className="text-xl text-muted-foreground">›</span>
+              <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-xl ${TILE_TONES[i % TILE_TONES.length]}`}>
+                {c.icon}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-display text-lg font-bold text-foreground">{t(c.titleKey)}</span>
+                <span className="mt-0.5 block text-sm text-muted-foreground">{t(`${c.titleKey}Sub`)}</span>
+              </span>
+              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
             </Link>
           ))}
         </div>
@@ -83,7 +102,7 @@ function Home() {
 
       <button
         onClick={() => void signOut()}
-        className="mt-8 w-full rounded-lg border border-input bg-background py-3 text-sm font-semibold text-foreground active:bg-accent"
+        className="mt-8 w-full rounded-lg border border-input bg-card py-3.5 text-sm font-semibold text-foreground shadow-card active:bg-accent"
       >
         {t("c.signOut")}
       </button>
