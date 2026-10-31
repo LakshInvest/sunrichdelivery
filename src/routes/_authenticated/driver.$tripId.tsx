@@ -39,6 +39,7 @@ type Trip = {
   ended_at: string | null;
   cash_expected: number | null;
   cash_received: number | null;
+  start_odometer: number | null;
   vehicles: { reg_no: string } | null;
 };
 
@@ -92,7 +93,7 @@ function TripScreen() {
     const [tripRes, stopsRes, settingsRes] = await Promise.all([
       supabase
         .from("trips")
-        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, vehicles(reg_no)")
+        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, start_odometer, vehicles(reg_no)")
         .eq("id", tripId)
         .single(),
       supabase
@@ -462,6 +463,9 @@ function TripScreen() {
   const doneCount = stops.filter((s) => s.status === "delivered").length;
   const canStart = ["planned", "loading", "loaded"].includes(trip.status);
   const onRoad = trip.status === "in_progress";
+  // start_trip records the driver's checks but the vehicle leaves only when
+  // security records gate out — show that waiting state instead of the form.
+  const startedAwaitingGateOut = canStart && trip.start_odometer != null;
   const returned = trip.status === "returned";
   const settled = trip.status === "settled";
   // The driver records the closing odometer, but the vehicle is only "returned"
@@ -498,7 +502,13 @@ function TripScreen() {
       {message && <p className="mb-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">{message}</p>}
       {error && <div className="mb-4"><ErrorCard message={error} /></div>}
 
-      {canStart && (
+      {startedAwaitingGateOut && (
+        <div className="mb-4 rounded-xl border border-border bg-card p-4">
+          <p className="text-sm font-semibold text-foreground">{t("dr.awaitingGateOut")}</p>
+        </div>
+      )}
+
+      {canStart && !startedAwaitingGateOut && (
         <StartTripPanel
           staffId={staff?.id ?? "anon"}
           tripId={tripId}
