@@ -414,6 +414,14 @@ function TripScreen() {
   const onRoad = trip.status === "in_progress";
   const returned = trip.status === "returned";
   const settled = trip.status === "settled";
+  // The driver records the closing odometer, but the vehicle is only "returned"
+  // once security records gate-in at the plant.
+  const endedAwaitingGateIn = onRoad && Boolean(trip.ended_at);
+  // Cash settlement is an office action (dispatch:approve / finance:create);
+  // drivers see the handover summary only.
+  const canSettle =
+    !!staff &&
+    (staff.permissions.includes("dispatch:approve") || staff.permissions.includes("finance:create"));
 
   const toolBtn = (id: string, label: string, danger = false) => (
     <button
