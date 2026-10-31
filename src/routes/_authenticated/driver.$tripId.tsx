@@ -73,6 +73,10 @@ function TripScreen() {
   const [pickupCustomer, setPickupCustomer] = useState("");
   const [pickupProduct, setPickupProduct] = useState("");
   const [pickupQty, setPickupQty] = useState("");
+  const [spotCustomer, setSpotCustomer] = useState("");
+  const [spotProduct, setSpotProduct] = useState("");
+  const [spotQty, setSpotQty] = useState("");
+  const [spotPaid, setSpotPaid] = useState(true);
   const [sosNote, setSosNote] = useState("");
   const [endOdo, setEndOdo] = useState("");
   const [endOdoPhoto, setEndOdoPhoto] = useState<string | null>(null);
