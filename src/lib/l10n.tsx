@@ -18,7 +18,7 @@ const en: Dict = {
   "login.pin": "4-digit PIN",
   "login.submit": "Sign in",
   "login.signingIn": "Signing in…",
-  "login.qaHint": "QA demo · Driver 9999900013 · Loader 9999900014 · PIN 1234",
+  "login.qaHint": "\n",
   "err.invalid_mobile": "Enter a valid 10-digit mobile number.",
   "err.not_registered": "This number is not registered. Ask your supervisor to register it.",
   "err.wrong_pin": "Wrong PIN. {n} attempt(s) left.",
