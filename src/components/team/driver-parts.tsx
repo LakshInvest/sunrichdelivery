@@ -239,6 +239,7 @@ export type StopRow = {
   seq: number;
   status: string;
   fail_reason: string | null;
+  arrived_at: string | null;
   orders: {
     id: string;
     customer_id: string;
