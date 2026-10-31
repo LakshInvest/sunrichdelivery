@@ -453,7 +453,7 @@ export function StopDetailPanel({
         </>
       )}
 
-      {delivered && due > 0 && (
+      {canCollect && due > 0 && (
         <div className="mt-4 rounded-lg bg-muted/60 p-3">
           <p className="text-sm font-medium text-foreground">{t("dr.amountDue")}: ₹{due}</p>
         </div>
@@ -509,7 +509,7 @@ export function StopDetailPanel({
         </>
       )}
 
-      {delivered && due > 0 && (
+      {canCollect && due > 0 && (
         <div className="mt-4 grid gap-2">
           <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("dr.recordCollection")}</p>
           <div className="grid grid-cols-2 gap-2">
