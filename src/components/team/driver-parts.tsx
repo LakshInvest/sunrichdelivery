@@ -306,7 +306,7 @@ export function StopDetailPanel({
   const { t } = useLang();
   const o = stop.orders;
   const delivered = stop.status === "delivered";
-  const [qty, setQty] = useState<Record<string, string>>({});
+  const [qty, setQty] = useState<Record<string, { delivered: string; damaged: string; refused: string; empties: string }>>({});
   const [failMode, setFailMode] = useState(false);
   const [failReason, setFailReason] = useState(settings.failed_reasons[0] ?? "");
   const [failNote, setFailNote] = useState("");
@@ -326,20 +326,32 @@ export function StopDetailPanel({
   const [dueReference, setDueReference] = useState("");
 
   useEffect(() => {
-    setQty(Object.fromEntries(lines.map((l) => [l.id, String(l.qty)])));
+    setQty(Object.fromEntries(lines.map((l) => [l.id, { delivered: String(l.qty), damaged: "", refused: "", empties: "" }])));
   }, [lines]);
 
   const due = Math.max(0, Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0));
 
   const submitDelivery = async () => {
     setLocalErr(null);
-    // deliver_stop expects { order_line_id, delivered, short, ... } and the
-    // quantities of each line must add up to the ordered qty.
+    // deliver_stop expects { order_line_id, delivered, short, damaged, refused,
+    // empties } and the outcome quantities must add up to the ordered qty.
+    // Short = whatever is not delivered, damaged or refused (goes back to stock).
     const linesOut = lines.map((l) => {
-      const d = Number(qty[l.id] ?? l.qty);
-      return { order_line_id: l.id, delivered: d, short: Math.max(0, l.qty - d) };
+      const d = qty[l.id] ?? { delivered: String(l.qty), damaged: "", refused: "", empties: "" };
+      const delivered = Number(d.delivered || 0);
+      const damaged = Number(d.damaged || 0);
+      const refused = Number(d.refused || 0);
+      const empties = Number(d.empties || 0);
+      return { order_line_id: l.id, delivered, short: Math.max(0, l.qty - delivered - damaged - refused), damaged, refused, empties };
     });
     if (!failMode) {
+      for (let i = 0; i < linesOut.length; i++) {
+        const l = lines[i];
+        const v = linesOut[i];
+        if (v.delivered + v.damaged + v.refused > l.qty) {
+          return setLocalErr(`${l.product_name}: ${t("dr.qtyOverflow")}`);
+        }
+      }
       if (settings.proof_photo_required && !photo) return setLocalErr(t("dr.needPhoto"));
       if (settings.proof_otp_required && otp === "") return setLocalErr(`${t("dr.verifyOtp")} — ${t("c.required")}`);
     }
