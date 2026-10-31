@@ -312,6 +312,8 @@ export function StopDetailPanel({
   const { t } = useLang();
   const o = stop.orders;
   const delivered = stop.status === "delivered";
+  // Partial stops also allow collecting the remaining payment.
+  const canCollect = delivered || stop.status === "partial";
   const [qty, setQty] = useState<Record<string, { delivered: string; damaged: string; refused: string; empties: string }>>({});
   const [failMode, setFailMode] = useState(false);
   const [failReason, setFailReason] = useState(settings.failed_reasons[0] ?? "");
