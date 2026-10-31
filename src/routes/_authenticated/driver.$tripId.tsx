@@ -599,13 +599,17 @@ function TripScreen() {
         <div className="rounded-xl border border-border bg-card p-4">
           <p className="text-sm font-bold text-foreground">{t("dr.settle")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t("dr.cashExpected")}: ₹{trip.cash_expected ?? 0}</p>
-          <div className="mt-3 grid gap-2">
-            <input inputMode="decimal" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} placeholder={t("dr.cashReceived")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-            <input value={settleNote} onChange={(e) => setSettleNote(e.target.value)} placeholder={t("dr.settleNote")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-            <button onClick={() => void settle()} disabled={busy} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-              {t("dr.settle")}
-            </button>
-          </div>
+          {canSettle ? (
+            <div className="mt-3 grid gap-2">
+              <input inputMode="decimal" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} placeholder={t("dr.cashReceived")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={settleNote} onChange={(e) => setSettleNote(e.target.value)} placeholder={t("dr.settleNote")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <button onClick={() => void settle()} disabled={busy} className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                {t("dr.settle")}
+              </button>
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-muted-foreground">{t("dr.settleOffice")}</p>
+          )}
         </div>
       )}
 
