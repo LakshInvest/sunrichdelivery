@@ -34,6 +34,13 @@ background location service, deep links, notification icon and the push guard.
 Without this file the app still builds and runs; it just skips push registration
 (the console shows "push skipped").
 
+## 4b. App icon + splash (first time only)
+```
+npx @capacitor/assets generate --android --iconBackgroundColor "#0D3278" --splashBackgroundColor "#0D3278" --iconBackgroundColorDark "#0D3278" --splashBackgroundColorDark "#0D3278"
+```
+This reads `resources/icon.png` and `resources/splash.png` (Sunrich brand files) and
+writes every launcher icon density plus the adaptive icon (navy background).
+
 ## 5. Sync
 ```
 npx cap sync android
