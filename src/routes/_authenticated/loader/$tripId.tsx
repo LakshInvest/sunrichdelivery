@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
-import { ErrorCard, PhotoInput, Screen, Spinner, StatusBadge } from "@/components/team/ui";
+import { ErrorCard, PhotoInput, Screen, Spinner, StatusBadge, ActionDock, DockButton, Stepper } from "@/components/team/ui";
 import { useTeamAuth } from "@/lib/team-auth";
 import { queueRpc } from "@/lib/offline";
+import { haptic } from "@/lib/native";
 
 export const Route = createFileRoute("/_authenticated/loader/$tripId")({
   head: () => ({
@@ -29,6 +30,7 @@ type Row = {
 };
 
 type GatePass = { id: string; pass_no: string; qr_token: string };
+type Draft = { qty: number; crates: number; photo: string | null };
 
 function LoadTrip() {
   const { tripId } = Route.useParams();
@@ -37,7 +39,7 @@ function LoadTrip() {
   const [trip, setTrip] = useState<{ trip_no: string; status: string; vehicles: { reg_no: string } | null } | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [passes, setPasses] = useState<GatePass[]>([]);
-  const [drafts, setDrafts] = useState<Record<string, { qty: string; crates: string; photo: string | null }>>({});
+  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -65,7 +67,7 @@ function LoadTrip() {
         Object.fromEntries(
           r.map((x) => [
             x.product_id,
-            { qty: x.loaded_qty != null ? String(x.loaded_qty) : "", crates: x.crates_count != null ? String(x.crates_count) : "", photo: null },
+            { qty: x.loaded_qty ?? 0, crates: x.crates_count ?? 0, photo: null },
           ]),
         ),
       );
@@ -93,7 +95,10 @@ function LoadTrip() {
     const res = await saveDrafts();
     setSaving(false);
     if (res) setError(res);
-    else setMsg(t("ld.loadingDone"));
+    else {
+      void haptic("success");
+      setMsg(t("ld.loadingDone"));
+    }
     await fetchAll();
   };
 
@@ -114,6 +119,7 @@ function LoadTrip() {
       setError(fin.error);
       return;
     }
+    if (!fin.queued) void haptic("success");
     setMsg(fin.queued ? t("c.tryAgainOffline") : t("ld.finalized"));
     await fetchAll();
   };
@@ -122,7 +128,7 @@ function LoadTrip() {
     // save every unsaved row first
     const pending = rows.filter((r) => {
       const d = drafts[r.product_id];
-      return d && d.qty !== "" && Number(d.qty) !== Number(r.loaded_qty ?? -1);
+      return d && d.qty > 0 && d.qty !== Number(r.loaded_qty ?? -1);
     });
     for (const r of pending) {
       const d = drafts[r.product_id];
@@ -130,8 +136,8 @@ function LoadTrip() {
       const res = await queueRpc("record_loading", {
         p_trip_id: tripId,
         p_product_id: r.product_id,
-        p_loaded_qty: Number(d.qty),
-        p_crates: d.crates === "" ? null : Number(d.crates),
+        p_loaded_qty: d.qty,
+        p_crates: d.crates > 0 ? d.crates : null,
         p_photo_url: d.photo,
       });
       if (res.error && !res.queued) return res.error;
@@ -140,7 +146,7 @@ function LoadTrip() {
   };
 
   const shortRow = useMemo(
-    () => rows.find((r) => drafts[r.product_id]?.qty !== "" && Number(drafts[r.product_id]?.qty ?? 0) < Number(r.planned_qty)),
+    () => rows.find((r) => Number(drafts[r.product_id]?.qty ?? 0) < Number(r.planned_qty)),
     [rows, drafts],
   );
 
@@ -150,113 +156,84 @@ function LoadTrip() {
   const done = trip.status !== "planned" && trip.status !== "loading";
 
   return (
-    <Screen title={t("ld.loadScreen")} right={<StatusBadge status={trip.status} />}>
-      <p className="mb-4 text-sm text-muted-foreground">
-        {t("ld.trip", { no: trip.trip_no })}
-        {trip.vehicles?.reg_no ? ` · ${trip.vehicles.reg_no}` : ""}
-      </p>
+    <>
+      <Screen title={t("ld.loadScreen")} right={<StatusBadge status={trip.status} />}>
+        <p className="mb-5 text-sm text-muted-foreground">
+          {t("ld.trip", { no: trip.trip_no })}
+          {trip.vehicles?.reg_no ? ` · ${trip.vehicles.reg_no}` : ""}
+        </p>
 
-      <div className="grid gap-3">
-        {rows.map((r) => {
-          const d = drafts[r.product_id] ?? { qty: "", crates: "", photo: null };
-          const short = d.qty !== "" && Number(d.qty) < Number(r.planned_qty);
-          return (
-            <div key={r.product_id} className="rounded-xl border border-border bg-card p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{productName(r.products)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t("ld.planned")}: {r.planned_qty} {r.products?.sell_unit ?? ""}
+        <div className="grid gap-3">
+          {rows.map((r) => {
+            const d = drafts[r.product_id] ?? { qty: 0, crates: 0, photo: null };
+            const short = d.qty < r.planned_qty;
+            return (
+              <div key={r.product_id} className="rounded-xl border border-border bg-card p-4 shadow-card">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-display text-base font-bold text-foreground">{productName(r.products)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("ld.planned")}: <span className="font-bold text-foreground">{r.planned_qty}</span> {r.products?.sell_unit ?? ""}
+                    </p>
+                  </div>
+                  {r.loaded_qty != null && <StatusBadge status="delivered" />}
+                </div>
+                {!done && (
+                  <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+                    <Stepper label={t("ld.enterLoaded")} value={d.qty} onChange={(v) => setDrafts((s) => ({ ...s, [r.product_id]: { ...d, qty: v } }))} />
+                    <Stepper label={t("ld.crates")} value={d.crates} onChange={(v) => setDrafts((s) => ({ ...s, [r.product_id]: { ...d, crates: v } }))} />
+                  </div>
+                )}
+                {short && !done && (
+                  <p className="mt-2 rounded-lg bg-amber-500/10 px-2 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                    {t("ld.shortNote")}
                   </p>
-                </div>
-                {r.loaded_qty != null && <StatusBadge status="delivered" />}
+                )}
+                {!done && (
+                  <div className="mt-3">
+                    <PhotoInput
+                      userId={staff?.id ?? "anon"}
+                      kind={`load-${r.product_id}`}
+                      label={t("c.camera")}
+                      value={d.photo}
+                      onChange={(path) => setDrafts((s) => ({ ...s, [r.product_id]: { ...d, photo: path } }))}
+                    />
+                  </div>
+                )}
               </div>
-              {!done && (
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-foreground">{t("ld.enterLoaded")}</label>
-                    <input
-                      inputMode="numeric"
-                      value={d.qty}
-                      onChange={(e) =>
-                        setDrafts((s) => ({ ...s, [r.product_id]: { ...d, qty: e.target.value.replace(/\D/g, "") } }))
-                      }
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-foreground">{t("ld.crates")}</label>
-                    <input
-                      inputMode="numeric"
-                      value={d.crates}
-                      onChange={(e) =>
-                        setDrafts((s) => ({ ...s, [r.product_id]: { ...d, crates: e.target.value.replace(/\D/g, "") } }))
-                      }
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                    />
-                  </div>
-                </div>
-              )}
-              {short && !done && (
-                <p className="mt-2 rounded-lg bg-amber-500/10 px-2 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
-                  {t("ld.shortNote")}
-                </p>
-              )}
-              {!done && (
-                <div className="mt-3">
-                  <PhotoInput
-                    userId={staff?.id ?? "anon"}
-                    kind={`load-${r.product_id}`}
-                    label={t("c.camera")}
-                    value={d.photo}
-                    onChange={(path) => setDrafts((s) => ({ ...s, [r.product_id]: { ...d, photo: path } }))}
-                  />
-                </div>
-              )}
-            </div>
-          );
-        })}
-        {rows.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
-      </div>
-
-      {msg && <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">{msg}</p>}
-      {error && <div className="mt-4"><ErrorCard message={error} /></div>}
-
-      {!done && canFinalize && (
-        <button
-          onClick={() => void finalize()}
-          disabled={saving || shortRow !== undefined}
-          className="mt-6 w-full rounded-lg bg-primary py-3.5 text-base font-semibold text-primary-foreground active:opacity-80 disabled:opacity-50"
-        >
-          {saving ? t("c.loading") : t("ld.finalize")}
-        </button>
-      )}
-      {!done && !canFinalize && (
-        <button
-          onClick={() => void markDone()}
-          disabled={saving}
-          className="mt-6 w-full rounded-lg bg-primary py-3.5 text-base font-semibold text-primary-foreground active:opacity-80 disabled:opacity-50"
-        >
-          {saving ? t("c.loading") : t("ld.loadingDone")}
-        </button>
-      )}
-
-      {passes.length > 0 && (
-        <div className="mt-6 rounded-xl border border-border bg-card p-4">
-          <p className="text-sm font-bold text-foreground">{t("ld.gatePass")}</p>
-          {passes.map((p) => (
-            <div key={p.id} className="mt-2">
-              <p className="text-sm text-foreground">
-                {t("ld.gatePassNo")}: <span className="font-semibold">{p.pass_no}</span>
-              </p>
-              <p className="mt-1 break-all rounded-lg bg-muted px-2 py-1.5 font-mono text-xs text-muted-foreground">
-                {p.qr_token}
-              </p>
-            </div>
-          ))}
+            );
+          })}
+          {rows.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
         </div>
+
+        {msg && <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">{msg}</p>}
+        {error && <div className="mt-4"><ErrorCard message={error} /></div>}
+
+        {passes.length > 0 && (
+          <div className="mt-6 rounded-xl border border-border bg-card p-4 shadow-card">
+            <p className="font-display text-base font-bold text-foreground">{t("ld.gatePass")}</p>
+            {passes.map((p) => (
+              <div key={p.id} className="mt-2">
+                <p className="text-sm text-foreground">
+                  {t("ld.gatePassNo")}: <span className="font-semibold">{p.pass_no}</span>
+                </p>
+                <p className="mt-1 break-all rounded-lg bg-muted px-2 py-1.5 font-mono text-xs text-muted-foreground">
+                  {p.qr_token}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Screen>
+
+      {!done && (
+        <ActionDock>
+          <DockButton onClick={() => void (canFinalize ? finalize() : markDone())} disabled={saving || (canFinalize && shortRow !== undefined)}>
+            {saving ? t("c.loading") : canFinalize ? t("ld.finalize") : t("ld.loadingDone")}
+          </DockButton>
+        </ActionDock>
       )}
-    </Screen>
+    </>
   );
 }
 

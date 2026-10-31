@@ -1,10 +1,49 @@
-// Shared mobile UI pieces for the Team app screens.
+// Shared mobile UI pieces for the Team app screens — Sunrich water identity.
+// Big touch targets, soft shadows, 20px cards, round chips, no hard corners.
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { LANGS, useLang } from "@/lib/l10n";
 import { pendingCount, subscribe } from "@/lib/offline";
 import { supabase } from "@/integrations/supabase/client";
 import { fileToDataUrl, photoUrl, uploadPhoto } from "@/lib/photo";
-import { isNative, takeNativePhoto } from "@/lib/native";
+import { isNative, takeNativePhoto, haptic } from "@/lib/native";
+import logoNavy from "@/assets/sunrich-logo-navy.png.asset.json";
+import logoWhite from "@/assets/sunrich-logo-white.png.asset.json";
+
+/** Sunrich wordmark from the CDN (navy on light, white on navy). */
+export function BrandLogo({ tone = "navy", className = "h-8" }: { tone?: "navy" | "white"; className?: string }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={tone === "white" ? logoWhite.url : logoNavy.url} alt="Sunrich" className={`${className} w-auto`} />;
+}
+
+/** Tiny bottle that fills with water — the app's loader. */
+export function WaterLoader({ className = "h-9 w-9", light = false }: { className?: string; light?: boolean }) {
+  const stroke = light ? "rgba(255,255,255,0.75)" : "var(--color-muted-foreground)";
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <defs>
+        <clipPath id="bottle-clip">
+          <path d="M10 2.5h4v2.2c0 .6.3 1 .8 1.5 1.6 1.4 2.7 3.4 2.7 5.8v6.5a3.5 3.5 0 0 1-3.5 3.5h-4a3.5 3.5 0 0 1-3.5-3.5V12c0-2.4 1.1-4.4 2.7-5.8.5-.4.8-.9.8-1.5V2.5z" />
+        </clipPath>
+      </defs>
+      <g clipPath="url(#bottle-clip)">
+        <rect
+          x="4"
+          y="2"
+          width="16"
+          height="22"
+          fill="var(--color-aqua)"
+          style={{ transformOrigin: "center", animation: "bottle-fill 1.3s ease-in-out infinite" }}
+        />
+      </g>
+      <path
+        d="M10 2.5h4v2.2c0 .6.3 1 .8 1.5 1.6 1.4 2.7 3.4 2.7 5.8v6.5a3.5 3.5 0 0 1-3.5 3.5h-4a3.5 3.5 0 0 1-3.5-3.5V12c0-2.4 1.1-4.4 2.7-5.8.5-.4.8-.9.8-1.5V2.5z"
+        fill="none"
+        stroke={stroke}
+        strokeWidth="1.4"
+      />
+    </svg>
+  );
+}
 
 export function LanguageChips({ className = "" }: { className?: string }) {
   const { lang, setLang } = useLang();
@@ -16,8 +55,8 @@ export function LanguageChips({ className = "" }: { className?: string }) {
           type="button"
           onClick={() => setLang(l.code)}
           aria-pressed={lang === l.code}
-          className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-            lang === l.code ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
+          className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+            lang === l.code ? "bg-primary text-primary-foreground shadow-soft" : "bg-muted text-muted-foreground hover:bg-accent"
           }`}
         >
           {l.short}
@@ -27,15 +66,31 @@ export function LanguageChips({ className = "" }: { className?: string }) {
   );
 }
 
+/** Offline + pending-sync pill; always visible while work is unsent. */
 export function SyncBadge() {
   const { t } = useLang();
   const [n, setN] = useState(pendingCount());
   useEffect(() => subscribe(() => setN(pendingCount())), []);
-  if (n === 0) return null;
+  const [online, setOnline] = useState(true);
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+  if (n === 0 && online) return null;
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+        !online ? "bg-destructive/10 text-destructive" : "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+      }`}
+    >
       <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
-      {t("c.pendingSync", { n })}
+      {!online ? t("c.offline") : t("c.pendingSync", { n })}
     </span>
   );
 }
@@ -46,20 +101,21 @@ export function StatusBadge({ status }: { status: string }) {
   const label = t(key);
   const tone =
     status === "in_progress"
-      ? "bg-blue-500/15 text-blue-700 dark:text-blue-300"
-      : status === "delivered" || status === "settled" || status === "loaded"
+      ? "bg-aqua/15 text-navy dark:text-aqua"
+      : status === "delivered" || status === "settled" || status === "loaded" || status === "partial"
         ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
         : status === "failed" || status === "cancelled"
           ? "bg-red-500/15 text-red-700 dark:text-red-300"
           : "bg-muted text-muted-foreground";
-  return <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>{label}</span>;
+  return <span className={`rounded-full px-3 py-1 text-xs font-semibold ${tone}`}>{label}</span>;
 }
 
+/** Standard screen shell: roomy header, 20px cards, one-hand friendly width. */
 export function Screen({ title, children, right }: { title: string; children: ReactNode; right?: ReactNode }) {
   return (
-    <main className="mx-auto w-full max-w-md px-4 pb-24 pt-5">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <h1 className="text-xl font-bold tracking-tight text-foreground">{title}</h1>
+    <main className="mx-auto w-full max-w-md px-4 pb-32 pt-5">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">{title}</h1>
         {right}
       </div>
       {children}
@@ -70,8 +126,8 @@ export function Screen({ title, children, right }: { title: string; children: Re
 export function Spinner({ label }: { label?: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted-foreground">
-      <span className="h-8 w-8 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-foreground" />
-      {label && <span className="text-sm">{label}</span>}
+      <WaterLoader />
+      {label && <span className="text-sm font-medium">{label}</span>}
     </div>
   );
 }
@@ -82,10 +138,99 @@ export function ErrorCard({ message, onRetry }: { message: string; onRetry?: () 
     <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-center">
       <p className="text-sm font-medium text-destructive">{message}</p>
       {onRetry && (
-        <button onClick={onRetry} className="mt-3 rounded-lg border border-input px-4 py-2 text-sm font-medium">
+        <button onClick={onRetry} className="mt-3 rounded-md border border-input px-4 py-2 text-sm font-medium">
           {t("c.retry")}
         </button>
       )}
+    </div>
+  );
+}
+
+/** Sticky bottom dock: the screen's one main action, always reachable one-handed. */
+export function ActionDock({ children, tone = "solid" }: { children: ReactNode; tone?: "solid" | "plain" }) {
+  return (
+    <div
+      className={`fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 ${
+        tone === "solid" ? "bg-gradient-to-t from-background via-background to-background/0" : ""
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Big primary button for the ActionDock — min 56px tall. */
+export function DockButton({
+  onClick,
+  disabled,
+  children,
+  tone = "primary",
+}: {
+  onClick?: () => void;
+  disabled?: boolean;
+  children: ReactNode;
+  tone?: "primary" | "danger" | "quiet";
+}) {
+  const cls =
+    tone === "primary"
+      ? "bg-primary text-primary-foreground shadow-soft"
+      : tone === "danger"
+        ? "bg-destructive text-destructive-foreground"
+        : "border border-input bg-card text-foreground";
+  return (
+    <button
+      onClick={() => {
+        void haptic("light");
+        onClick?.();
+      }}
+      disabled={disabled}
+      className={`w-full rounded-lg py-4 text-base font-bold transition-opacity active:opacity-80 disabled:opacity-50 ${cls}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** − / + stepper for pack counts: numeric keyboard not needed, big targets. */
+export function Stepper({
+  value,
+  onChange,
+  min = 0,
+  max = 99999,
+  label,
+  size = "md",
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  min?: number;
+  max?: number;
+  label?: string;
+  size?: "md" | "lg";
+}) {
+  const btn =
+    size === "lg"
+      ? "h-11 w-11 text-xl font-bold"
+      : "h-9 w-9 text-lg font-bold";
+  const set = (v: number) => {
+    void haptic("light");
+    onChange(Math.min(max, Math.max(min, v)));
+  };
+  return (
+    <div className="inline-flex items-center gap-1 rounded-full bg-muted p-1">
+      {label && <span className="pl-2 text-xs font-semibold text-muted-foreground">{label}</span>}
+      <button type="button" aria-label="minus" onClick={() => set(value - 1)} disabled={value <= min} className={`${btn} rounded-full bg-background text-foreground shadow-soft disabled:opacity-40`}>
+        −
+      </button>
+      <input
+        inputMode="numeric"
+        value={String(value)}
+        onChange={(e) => onChange(Math.min(max, Math.max(min, Number(e.target.value.replace(/\D/g, "")) || 0)))}
+        className={`w-14 bg-transparent text-center font-bold text-foreground outline-none ${size === "lg" ? "text-lg" : "text-base"}`}
+        aria-label={label ?? "count"}
+      />
+      <button type="button" aria-label="plus" onClick={() => set(value + 1)} disabled={value >= max} className={`${btn} rounded-full bg-primary text-primary-foreground shadow-soft disabled:opacity-40`}>
+        +
+      </button>
     </div>
   );
 }
@@ -131,6 +276,7 @@ export function PhotoInput({
     try {
       const path = await uploadPhoto(file, userId, kind);
       onChange(path);
+      void haptic("success");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("c.error"));
       // keep a local preview so the flow can continue offline
@@ -166,12 +312,13 @@ export function PhotoInput({
             else ref.current?.click();
           }}
           disabled={busy}
-          className="rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium text-foreground active:bg-accent disabled:opacity-60"
+          className="flex items-center gap-2 rounded-md border border-input bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-card active:bg-accent disabled:opacity-60"
         >
-          {busy ? t("c.loading") : preview ? t("c.retake") : t("c.takePhoto")}
+          {busy ? <WaterLoader className="h-5 w-5" /> : preview ? t("c.retake") : t("c.takePhoto")}
         </button>
         {preview && (
-          <img src={preview} alt="" className="h-12 w-12 rounded-lg border border-border object-cover" />
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={preview} alt="" className="h-14 w-14 rounded-xl border border-border object-cover" />
         )}
       </div>
       {error && <p className="mt-1 text-xs text-destructive">{error}</p>}

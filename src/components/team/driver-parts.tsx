@@ -191,7 +191,7 @@ export function StartTripPanel({
   ].filter(Boolean);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-card">
       <p className="text-sm font-bold text-foreground">{t("dr.startTrip")}</p>
       <p className="mt-0.5 text-xs text-muted-foreground">{startSteps.join(" · ")}</p>
       <div className="mt-4 grid gap-4">
@@ -208,7 +208,7 @@ export function StartTripPanel({
                 inputMode="numeric"
                 value={odometer}
                 onChange={(e) => setOdometer(e.target.value.replace(/\D/g, ""))}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-lg border border-input bg-background px-3 py-3 text-base font-semibold outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30"
               />
             </div>
             {settings.require_start_odometer_photo && (
@@ -241,7 +241,7 @@ export function StartTripPanel({
         <button
           onClick={() => void submit()}
           disabled={busy}
-          className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground active:opacity-80 disabled:opacity-60"
+          className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground active:opacity-80 disabled:opacity-60"
         >
           {busy ? t("c.loading") : t("dr.startTrip")}
         </button>
@@ -266,6 +266,8 @@ export type StopRow = {
     grand_total: number | null;
     amount_paid: number | null;
     payment_mode: string | null;
+    delivery_latitude: number | null;
+    delivery_longitude: number | null;
     firm_id?: string | null;
   } | null;
 };
@@ -385,7 +387,7 @@ export function StopDetailPanel({
   const err = localErr ?? error;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-card">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-bold text-foreground">
           {t("dr.stop", { n: stop.seq })} · {o?.order_no}
@@ -415,22 +417,22 @@ export function StopDetailPanel({
                       value={d.delivered}
                       onChange={(e) => set("delivered", e.target.value)}
                       disabled={!settings.allow_partial_delivery}
-                      className="w-16 rounded-md border border-input bg-background px-2 py-1.5 text-center text-sm outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
+                      className="w-16 rounded-md border border-input bg-background px-2 py-2.5 text-center text-base font-semibold outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30 disabled:opacity-60"
                     />
                   </div>
                   {settings.allow_partial_delivery && (
                     <div className="mt-2 grid grid-cols-3 gap-2">
                       <div>
                         <label className="block text-[10px] font-medium uppercase text-muted-foreground">{t("dr.damaged")}</label>
-                        <input inputMode="numeric" value={d.damaged} onChange={(e) => set("damaged", e.target.value)} placeholder="0" className="w-full rounded-md border border-input bg-background px-2 py-1 text-center text-sm outline-none focus:ring-2 focus:ring-ring" />
+                        <input inputMode="numeric" value={d.damaged} onChange={(e) => set("damaged", e.target.value)} placeholder="0" className="w-full rounded-md border border-input bg-background px-2 py-2.5 text-center text-base font-semibold outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
                       </div>
                       <div>
                         <label className="block text-[10px] font-medium uppercase text-muted-foreground">{t("dr.refused")}</label>
-                        <input inputMode="numeric" value={d.refused} onChange={(e) => set("refused", e.target.value)} placeholder="0" className="w-full rounded-md border border-input bg-background px-2 py-1 text-center text-sm outline-none focus:ring-2 focus:ring-ring" />
+                        <input inputMode="numeric" value={d.refused} onChange={(e) => set("refused", e.target.value)} placeholder="0" className="w-full rounded-md border border-input bg-background px-2 py-2.5 text-center text-base font-semibold outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
                       </div>
                       <div>
                         <label className="block text-[10px] font-medium uppercase text-muted-foreground">{t("dr.empties")}</label>
-                        <input inputMode="numeric" value={d.empties} onChange={(e) => set("empties", e.target.value)} placeholder="0" className="w-full rounded-md border border-input bg-background px-2 py-1 text-center text-sm outline-none focus:ring-2 focus:ring-ring" />
+                        <input inputMode="numeric" value={d.empties} onChange={(e) => set("empties", e.target.value)} placeholder="0" className="w-full rounded-md border border-input bg-background px-2 py-2.5 text-center text-base font-semibold outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
                       </div>
                     </div>
                   )}
@@ -462,7 +464,7 @@ export function StopDetailPanel({
                 maxLength={6}
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                className="w-28 rounded-lg border border-input bg-background px-3 py-2 text-center text-sm tracking-[0.3em] outline-none focus:ring-2 focus:ring-ring"
+                className="w-28 rounded-lg border border-input bg-background px-3 py-2 text-center text-sm tracking-[0.3em] text-base font-semibold outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30"
               />
             </div>
           )}
@@ -479,8 +481,8 @@ export function StopDetailPanel({
         <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
           <p className="text-sm font-semibold text-foreground">{t("dr.oldDue")}: ₹{outstanding}</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
-            <input inputMode="decimal" value={dueAmount} onChange={(e) => setDueAmount(e.target.value)} placeholder={t("dr.dueAmount")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-            <select value={dueMode} onChange={(e) => setDueMode(e.target.value)} className="rounded-lg border border-input bg-background px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+            <input inputMode="decimal" value={dueAmount} onChange={(e) => setDueAmount(e.target.value)} placeholder={t("dr.dueAmount")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+            <select value={dueMode} onChange={(e) => setDueMode(e.target.value)} className="rounded-lg border border-input bg-background px-2 py-2 text-sm outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
               {settings.allow_cash && <option value="cash">Cash</option>}
               {settings.allow_upi && <option value="upi">UPI</option>}
               {settings.allow_cheque && <option value="cheque">Cheque</option>}
@@ -491,11 +493,11 @@ export function StopDetailPanel({
               <UpiQrCode pa={upi.id} pn={upi.payee} amount={Number(dueAmount || outstanding) || null} tn={o?.order_no ?? null} />
             </div>
           )}
-          <input value={dueReference} onChange={(e) => setDueReference(e.target.value)} placeholder={t("dr.reference")} className="mt-2 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+          <input value={dueReference} onChange={(e) => setDueReference(e.target.value)} placeholder={t("dr.reference")} className="mt-2 w-full rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
           <button
             onClick={() => void onSubmitDueCollection({ amount: dueAmount, mode: dueMode, reference: dueReference, photo: payPhoto })}
             disabled={busy || dueAmount === ""}
-            className="mt-2 w-full rounded-lg border border-amber-500/60 py-2 text-sm font-semibold text-foreground active:bg-accent disabled:opacity-50"
+            className="mt-2 w-full rounded-lg border border-amber-500/60 py-3.5 text-base font-bold text-foreground active:bg-accent disabled:opacity-50"
           >
             {t("dr.recordCollection")}
           </button>
@@ -511,13 +513,13 @@ export function StopDetailPanel({
           {failMode && (
             <div className="mt-2 grid gap-2">
               {settings.failed_reasons.length > 0 && (
-                <select value={failReason} onChange={(e) => setFailReason(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                <select value={failReason} onChange={(e) => setFailReason(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
                   {settings.failed_reasons.map((r) => (
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
               )}
-              <input value={failNote} onChange={(e) => setFailNote(e.target.value)} placeholder={t("dr.failNote")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={failNote} onChange={(e) => setFailNote(e.target.value)} placeholder={t("dr.failNote")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
             </div>
           )}
           <button
@@ -534,14 +536,14 @@ export function StopDetailPanel({
         <div className="mt-4 grid gap-2">
           <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("dr.recordCollection")}</p>
           <div className="grid grid-cols-2 gap-2">
-            <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={String(due)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-            <select value={mode} onChange={(e) => setMode(e.target.value)} className="rounded-lg border border-input bg-background px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+            <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={String(due)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+            <select value={mode} onChange={(e) => setMode(e.target.value)} className="rounded-lg border border-input bg-background px-2 py-2 text-sm outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
               {settings.allow_cash && <option value="cash">Cash</option>}
               {settings.allow_upi && <option value="upi">UPI</option>}
               {settings.allow_cheque && <option value="cheque">Cheque</option>}
             </select>
           </div>
-          <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t("dr.reference")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+          <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t("dr.reference")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
           {mode === "upi" && upi && upi.id && (
             <div className="rounded-lg border border-border bg-muted/40 p-3 text-center">
               <UpiQrCode pa={upi.id} pn={upi.payee} amount={Number(amount || due) || null} tn={o?.order_no ?? null} />
@@ -553,7 +555,7 @@ export function StopDetailPanel({
           <button
             onClick={() => void onSubmitCollection({ mode, amount: amount === "" ? String(due) : amount, reference, photo: payPhoto })}
             disabled={busy}
-            className="rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground active:opacity-80 disabled:opacity-60"
+            className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground active:opacity-80 disabled:opacity-60"
           >
             {t("dr.recordCollection")}
           </button>

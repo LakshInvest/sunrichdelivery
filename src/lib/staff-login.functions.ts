@@ -109,6 +109,109 @@ export const staffLogin = createServerFn({ method: "POST" })
   });
 
 /**
+ * What the login screen should show for this mobile + device: the PIN step
+ * (trusted device / PIN-exempt staff) or the OTP step (new device, no PIN set).
+ * Read-only; reveals only the first name.
+ */
+export type DeviceStatus = {
+  registered: boolean;
+  firstName: string | null;
+  hasPin: boolean;
+  trusted: boolean;
+  skipOtp: boolean;
+};
+
+export const checkDeviceStatus = createServerFn({ method: "POST" })
+  .inputValidator((input: { mobile: string; deviceId: string }) => input)
+  .handler(async ({ data }): Promise<DeviceStatus> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const digits = String(data.mobile || "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
+    if (!/^\d{10}$/.test(digits) || !/^[6-9]/.test(digits)) {
+      return { registered: false, firstName: null, hasPin: false, trusted: false, skipOtp: false };
+    }
+    const mobile = `+91${digits}`;
+    const { data: p } = await supabaseAdmin
+      .from("user_profiles")
+      .select("id, full_name, is_active, login_without_otp, is_demo")
+      .eq("mobile", mobile)
+      .eq("user_type", "staff")
+      .maybeSingle();
+    if (!p || p.is_active === false) {
+      return { registered: false, firstName: null, hasPin: false, trusted: false, skipOtp: false };
+    }
+    const [pinRes, devRes] = await Promise.all([
+      supabaseAdmin.from("user_pins").select("user_id").eq("user_id", String(p.id)).maybeSingle(),
+      supabaseAdmin
+        .from("user_devices")
+        .select("id")
+        .eq("user_id", String(p.id))
+        .eq("device_id", String(data.deviceId || "").slice(0, 64))
+        .is("revoked_at", null)
+        .maybeSingle(),
+    ]);
+    return {
+      registered: true,
+      firstName: String(p.full_name ?? "").split(" ")[0] || null,
+      hasPin: !!pinRes.data,
+      trusted: !!devRes.data,
+      skipOtp: !!(p.login_without_otp || p.is_demo),
+    };
+  });
+
+/**
+ * OTP-path sign-in: mints the magic-link OTP for the staff member after the
+ * mobile is confirmed registered. Used when the device is new, no PIN is set,
+ * the PIN was forgotten, or five wrong PINs locked the device.
+ */
+export type StaffOtpResult =
+  | { ok: true; email: string; token: string; staff: StaffBrief }
+  | { ok: false; code: string };
+
+export const staffOtpLogin = createServerFn({ method: "POST" })
+  .inputValidator((input: { mobile: string }) => input)
+  .handler(async ({ data }): Promise<StaffOtpResult> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const digits = String(data.mobile || "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
+    if (!/^\d{10}$/.test(digits) || !/^[6-9]/.test(digits)) {
+      return { ok: false, code: "invalid_mobile" };
+    }
+    const mobile = `+91${digits}`;
+    const { data: profile } = await supabaseAdmin
+      .from("user_profiles")
+      .select("id, full_name, mobile, email, preferred_language, unit_id, firm_id, is_active")
+      .eq("mobile", mobile)
+      .eq("user_type", "staff")
+      .maybeSingle();
+    if (!profile || profile.is_active === false) return { ok: false, code: "not_registered" };
+    const email = String(profile.email ?? "").trim();
+    if (!email) return { ok: false, code: "login_failed" };
+    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
+    if (error || !link) {
+      console.error("[staffOtpLogin] generateLink failed", error?.message);
+      return { ok: false, code: "login_failed" };
+    }
+    const token = link.properties?.email_otp ?? "";
+    if (!token) return { ok: false, code: "login_failed" };
+    return {
+      ok: true,
+      email,
+      token,
+      staff: {
+        id: profile.id,
+        fullName: profile.full_name ?? "",
+        mobile: profile.mobile ?? mobile,
+        email,
+        preferredLanguage: profile.preferred_language ?? "en",
+        unitId: profile.unit_id ?? null,
+        firmId: profile.firm_id ?? null,
+      },
+    };
+  });
+
+/**
  * Role codes for the signed-in staff member. Roles live in user_roles/roles
  * whose codes are not readable by the user's own token, so this resolves them
  * with the service client after verifying the caller's session.
