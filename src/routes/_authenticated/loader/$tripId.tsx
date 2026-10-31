@@ -222,13 +222,22 @@ function LoadTrip() {
       {msg && <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">{msg}</p>}
       {error && <div className="mt-4"><ErrorCard message={error} /></div>}
 
-      {!done && (
+      {!done && canFinalize && (
         <button
           onClick={() => void finalize()}
           disabled={saving || shortRow !== undefined}
           className="mt-6 w-full rounded-lg bg-primary py-3.5 text-base font-semibold text-primary-foreground active:opacity-80 disabled:opacity-50"
         >
           {saving ? t("c.loading") : t("ld.finalize")}
+        </button>
+      )}
+      {!done && !canFinalize && (
+        <button
+          onClick={() => void markDone()}
+          disabled={saving}
+          className="mt-6 w-full rounded-lg bg-primary py-3.5 text-base font-semibold text-primary-foreground active:opacity-80 disabled:opacity-50"
+        >
+          {saving ? t("c.loading") : t("ld.loadingDone")}
         </button>
       )}
 
