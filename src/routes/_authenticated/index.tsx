@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { useTeamAuth } from "@/lib/team-auth";
 import { useLang } from "@/lib/l10n";
-import { BrandLogo, LanguageChips, Screen, Spinner, SyncBadge, hapticsSafe } from "@/components/team/ui";
+import { BrandLogo, LanguageChips, Screen, Spinner, SyncBadge } from "@/components/team/ui";
 import { Truck, Boxes, ShieldCheck, ChevronRight, UserRound } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -18,9 +19,9 @@ export const Route = createFileRoute("/_authenticated/")({
   component: Home,
 });
 
-type RoleCard = { to: "/driver" | "/loader" | "/security"; titleKey: string; icon: React.ReactNode };
+type RoleCard = { to: "/driver" | "/loader" | "/security"; titleKey: string; icon: ReactNode };
 
-const ROLE_CARDS: Record<string, Omit<RoleCard, "title">> = {
+const ROLE_CARDS: Record<string, RoleCard> = {
   DRIVER: { to: "/driver", titleKey: "home.driverCard", icon: <Truck className="h-7 w-7" /> },
   LOADER: { to: "/loader", titleKey: "home.loaderCard", icon: <Boxes className="h-7 w-7" /> },
   SECURITY: { to: "/security", titleKey: "home.securityCard", icon: <ShieldCheck className="h-7 w-7" /> },

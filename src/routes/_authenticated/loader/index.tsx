@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
-import { ErrorCard, Screen, Spinner, StatusBadge } from "@/components/team/ui";
+import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge } from "@/components/team/ui";
 
 export const Route = createFileRoute("/_authenticated/loader/")({
   head: () => ({
@@ -71,33 +71,33 @@ function LoaderHome() {
       key={r.id}
       to="/loader/$tripId"
       params={{ tripId: r.id }}
-      className="block rounded-xl border border-border bg-card p-4 transition-colors active:bg-accent"
+      className="block rounded-xl border border-border bg-card p-5 shadow-card transition-transform active:scale-[0.99]"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold text-foreground">{t("ld.trip", { no: r.trip_no })}</span>
+        <span className="font-display text-base font-bold text-foreground">{t("ld.trip", { no: r.trip_no })}</span>
         <StatusBadge status={r.status} />
       </div>
-      <div className="mt-1 text-xs text-muted-foreground">
-        {r.vehicles?.reg_no ? `${t("ld.vehicle")}: ${r.vehicles.reg_no}` : ""}
-        {r.geo_routes?.name ? ` · ${t("ld.route")}: ${r.geo_routes.name}` : ""}
-        {` · ${t("ld.stops", { n: r.trip_stops?.[0]?.count ?? 0 })}`}
+      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+        {r.vehicles?.reg_no && <span className="font-semibold text-foreground">{r.vehicles.reg_no}</span>}
+        {r.geo_routes?.name && <span>{r.geo_routes.name}</span>}
+        <span className="font-semibold text-navy">{t("ld.stops", { n: r.trip_stops?.[0]?.count ?? 0 })}</span>
       </div>
     </Link>
   );
 
   return (
-    <Screen title={t("ld.title")}>
+    <Screen title={t("ld.title")} right={<SyncBadge />}>
       {rows === null && !error ? (
         <Spinner label={t("c.loading")} />
       ) : (
         <>
           {error && <div className="mb-4"><ErrorCard message={error} onRetry={() => void load()} /></div>}
           <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("ld.toLoad")}</h2>
-          <div className="grid gap-2">
+          <div className="grid gap-3">
             {rows && rows.length > 0 ? rows.map(card) : <p className="py-4 text-sm text-muted-foreground">{t("c.none")}</p>}
           </div>
-          <h2 className="mb-2 mt-6 text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("ld.loadedToday")}</h2>
-          <div className="grid gap-2">
+          <h2 className="mb-2 mt-7 text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("ld.loadedToday")}</h2>
+          <div className="grid gap-3">
             {doneRows && doneRows.length > 0 ? doneRows.map(card) : <p className="py-4 text-sm text-muted-foreground">{t("c.none")}</p>}
           </div>
         </>
