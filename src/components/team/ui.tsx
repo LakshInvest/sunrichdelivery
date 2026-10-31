@@ -4,6 +4,7 @@ import { LANGS, useLang } from "@/lib/l10n";
 import { pendingCount, subscribe } from "@/lib/offline";
 import { supabase } from "@/integrations/supabase/client";
 import { fileToDataUrl, photoUrl, uploadPhoto } from "@/lib/photo";
+import { isNative, takeNativePhoto } from "@/lib/native";
 
 export function LanguageChips({ className = "" }: { className?: string }) {
   const { lang, setLang } = useLang();
@@ -160,7 +161,10 @@ export function PhotoInput({
       <div className="flex items-center gap-3">
         <button
           type="button"
-          onClick={() => ref.current?.click()}
+          onClick={() => {
+            if (isNative()) void takeNativePhoto().then((f) => (f ? void pick(f) : ref.current?.click()));
+            else ref.current?.click();
+          }}
           disabled={busy}
           className="rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium text-foreground active:bg-accent disabled:opacity-60"
         >

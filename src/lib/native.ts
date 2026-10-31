@@ -215,7 +215,7 @@ export async function shareText(title: string, text: string, url?: string) {
   if (isNative()) {
     try {
       const { Share } = await import("@capacitor/share");
-      await Share.share({ title, text, url });
+      await Share.share({ title, text, ...(url ? { url } : {}) });
       return true;
     } catch {
       return false;
@@ -223,7 +223,7 @@ export async function shareText(title: string, text: string, url?: string) {
   }
   if (typeof navigator !== "undefined" && navigator.share) {
     try {
-      await navigator.share({ title, text, url });
+      await navigator.share({ title, text, ...(url ? { url } : {}) });
       return true;
     } catch {
       return false;
