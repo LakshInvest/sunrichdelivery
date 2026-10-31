@@ -218,7 +218,13 @@ function TripScreen() {
     await run(async () => {
       const coords = await getCoords();
       const signPath = await signatureToPath(v.signature, staff.id, stop.id);
-      const proof: Record<string, unknown> = {};
+      const proof: {
+        photo_url?: string;
+        signature_url?: string;
+        otp?: string;
+        latitude?: number;
+        longitude?: number;
+      } = {};
       if (v.photo) proof.photo_url = v.photo;
       if (signPath) proof.signature_url = signPath;
       if (v.otp) proof.otp = v.otp;
