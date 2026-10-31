@@ -158,6 +158,12 @@ export function StopMap({ stops }: { stops: MapStop[] }) {
         }
         draw(map.current);
         setState("ready");
+        // Google renders its own error overlay (bad/restricted key, billing):
+        // detect it a beat after load and fall back to the friendly card.
+        setTimeout(() => {
+          if (!alive || !holder.current) return;
+          if (holder.current.querySelector(".gm-err-container, .gm-err-content")) setState("error");
+        }, 3000);
       } catch {
         if (alive) setState("error");
       }
