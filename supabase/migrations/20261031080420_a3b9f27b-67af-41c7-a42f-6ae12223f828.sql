@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public._is_trip_order(uuid) FROM anon, public;
