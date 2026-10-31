@@ -375,21 +375,47 @@ export function StopDetailPanel({
         <>
           <div className="mt-4 grid gap-2">
             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("dr.deliveredQty")}</p>
-            {lines.map((l) => (
-              <div key={l.id} className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 px-3 py-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm text-foreground">{l.product_name}</p>
-                  {l.pack_label && <p className="text-xs text-muted-foreground">{l.pack_label}</p>}
+            {lines.map((l) => {
+              const d = qty[l.id] ?? { delivered: String(l.qty), damaged: "", refused: "", empties: "" };
+              const num = (k: "delivered" | "damaged" | "refused" | "empties") =>
+                setQty((s) => ({ ...s, [l.id]: { ...d, [k]: e.target.value.replace(/\D/g, "") } }));
+              void num;
+              const set = (k: "delivered" | "damaged" | "refused" | "empties", raw: string) =>
+                setQty((s) => ({ ...s, [l.id]: { ...d, [k]: raw.replace(/\D/g, "") } }));
+              return (
+                <div key={l.id} className="rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm text-foreground">{l.product_name}</p>
+                      {l.pack_label && <p className="text-xs text-muted-foreground">{l.pack_label}</p>}
+                    </div>
+                    <input
+                      inputMode="numeric"
+                      value={d.delivered}
+                      onChange={(e) => set("delivered", e.target.value)}
+                      disabled={!settings.allow_partial_delivery}
+                      className="w-16 rounded-md border border-input bg-background px-2 py-1.5 text-center text-sm outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
+                    />
+                  </div>
+                  {settings.allow_partial_delivery && (
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-medium uppercase text-muted-foreground">{t("dr.damaged")}</label>
+                        <input inputMode="numeric" value={d.damaged} onChange={(e) => set("damaged", e.target.value)} placeholder="0" className="w-full rounded-md border border-input bg-background px-2 py-1 text-center text-sm outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-medium uppercase text-muted-foreground">{t("dr.refused")}</label>
+                        <input inputMode="numeric" value={d.refused} onChange={(e) => set("refused", e.target.value)} placeholder="0" className="w-full rounded-md border border-input bg-background px-2 py-1 text-center text-sm outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-medium uppercase text-muted-foreground">{t("dr.empties")}</label>
+                        <input inputMode="numeric" value={d.empties} onChange={(e) => set("empties", e.target.value)} placeholder="0" className="w-full rounded-md border border-input bg-background px-2 py-1 text-center text-sm outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <input
-                  inputMode="numeric"
-                  value={qty[l.id] ?? ""}
-                  onChange={(e) => setQty((s) => ({ ...s, [l.id]: e.target.value.replace(/\D/g, "") }))}
-                  disabled={!settings.allow_partial_delivery}
-                  className="w-16 rounded-md border border-input bg-background px-2 py-1.5 text-center text-sm outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
-                />
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {settings.proof_photo_enabled && (
