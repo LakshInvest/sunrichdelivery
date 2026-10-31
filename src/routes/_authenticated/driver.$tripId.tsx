@@ -650,6 +650,7 @@ function TripScreen() {
                 settings={settings}
                 staffId={staff?.id ?? "anon"}
                 outstanding={outstanding[stop.id] ?? null}
+                upi={firmUpi}
                 onSubmitDelivery={deliverStop}
                 onSubmitCollection={collectForStop}
                 onSubmitDueCollection={collectDue}
