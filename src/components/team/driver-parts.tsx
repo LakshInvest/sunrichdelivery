@@ -233,6 +233,7 @@ export type StopRow = {
   fail_reason: string | null;
   orders: {
     id: string;
+    customer_id: string;
     order_no: string;
     business_name: string | null;
     customer_name: string | null;
