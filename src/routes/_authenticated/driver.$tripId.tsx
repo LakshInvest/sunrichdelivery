@@ -266,7 +266,7 @@ function TripScreen() {
     await run(async () => {
       const res = await queueRpc("record_due_collection", {
         p_trip_id: tripId,
-        p_customer_id: stop.orders!.id,
+        p_customer_id: stop.orders!.customer_id,
         p_mode: v.mode,
         p_amount: Number(v.amount),
         p_reference: v.reference || null,
