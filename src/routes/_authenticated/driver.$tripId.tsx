@@ -123,6 +123,19 @@ function TripScreen() {
     } else {
       setLines({});
     }
+    // Firm UPI details for the QR shown at collection time.
+    const firmId = stopRows.find((s) => s.orders?.firm_id)?.orders?.firm_id;
+    if (firmId) {
+      const fRes = await supabase.from("firms").select("upi_id, upi_payee_name, upi_qr_path").eq("id", firmId).single();
+      if (!fRes.error && fRes.data) {
+        const f = fRes.data as { upi_id: string | null; upi_payee_name: string | null; upi_qr_path: string | null };
+        setFirmUpi({
+          id: f.upi_id ?? "",
+          payee: f.upi_payee_name,
+          qrUrl: f.upi_qr_path ? supabase.storage.from("operations").getPublicUrl(f.upi_qr_path).data.publicUrl : null,
+        });
+      }
+    }
     if (!settingsRes.error && settingsRes.data) {
       setSettings({ ...DEFAULT_SETTINGS, ...(settingsRes.data as unknown as Settings) });
     }
