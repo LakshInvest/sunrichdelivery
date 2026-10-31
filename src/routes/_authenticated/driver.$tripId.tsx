@@ -187,7 +187,7 @@ function TripScreen() {
 
   const startTrip = async (v: { selfie: string | null; odometer: string; odoPhoto: string | null; checkPhoto: string | null; checkItems: { item: string; ok: boolean }[] }) => {
     await run(async () => {
-      const coords = await getCoords();
+      // start_trip takes no coordinates; location tracking logs them separately.
       const res = await queueRpc("start_trip", {
         p_trip_id: tripId,
         p_selfie_url: v.selfie,
@@ -195,7 +195,6 @@ function TripScreen() {
         p_odometer_photo_url: v.odoPhoto,
         p_check_photo_url: v.checkPhoto,
         p_vehicle_check: v.checkItems,
-        ...(coords ? { p_latitude: coords.latitude, p_longitude: coords.longitude } : {}),
       });
       if (res.error && !res.queued) {
         setError(res.error);
