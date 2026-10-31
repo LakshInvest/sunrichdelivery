@@ -165,7 +165,16 @@ export function StartTripPanel({
     if (settings.require_start_selfie && !selfie) return setLocalErr(t("dr.needSelfie"));
     if (settings.require_start_odometer && odometer === "") return setLocalErr(t("dr.needOdo"));
     if (settings.require_start_odometer_photo && !odoPhoto) return setLocalErr(t("dr.needPhoto"));
-    await onSubmit({ selfie, odometer, odoPhoto, checkPhoto, checks });
+    // Vehicle check is submitted as [{ item, ok }] — the DB validates that every
+    // item passed (bool_and) before a trip may start.
+    await onSubmit({
+      selfie,
+      odometer,
+      odoPhoto,
+      checkPhoto,
+      checks: settings.vehicle_check_enabled ? [] : [], // unused; payload built below
+      checkItems: settings.vehicle_check_items.map((item) => ({ item, ok: checks.includes(item) })),
+    });
   };
 
   const err = localErr ?? error;
