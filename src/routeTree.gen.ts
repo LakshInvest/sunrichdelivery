@@ -14,6 +14,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedLoaderTripIdRouteImport } from './routes/_authenticated/loader.$tripId'
 
@@ -33,6 +34,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDriverRoute = AuthenticatedDriverRouteImport.update({
+  id: '/driver',
+  path: '/driver',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
   id: '/security',
   path: '/security',
@@ -48,11 +54,13 @@ const AuthenticatedLoaderTripIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
+  '/driver': typeof AuthenticatedDriverRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/driver': typeof AuthenticatedDriverRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/': typeof AuthenticatedIndexRoute
   '/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
@@ -61,19 +69,21 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/driver': typeof AuthenticatedDriverRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/security' | '/loader/$tripId'
+  fullPaths: '/' | '/login' | '/driver' | '/security' | '/loader/$tripId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/security' | '/' | '/loader/$tripId'
+  to: '/login' | '/driver' | '/security' | '/' | '/loader/$tripId'
   id:
     | '__root__'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/driver'
     | '/_authenticated/security'
     | '/_authenticated/'
     | '/_authenticated/loader/$tripId'
@@ -107,6 +117,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/driver': {
+      id: '/_authenticated/driver'
+      path: '/driver'
+      fullPath: '/driver'
+      preLoaderRoute: typeof AuthenticatedDriverRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/security': {
       id: '/_authenticated/security'
       path: '/security'
@@ -125,12 +142,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDriverRoute: typeof AuthenticatedDriverRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedLoaderTripIdRoute: typeof AuthenticatedLoaderTripIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDriverRoute: AuthenticatedDriverRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedLoaderTripIdRoute: AuthenticatedLoaderTripIdRoute,

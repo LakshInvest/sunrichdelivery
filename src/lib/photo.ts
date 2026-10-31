@@ -49,3 +49,13 @@ export async function photoUrl(path: string | null | undefined): Promise<string 
   const { data } = await supabase.storage.from("operations").createSignedUrl(path, 60 * 60);
   return data?.signedUrl ?? null;
 }
+
+/** Upload a data URL (e.g. signature canvas) to the operations bucket. */
+export async function uploadDataUrl(dataUrl: string, userId: string, kind: string): Promise<string> {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  const path = `team/${userId}/${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.png`;
+  const { error } = await supabase.storage.from("operations").upload(path, blob, { contentType: "image/png" });
+  if (error) throw error;
+  return path;
+}
