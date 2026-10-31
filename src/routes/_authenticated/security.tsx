@@ -166,6 +166,7 @@ function SecurityGate() {
     { id: "out", label: t("sec.gateOut") },
     { id: "in", label: t("sec.gateIn") },
     { id: "log", label: t("sec.gateLog") },
+    { id: "pickup", label: t("sec.pickup") },
   ];
 
   return (
@@ -246,6 +247,35 @@ function SecurityGate() {
               <p className="mt-1 text-xs text-muted-foreground">
                 {t("sec.logOut")}: {fmt(r.trips?.gate_out_at)} · {t("sec.logIn")}: {fmt(r.trips?.gate_in_at)}
               </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "pickup" && (
+        <div className="grid gap-3">
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-sm font-bold text-foreground">{t("sec.pickup")}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t("sec.pickupSub")}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <input value={pickupOrder} onChange={(e) => setPickupOrder(e.target.value)} placeholder={t("sec.pickupOrder")} className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input inputMode="numeric" maxLength={6} value={pickupOtp} onChange={(e) => setPickupOtp(e.target.value.replace(/\D/g, ""))} placeholder={t("sec.passCode")} className="rounded-lg border border-input bg-background px-3 py-2 text-center text-sm tracking-[0.3em] outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <button onClick={() => void pickupHandover()} disabled={busy} className="mt-3 w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground active:opacity-80 disabled:opacity-60">
+              {busy ? t("c.loading") : t("sec.pickupDone")}
+            </button>
+          </div>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("sec.pickupList")}</p>
+          {pickups === null && <Spinner label={t("c.loading")} />}
+          {pickups && pickups.length === 0 && <p className="py-2 text-sm text-muted-foreground">{t("c.none")}</p>}
+          {pickups?.map((o) => (
+            <div key={o.id} className="rounded-xl border border-border bg-card p-3 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-semibold text-foreground">{o.order_no}</span>
+                <span className="text-xs text-muted-foreground">₹{o.grand_total ?? 0}</span>
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">{o.customers?.business_name || o.customers?.customer_name || "—"}</p>
+              <p className="mt-1 font-mono text-xs text-foreground">{t("sec.passCode")}: {o.delivery_otp ?? "—"}</p>
             </div>
           ))}
         </div>
