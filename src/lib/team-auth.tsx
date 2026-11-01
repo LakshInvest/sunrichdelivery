@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { staffLogin, myRoleCodes } from "@/lib/staff-login.functions";
 import { getDeviceId, getDeviceLabel } from "@/lib/device";
