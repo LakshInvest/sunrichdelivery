@@ -93,7 +93,6 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
     void boot();
 
     const { data: sub } = supabase.auth.onAuthStateChange((event: string) => {
-      console.info("[auth] event", event);
       if (event === "SIGNED_OUT") setStaff(null);
       if (event === "SIGNED_IN" || event === "USER_UPDATED") {
         void supabase.auth.getSession().then(({ data: d }: { data: { session: { user?: { id: string } } | null } }) => {

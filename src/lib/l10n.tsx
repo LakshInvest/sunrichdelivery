@@ -720,7 +720,9 @@ export function LanguageProvider({
 
   const value = useMemo<LangCtx>(
     () => ({ lang, setLang, t: (key, vars) => translate(lang, key, vars) }),
-    [lang],
+    // setLang is a fresh closure each render (it captures onPersist); including it
+    // keeps the context from freezing the first render's onPersist (stale staff).
+    [lang, setLang],
   );
   return <LangContext.Provider value={value}>{children}</LangContext.Provider>;
 }
