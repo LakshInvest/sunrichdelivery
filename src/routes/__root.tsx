@@ -130,6 +130,9 @@ function RootShell({ children }: { children: ReactNode }) {
 /** Bridges the signed-in staff member's language into the translation provider. */
 function TeamLocale({ children }: { children: ReactNode }) {
   const { staff } = useTeamAuth();
+  useEffect(() => {
+    console.info("[lang] TeamLocale staff:", !!staff);
+  }, [staff]);
   return (
     <LanguageProvider
       initialLang={staff?.lang ?? null}
