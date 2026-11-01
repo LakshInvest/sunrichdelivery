@@ -18,7 +18,7 @@ type MapStop = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: "#0AAAED",
+  pending: "#E0A526",
   arrived: "#F59E0B",
   delivered: "#16A34A",
   partial: "#16A34A",
@@ -111,7 +111,7 @@ export function StopMap({ stops }: { stops: MapStop[] }) {
         new google.maps.Polyline({
           path: pts.map(({ pos }) => pos),
           map: mapObj,
-          strokeColor: "#0AAAED",
+          strokeColor: "#E0A526",
           strokeOpacity: 0.9,
           strokeWeight: 3,
         });
