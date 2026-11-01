@@ -415,7 +415,7 @@ function Login() {
         </div>
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-6 text-center">
           <BrandLogo tone="white" className="h-16" />
-          <p className="mt-4 text-sm font-bold uppercase tracking-[0.35em] text-aqua">
+          <p className={`mt-4 text-sm font-bold uppercase text-aqua ${lang === "en" ? "tracking-[0.35em]" : "tracking-wide"}`}>
             {lang === "hi" ? "डिलीवरी" : lang === "mr" ? "डिलिव्हरी" : "DELIVERY"}
           </p>
         </div>
