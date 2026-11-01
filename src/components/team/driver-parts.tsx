@@ -16,21 +16,28 @@ function useVehicleCheckNames(): CheckNames {
   useEffect(() => {
     if (checkNamesCache) return;
     let alive = true;
-    void supabase
-      .from("vehicle_check_item_names")
-      .select("en, name_hi, name_mr")
-      .then(({ data, error }) => {
-        if (!alive) return;
-        if (error || !data) {
-          // Table not created yet (or unreadable) — English fallback.
-          checkNamesCache = {};
-        } else {
-          checkNamesCache = Object.fromEntries(
-            data.map((r) => [r.en, { name_hi: r.name_hi ?? undefined, name_mr: r.name_mr ?? undefined }]),
-          );
-        }
-        setNames(checkNamesCache);
-      });
+    // The table ships with database/20261101_043_vehicle_check_item_names.sql
+    // and is not in the generated types yet — query it loosely typed.
+    const req = (
+      supabase.from("vehicle_check_item_names") as unknown as {
+        select: (cols: string) => PromiseLike<{
+          data: { en: string; name_hi: string | null; name_mr: string | null }[] | null;
+          error: { message: string } | null;
+        }>;
+      }
+    ).select("en, name_hi, name_mr");
+    void req.then(({ data, error }) => {
+      if (!alive) return;
+      if (error || !data) {
+        // Table not created yet (or unreadable) — English fallback.
+        checkNamesCache = {};
+      } else {
+        checkNamesCache = Object.fromEntries(
+          data.map((r) => [r.en, { name_hi: r.name_hi ?? undefined, name_mr: r.name_mr ?? undefined }]),
+        );
+      }
+      setNames(checkNamesCache);
+    });
     return () => {
       alive = false;
     };

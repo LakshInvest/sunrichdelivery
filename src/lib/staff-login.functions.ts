@@ -44,11 +44,15 @@ const sha256Hex = async (s: string): Promise<string> => {
 const sixDigitCode = (): string => {
   const buf = new Uint32Array(1);
   crypto.getRandomValues(buf);
-  return String(buf[0] % 1_000_000).padStart(6, "0");
+  return String((buf[0] ?? 0) % 1_000_000).padStart(6, "0");
 };
 
 /** Audit-log a login_without_otp sign-in (flag set from Command Center). */
-const auditFlaggedLogin = (supabaseAdmin: Awaited<ReturnType<typeof adminClient>>, profileId: string, mobile: string) => {
+const auditFlaggedLogin = (
+  supabaseAdmin: { from: (t: string) => { insert: (row: Record<string, unknown>) => PromiseLike<{ error: { message: string } | null }> } },
+  profileId: string,
+  mobile: string,
+) => {
   return supabaseAdmin.from("audit_logs").insert({
     action: "login_without_otp",
     entity_type: "user_profiles",
@@ -57,8 +61,7 @@ const auditFlaggedLogin = (supabaseAdmin: Awaited<ReturnType<typeof adminClient>
   });
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const adminClient = async (): Promise<any> => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+const adminClient = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 
 export const staffLogin = createServerFn({ method: "POST" })
   .inputValidator((input: LoginInput) => input)
