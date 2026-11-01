@@ -37,7 +37,7 @@ function Home() {
 
   if (!staff) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6">
+      <main className="mx-auto flex h-[100dvh] max-w-md flex-col items-center justify-center gap-4 px-6">
         <BrandLogo />
         <p className="text-center text-sm text-muted-foreground">{t("home.noRoles")}</p>
         <button onClick={() => void signOut()} className="rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-soft">
