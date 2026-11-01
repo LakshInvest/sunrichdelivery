@@ -88,13 +88,17 @@ export async function registerPush(language: string) {
     if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") perm = await PushNotifications.requestPermissions();
     if (perm.receive !== "granted") return;
     await PushNotifications.addListener("registration", ({ value }) => {
-      void supabase.rpc("save_my_push_token", {
-        p_token: value,
-        p_device_id: getDeviceId(),
-        p_platform: "android",
-        p_app: "delivery",
-        p_language: language,
-      });
+      void supabase
+        .rpc("save_my_push_token", {
+          p_token: value,
+          p_device_id: getDeviceId(),
+          p_platform: "android",
+          p_app: "delivery",
+          p_language: language,
+        })
+        .then(({ error }) => {
+          if (error) console.warn("[native] save push token failed", error.message);
+        });
     });
     await PushNotifications.addListener("registrationError", (err) => console.warn("[native] push registration error", err));
     await PushNotifications.addListener("pushNotificationActionPerformed", (a) => {
