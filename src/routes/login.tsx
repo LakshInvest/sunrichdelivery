@@ -467,7 +467,7 @@ function Login() {
                 <button
                   type="submit"
                   disabled={busy || mobile.replace(/\D/g, "").length !== 10}
-                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:opacity-50"
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
                 >
                   {busy ? <WaterLoader className="h-5 w-5" light /> : <WhatsAppIcon />}
                   {busy ? t("login.verifying") : t("login.cta")}
