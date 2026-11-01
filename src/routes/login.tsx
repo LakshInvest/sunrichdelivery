@@ -34,13 +34,8 @@ type Step = "mobile" | "pin" | "otp";
 
 const LAST_MOBILE_KEY = "sunrich_last_mobile";
 
-/** Full-screen navy water scene: slow waves + rising bubbles behind the login sheet. */
-function WaterScene() {
-  const waves = [
-    { cls: "bg-gradient-to-br from-aqua/40 to-aqua/10", style: { width: "150%", height: "70%", bottom: "-32%", left: "-20%", animationDuration: "19s" } },
-    { cls: "bg-gradient-to-tl from-aqua/25 to-white/10", style: { width: "140%", height: "55%", bottom: "-22%", right: "-30%", animationDuration: "25s", animationDelay: "-6s" } },
-    { cls: "bg-white/10", style: { width: "120%", height: "42%", bottom: "-12%", left: "-10%", animationDuration: "31s", animationDelay: "-12s" } },
-  ];
+/** Soft rising bubbles behind the navy hero — no wave strip, one clean block. */
+function BubbleScene() {
   const bubbles = [
     { left: "8%", size: 14, dur: 13, delay: 0 },
     { left: "22%", size: 8, dur: 17, delay: 4 },
@@ -51,10 +46,7 @@ function WaterScene() {
     { left: "92%", size: 16, dur: 14, delay: 9 },
   ];
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-t-[28px]">
-      {waves.map((w, i) => (
-        <div key={i} className={`wave-blob ${w.cls}`} style={w.style} />
-      ))}
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {bubbles.map((b, i) => (
         <span
           key={i}
@@ -132,10 +124,10 @@ function ResendRing({ seconds, onResend, label }: { seconds: number; onResend: (
       type="button"
       onClick={onResend}
       disabled={!done}
-      className="inline-flex items-center gap-2 text-xs font-semibold text-white/80 disabled:opacity-70"
+      className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground disabled:opacity-70"
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5 -rotate-90">
-        <circle cx="12" cy="12" r={r} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" />
+        <circle cx="12" cy="12" r={r} fill="none" stroke="var(--color-border)" strokeWidth="2.5" />
         <circle
           cx="12"
           cy="12"
@@ -368,16 +360,17 @@ function Login() {
   };
 
   const formatted = (digits: string) => (digits.length > 5 ? `${digits.slice(0, 5)} ${digits.slice(5)}` : digits);
-  const progress = step === "mobile" ? "w-1/2" : "w-full";
   const maskedMobile = `+91 ${formatted(mobile.replace(/\D/g, ""))}`;
 
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-navy-deep">
-      {/* Brand sky: navy with slow water waves and bubbles */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-navy via-navy to-navy-deep pb-10 pt-[max(env(safe-area-inset-top),1.25rem)]">
-        <WaterScene />
-        <div className="relative flex items-center justify-between px-5">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Sunrich Delivery</span>
+    <main className="relative mx-auto flex h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-navy-deep">
+      {/* Navy hero — one clean block, soft bubbles, logo + tagline centred. Shrinks with the keyboard. */}
+      <div
+        className="relative flex shrink-0 flex-col overflow-hidden bg-gradient-to-b from-navy via-navy to-navy-deep pt-[max(env(safe-area-inset-top),0.75rem)] transition-[height] duration-300 ease-out"
+        style={{ height: "55dvh", minHeight: "220px" }}
+      >
+        <BubbleScene />
+        <div className="relative z-10 flex justify-end px-4">
           <div className="flex gap-1 rounded-full bg-white/10 p-1" role="group" aria-label="Language">
             {LANGS.map((l: { code: Lang; short: string }) => (
               <button
@@ -394,154 +387,176 @@ function Login() {
             ))}
           </div>
         </div>
-        <div className="relative mt-10 flex flex-col items-center px-6 text-center">
-          <BrandLogo tone="white" className="h-14" />
-          {tagline && <p className="mt-3 text-sm font-medium text-white/75">{tagline}</p>}
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-6 text-center">
+          <BrandLogo tone="white" className="h-16" />
+          {tagline && <p className="mt-4 text-sm font-medium text-white/75">{tagline}</p>}
         </div>
       </div>
 
-      {/* White sheet docked to the bottom */}
-      <div className="relative z-10 -mt-6 flex flex-1 flex-col rounded-t-[28px] bg-card px-6 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-7 shadow-[0_-12px_40px_-20px_rgba(13,50,120,0.45)]">
-        <div className="mb-6 h-1 overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-aqua transition-all duration-300" style={{ width: progress === "w-full" ? "100%" : "50%" }} />
+      {/* White sheet docked low: rounded top, small centred progress bar, centred content */}
+      <div className="relative z-10 -mt-7 flex min-h-0 flex-1 flex-col rounded-t-[28px] bg-card px-6 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-4 shadow-[0_-12px_40px_-20px_rgba(13,50,120,0.45)]">
+        <div aria-hidden className="mx-auto mb-5 h-1 w-20 shrink-0 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-aqua transition-all duration-300"
+            style={{ width: step === "mobile" ? "50%" : "100%" }}
+          />
         </div>
 
-        {step === "mobile" && (
-          <div key="mobile" className="animate-in fade-in slide-in-from-bottom-3 duration-300">
-            <h1 className="font-display text-2xl font-bold text-foreground">{t("login.title")}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{t("login.subtitle")}</p>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void checkMobile();
-              }}
-              className="mt-6"
-            >
-              <label htmlFor="mobile" className="mb-1 block text-sm font-medium text-foreground">
-                {t("login.mobile")}
-              </label>
-              <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 focus-within:border-aqua focus-within:ring-2 focus-within:ring-aqua/30">
-                <span className="text-sm font-semibold text-muted-foreground">+91</span>
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+          {step === "mobile" && (
+            <div key="mobile" className="animate-in text-center fade-in slide-in-from-bottom-3 duration-300">
+              <h1 className="font-display text-2xl font-bold text-foreground">{t("login.title")}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">{t("login.subtitle")}</p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void checkMobile();
+                }}
+                className="mt-6"
+              >
+                <label htmlFor="mobile" className="mb-1 block text-sm font-medium text-foreground">
+                  {t("login.mobile")}
+                </label>
+                <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 focus-within:border-aqua focus-within:ring-2 focus-within:ring-aqua/30">
+                  <span className="text-sm font-semibold text-muted-foreground">+91</span>
+                  <input
+                    id="mobile"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    maxLength={11}
+                    value={formatted(mobile.replace(/\D/g, ""))}
+                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    className="w-full bg-transparent py-3.5 text-lg font-semibold tracking-wide text-foreground outline-none"
+                    placeholder="98765 43210"
+                    required
+                  />
+                </div>
+                {error && (
+                  <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive" role="alert">
+                    {error}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={busy || mobile.replace(/\D/g, "").length !== 10}
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:opacity-50"
+                >
+                  {busy ? <WaterLoader className="h-5 w-5" light /> : <WhatsAppIcon />}
+                  {busy ? t("login.verifying") : t("login.cta")}
+                </button>
+                <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                  <Lock className="h-3.5 w-3.5" /> {t("login.secure")}
+                </p>
+              </form>
+            </div>
+          )}
+
+          {step === "pin" && (
+            <div key="pin" className="animate-in text-center fade-in slide-in-from-right-3 duration-300">
+              <button
+                type="button"
+                onClick={() => setStep("mobile")}
+                className="mx-auto mb-3 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground"
+              >
+                <ChevronLeft className="h-4 w-4" /> {t("login.changeNumber")}
+              </button>
+              <h1 className="font-display text-2xl font-bold text-foreground">{t("login.welcome", { name: name ?? "" })}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">{t("login.pinHint")}</p>
+              <div className="relative mt-6">
                 <input
-                  id="mobile"
+                  ref={(el) => {
+                    if (el) setTimeout(() => el.focus(), 200);
+                  }}
                   inputMode="numeric"
-                  autoComplete="tel-national"
-                  maxLength={11}
-                  value={formatted(mobile.replace(/\D/g, ""))}
-                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  className="w-full bg-transparent py-3.5 text-lg font-semibold tracking-wide text-foreground outline-none"
-                  placeholder="98765 43210"
-                  required
+                  autoComplete="one-time-code"
+                  value={pin}
+                  onChange={(e) => onPinChange(e.target.value)}
+                  className="absolute inset-0 h-16 w-full cursor-pointer opacity-0"
+                  aria-label={t("login.pin")}
+                  autoFocus
                 />
+                <CodeBoxes count={4} code={pin} state={pinState} />
               </div>
               {error && (
-                <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive" role="alert">
+                <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive" role="alert">
                   {error}
                 </p>
               )}
               <button
-                type="submit"
-                disabled={busy || mobile.replace(/\D/g, "").length !== 10}
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:opacity-50"
+                type="button"
+                onClick={() => void goOtp()}
+                className="mx-auto mt-5 block text-sm font-semibold text-navy underline-offset-4 hover:underline"
               >
-                {busy ? <WaterLoader className="h-5 w-5" light /> : <WhatsAppIcon />}
-                {busy ? t("login.verifying") : t("login.cta")}
+                {t("login.forgotPin")}
               </button>
-              <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-                <Lock className="h-3.5 w-3.5" /> {t("login.secure")}
-              </p>
-            </form>
-          </div>
-        )}
-
-        {step === "pin" && (
-          <div key="pin" className="animate-in fade-in slide-in-from-right-3 duration-300">
-            <button type="button" onClick={() => setStep("mobile")} className="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
-              <ChevronLeft className="h-4 w-4" /> {t("login.changeNumber")}
-            </button>
-            <h1 className="font-display text-2xl font-bold text-foreground">{t("login.welcome", { name: name ?? "" })}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{t("login.pinHint")}</p>
-            <div className="relative mt-6">
-              <input
-                ref={(el) => {
-                  if (el) setTimeout(() => el.focus(), 200);
-                }}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={pin}
-                onChange={(e) => onPinChange(e.target.value)}
-                className="absolute inset-0 h-16 w-full cursor-pointer opacity-0"
-                aria-label={t("login.pin")}
-                autoFocus
-              />
-              <CodeBoxes count={4} code={pin} state={pinState} />
             </div>
-            {error && (
-              <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive" role="alert">
-                {error}
-              </p>
-            )}
-            <button type="button" onClick={() => void goOtp()} className="mt-5 text-sm font-semibold text-navy underline-offset-4 hover:underline">
-              {t("login.forgotPin")}
-            </button>
-          </div>
-        )}
+          )}
 
-        {step === "otp" && (
-          <div key="otp" className="animate-in fade-in slide-in-from-right-3 duration-300">
-            <button type="button" onClick={() => setStep("mobile")} className="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
-              <ChevronLeft className="h-4 w-4" /> {t("login.changeNumber")}
-            </button>
-            <h1 className="font-display text-2xl font-bold text-foreground">{t("login.otpTitle")}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{t("login.otpSent", { mobile: maskedMobile })}</p>
-            <div className="relative mt-6">
-              <input
-                ref={otpInput}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={code}
-                onChange={(e) => onOtpChange(e.target.value)}
-                onPaste={(e) => {
-                  e.preventDefault();
-                  onOtpChange(e.clipboardData.getData("text"));
-                }}
-                className="absolute inset-0 h-16 w-full cursor-pointer opacity-0"
-                aria-label={t("login.otpTitle")}
-              />
-              <CodeBoxes count={6} code={code} state={otpState} />
-            </div>
-            {clipboardCode && (
+          {step === "otp" && (
+            <div key="otp" className="animate-in text-center fade-in slide-in-from-right-3 duration-300">
               <button
                 type="button"
-                onClick={() => onOtpChange(clipboardCode)}
-                className="mt-4 w-full rounded-md bg-aqua-soft px-3 py-2.5 text-sm font-semibold text-navy"
+                onClick={() => setStep("mobile")}
+                className="mx-auto mb-3 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground"
               >
-                {t("login.clipboard")} · <span className="font-mono">{clipboardCode}</span>
+                <ChevronLeft className="h-4 w-4" /> {t("login.changeNumber")}
               </button>
-            )}
-            {error && (
-              <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive" role="alert">
-                {error}
-              </p>
-            )}
-            <div className="mt-5 flex items-center justify-between">
-              <ResendRing
-                seconds={resendIn}
-                label={resendIn > 0 ? t("login.resendIn", { n: resendIn }) : t("login.resend")}
-                onResend={() => void goOtp()}
-              />
-              <button type="button" onClick={() => void autoVerify()} disabled={busy || !otpToken.current} className="text-xs font-semibold text-navy underline-offset-4 hover:underline">
-                {t("login.otpAuto")}
-              </button>
+              <h1 className="font-display text-2xl font-bold text-foreground">{t("login.otpTitle")}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">{t("login.otpSent", { mobile: maskedMobile })}</p>
+              <div className="relative mt-6">
+                <input
+                  ref={otpInput}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  value={code}
+                  onChange={(e) => onOtpChange(e.target.value)}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    onOtpChange(e.clipboardData.getData("text"));
+                  }}
+                  className="absolute inset-0 h-16 w-full cursor-pointer opacity-0"
+                  aria-label={t("login.otpTitle")}
+                />
+                <CodeBoxes count={6} code={code} state={otpState} />
+              </div>
+              {clipboardCode && (
+                <button
+                  type="button"
+                  onClick={() => onOtpChange(clipboardCode)}
+                  className="mt-4 w-full rounded-md bg-aqua-soft px-3 py-2.5 text-sm font-semibold text-navy"
+                >
+                  {t("login.clipboard")} · <span className="font-mono">{clipboardCode}</span>
+                </button>
+              )}
+              {error && (
+                <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive" role="alert">
+                  {error}
+                </p>
+              )}
+              <div className="mt-5 flex flex-col items-center gap-3">
+                <ResendRing
+                  seconds={resendIn}
+                  label={resendIn > 0 ? t("login.resendIn", { n: resendIn }) : t("login.resend")}
+                  onResend={() => void goOtp()}
+                />
+                <button
+                  type="button"
+                  onClick={() => void autoVerify()}
+                  disabled={busy || !otpToken.current}
+                  className="text-xs font-semibold text-navy underline-offset-4 hover:underline"
+                >
+                  {t("login.otpAuto")}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {busy && step !== "mobile" && (
-          <div className="mt-6 flex justify-center">
-            <WaterLoader />
-          </div>
-        )}
+          {busy && step !== "mobile" && (
+            <div className="mt-6 flex justify-center">
+              <WaterLoader />
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );
@@ -554,4 +569,3 @@ function WhatsAppIcon() {
     </svg>
   );
 }
-
