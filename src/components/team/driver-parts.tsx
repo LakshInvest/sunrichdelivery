@@ -2,9 +2,41 @@
 import { nativeCoords } from "@/lib/native";
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/l10n";
+import { supabase } from "@/integrations/supabase/client";
 import { UpiQrCode } from "@/components/team/upi-qr";
 import { PhotoInput, StatusBadge } from "@/components/team/ui";
 import { uploadDataUrl } from "@/lib/photo";
+
+/** Vehicle-check labels keyed by the English name; missing/empty → English. */
+type CheckNames = Record<string, { name_hi?: string; name_mr?: string }>;
+let checkNamesCache: CheckNames | null = null;
+
+function useVehicleCheckNames(): CheckNames {
+  const [names, setNames] = useState<CheckNames | null>(checkNamesCache);
+  useEffect(() => {
+    if (checkNamesCache) return;
+    let alive = true;
+    void supabase
+      .from("vehicle_check_item_names")
+      .select("en, name_hi, name_mr")
+      .then(({ data, error }) => {
+        if (!alive) return;
+        if (error || !data) {
+          // Table not created yet (or unreadable) — English fallback.
+          checkNamesCache = {};
+        } else {
+          checkNamesCache = Object.fromEntries(
+            data.map((r) => [r.en, { name_hi: r.name_hi ?? undefined, name_mr: r.name_mr ?? undefined }]),
+          );
+        }
+        setNames(checkNamesCache);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return names ?? {};
+}
 
 export type Settings = {
   require_start_selfie: boolean;
@@ -158,7 +190,14 @@ export function StartTripPanel({
   busy: boolean;
   error: string | null;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const checkNames = useVehicleCheckNames();
+  const checkLabel = (item: string) => {
+    const n = checkNames[item];
+    if (lang === "hi" && n?.name_hi) return n.name_hi;
+    if (lang === "mr" && n?.name_mr) return n.name_mr;
+    return item;
+  };
   const [selfie, setSelfie] = useState<string | null>(null);
   const [odometer, setOdometer] = useState("");
   const [odoPhoto, setOdoPhoto] = useState<string | null>(null);
@@ -228,7 +267,7 @@ export function StartTripPanel({
                     onChange={(e) => setChecks((s) => (e.target.checked ? [...s, item] : s.filter((x) => x !== item)))}
                     className="h-4 w-4 rounded border-input"
                   />
-                  {item}
+                  {checkLabel(item)}
                 </label>
               ))}
             </div>
