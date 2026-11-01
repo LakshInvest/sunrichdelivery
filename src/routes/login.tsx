@@ -162,28 +162,8 @@ function Login() {
   const otpToken = useRef<string | null>(null);
   const [resendIn, setResendIn] = useState(0);
   const [clipboardCode, setClipboardCode] = useState<string | null>(null);
-  const [tagline, setTagline] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState<ReturnType<typeof setInterval> | null>(null);
   const otpInput = useRef<HTMLInputElement>(null);
-
-  // Brand tagline from public_app_info() so Command Center edits apply here too.
-  useEffect(() => {
-    let alive = true;
-    void (async () => {
-      try {
-        const { data } = await supabase.rpc("public_app_info");
-        if (!alive || !data) return;
-        const info = data as Record<string, unknown>;
-        const key = lang === "hi" ? "login_tagline_hi" : lang === "mr" ? "login_tagline_mr" : "login_tagline";
-        setTagline((info[key] as string) || (info["login_tagline"] as string) || null);
-      } catch {
-        // branding stays on the bundled logo/tagline fallback
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [lang]);
 
   // Remember the last number on this device (device id itself is never regenerated).
   useEffect(() => {
