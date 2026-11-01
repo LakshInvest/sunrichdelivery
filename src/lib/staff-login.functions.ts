@@ -69,55 +69,43 @@ type AiSensySend = { ok: boolean; reason?: string };
 
 /**
  * WhatsApp OTP delivery via AiSensy (the same sender the customer app uses).
- * Runs server-only: the code and the API key never reach the browser. On a
- * template rejection because the campaign expects a copy-code button, retries
- * once with the button payload. The failure reason is logged without the OTP
- * or the key.
+ * Runs server-only: the code and the API key never reach the browser.
+ * AiSensy returns success even when WhatsApp later rejects the message, so the
+ * copy-code button parameter is ALWAYS sent with every call — no
+ * retry-on-rejection path. The failure reason is logged without the OTP or key.
  */
 const sendOtpWhatsapp = async (mobile10: string, otp: string, userName: string): Promise<AiSensySend> => {
   const apiKey = process.env["AISENSY_API_KEY"];
   const campaignName = process.env["AISENSY_OTP_CAMPAIGN"];
   if (!apiKey || !campaignName) return { ok: false, reason: "missing_aisensy_secret" };
 
-  const payload = (withButton: boolean) => ({
+  const payload = {
     apiKey,
     campaignName,
     destination: `91${mobile10}`,
     userName,
     templateParams: [otp],
-    ...(withButton
-      ? { buttons: [{ type: "button", sub_type: "url", index: 0, parameters: [{ type: "text", text: otp }] }] }
-      : {}),
-  });
-
-  const call = async (withButton: boolean) => {
-    try {
-      const res = await fetch("https://backend.aisensy.com/campaign/t1/api/v2", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload(withButton)),
-      });
-      const body: unknown = await res.json().catch(() => null);
-      const msg = typeof (body as { message?: unknown })?.message === "string" ? (body as { message: string }).message : "";
-      const success = res.ok && (body as { success?: unknown })?.success !== false;
-      return { ok: success, status: res.status, msg };
-    } catch (e) {
-      return { ok: false, status: 0, msg: e instanceof Error ? e.message : "network_error" };
-    }
+    buttons: [{ type: "button", sub_type: "url", index: 0, parameters: [{ type: "text", text: otp }] }],
   };
 
-  const first = await call(false);
-  if (first.ok) return { ok: true };
-
-  // The campaign template may require a copy-code button; retry once with it.
-  if (/button|template/i.test(first.msg)) {
-    const second = await call(true);
-    if (second.ok) return { ok: true };
-    console.error("[sendOtpWhatsapp] send failed", second.status, second.msg);
-    return { ok: false, reason: `aisensy_${second.status || "error"}` };
+  try {
+    const res = await fetch("https://backend.aisensy.com/campaign/t1/api/v2", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const body: unknown = await res.json().catch(() => null);
+    const msg = typeof (body as { message?: unknown })?.message === "string" ? (body as { message: string }).message : "";
+    const success = res.ok && (body as { success?: unknown })?.success !== false;
+    if (!success) {
+      console.error("[sendOtpWhatsapp] send failed", res.status, msg);
+      return { ok: false, reason: `aisensy_${res.status || "error"}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    console.error("[sendOtpWhatsapp] request failed", e instanceof Error ? e.message : "network_error");
+    return { ok: false, reason: "aisensy_request_failed" };
   }
-  console.error("[sendOtpWhatsapp] send failed", first.status, first.msg);
-  return { ok: false, reason: `aisensy_${first.status || "error"}` };
 };
 
 export const staffLogin = createServerFn({ method: "POST" })
