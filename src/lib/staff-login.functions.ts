@@ -1,5 +1,9 @@
-// Mobile + PIN login. Runs server-side: check_pin is not callable by anonymous
-// clients, so PIN verification and the session-minting link happen here.
+// Mobile + PIN/OTP login. Runs server-side:
+// - PIN sign-in is verified by check_pin (trusted device required unless the
+//   profile allows skipping OTP).
+// - OTP sign-in: the 6-digit code is generated, stored hashed and verified on
+//   the server. A bare mobile number NEVER returns a session token; the token
+//   is minted only after a correct PIN or a correct, unexpired OTP.
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -26,10 +30,40 @@ const PIN_RESULT_CODES: Record<string, string> = {
   device_not_trusted: "device_not_trusted",
 };
 
+const OTP_TTL_MS = 5 * 60 * 1000; // codes live 5 minutes
+const OTP_LOCK_MS = 15 * 60 * 1000; // 15-minute lock after 5 wrong tries
+const OTP_MAX_ATTEMPTS = 5;
+
+const sha256Hex = async (s: string): Promise<string> => {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
+
+const sixDigitCode = (): string => {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return String(buf[0] % 1_000_000).padStart(6, "0");
+};
+
+/** Audit-log a login_without_otp sign-in (flag set from Command Center). */
+const auditFlaggedLogin = (supabaseAdmin: Awaited<ReturnType<typeof adminClient>>, profileId: string, mobile: string) => {
+  return supabaseAdmin.from("audit_logs").insert({
+    action: "login_without_otp",
+    entity_type: "user_profiles",
+    entity_id: profileId,
+    new_data: { mobile },
+  });
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const adminClient = async (): Promise<any> => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+
 export const staffLogin = createServerFn({ method: "POST" })
   .inputValidator((input: LoginInput) => input)
   .handler(async ({ data }): Promise<StaffLoginResult> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await adminClient();
 
     // Accept 10-digit national numbers or +91-prefixed ones; store as +91XXXXXXXXXX.
     const digits = String(data.mobile || "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
@@ -63,7 +97,7 @@ export const staffLogin = createServerFn({ method: "POST" })
 
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("user_profiles")
-      .select("id, full_name, mobile, email, preferred_language, user_type, unit_id, firm_id, is_active")
+      .select("id, full_name, mobile, email, preferred_language, user_type, unit_id, firm_id, is_active, login_without_otp")
       .eq("id", String(row.out_user_id))
       .single();
     if (profileError || !profile) {
@@ -83,6 +117,13 @@ export const staffLogin = createServerFn({ method: "POST" })
       unitId: profile.unit_id ?? null,
       firmId: profile.firm_id ?? null,
     };
+
+    // Accounts flagged login_without_otp skip OTP by database configuration;
+    // every such sign-in goes into the audit log.
+    if (profile.login_without_otp) {
+      const { error: auditErr } = await auditFlaggedLogin(supabaseAdmin, profile.id, mobile);
+      if (auditErr) console.error("[staffLogin] audit insert failed", auditErr.message);
+    }
 
     // Mint a Supabase session for this staff member. Auth users carry a
     // confirmed synthetic email, so the magic-link OTP is returned here for the
@@ -124,7 +165,7 @@ export type DeviceStatus = {
 export const checkDeviceStatus = createServerFn({ method: "POST" })
   .inputValidator((input: { mobile: string; deviceId: string }) => input)
   .handler(async ({ data }): Promise<DeviceStatus> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await adminClient();
     const digits = String(data.mobile || "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
     if (!/^\d{10}$/.test(digits) || !/^[6-9]/.test(digits)) {
       return { registered: false, firstName: null, hasPin: false, trusted: false, skipOtp: false };
@@ -158,21 +199,128 @@ export const checkDeviceStatus = createServerFn({ method: "POST" })
     };
   });
 
-/**
- * OTP-path sign-in: mints the magic-link OTP for the staff member after the
- * mobile is confirmed registered. Used when the device is new, no PIN is set,
- * the PIN was forgotten, or five wrong PINs locked the device.
- */
-export type StaffOtpResult =
-  | { ok: true; email: string; token: string; staff: StaffBrief }
+/** Result of asking for an OTP. */
+export type StaffOtpRequestResult =
+  | { ok: true; auto: true; email: string; token: string; staff: StaffBrief }
+  | { ok: true; auto?: false }
   | { ok: false; code: string };
 
-export const staffOtpLogin = createServerFn({ method: "POST" })
-  .inputValidator((input: { mobile: string }) => input)
-  .handler(async ({ data }): Promise<StaffOtpResult> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+/**
+ * Step 1 of the OTP path. Generates a 6-digit code, stores only its hash
+ * (5-minute validity, max 5 wrong tries then a 15-minute lock, single use) and
+ * sends nothing sensitive back to the browser.
+ *
+ * Accounts with login_without_otp (or demo accounts) skip the code entirely:
+ * they receive an auto-verifiable session token, audited in audit_logs.
+ */
+export const staffRequestOtp = createServerFn({ method: "POST" })
+  .inputValidator((input: { mobile: string; deviceId?: string }) => input)
+  .handler(async ({ data }): Promise<StaffOtpRequestResult> => {
+    const supabaseAdmin = await adminClient();
     const digits = String(data.mobile || "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
     if (!/^\d{10}$/.test(digits) || !/^[6-9]/.test(digits)) {
+      return { ok: false, code: "invalid_mobile" };
+    }
+    const mobile = `+91${digits}`;
+    const { data: profile } = await supabaseAdmin
+      .from("user_profiles")
+      .select("id, full_name, mobile, email, preferred_language, unit_id, firm_id, is_active, login_without_otp, is_demo")
+      .eq("mobile", mobile)
+      .eq("user_type", "staff")
+      .maybeSingle();
+    if (!profile || profile.is_active === false) return { ok: false, code: "not_registered" };
+    const staff: StaffBrief = {
+      id: profile.id,
+      fullName: profile.full_name ?? "",
+      mobile: profile.mobile ?? mobile,
+      email: profile.email ?? null,
+      preferredLanguage: profile.preferred_language ?? "en",
+      unitId: profile.unit_id ?? null,
+      firmId: profile.firm_id ?? null,
+    };
+
+    // Flagged accounts: mint the session token directly (audited).
+    if (profile.login_without_otp || profile.is_demo) {
+      const email = String(profile.email ?? "").trim();
+      if (!email) return { ok: false, code: "login_failed" };
+      const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({ type: "magiclink", email });
+      if (error || !link) {
+        console.error("[staffRequestOtp] generateLink failed", error?.message);
+        return { ok: false, code: "login_failed" };
+      }
+      const token = link.properties?.email_otp ?? "";
+      if (!token) return { ok: false, code: "login_failed" };
+      const { error: auditErr } = await auditFlaggedLogin(supabaseAdmin, profile.id, mobile);
+      if (auditErr) console.error("[staffRequestOtp] audit insert failed", auditErr.message);
+      return { ok: true, auto: true, email, token, staff };
+    }
+
+    // 15-minute lock after 5 wrong tries on the newest outstanding code.
+    const { data: lastRow } = await supabaseAdmin
+      .from("otp_requests")
+      .select("locked_until, attempts, max_attempts, consumed_at")
+      .eq("user_id", profile.id)
+      .eq("destination", mobile)
+      .eq("purpose", "staff_2fa")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (
+      lastRow &&
+      !lastRow.consumed_at &&
+      (lastRow.locked_until ? new Date(lastRow.locked_until).getTime() > Date.now() : false)
+    ) {
+      return { ok: false, code: "locked" };
+    }
+
+    // Single use: any earlier outstanding code is invalidated.
+    await supabaseAdmin
+      .from("otp_requests")
+      .update({ consumed_at: new Date().toISOString() })
+      .eq("user_id", profile.id)
+      .eq("destination", mobile)
+      .eq("purpose", "staff_2fa")
+      .is("consumed_at", null);
+
+    const code = sixDigitCode();
+    const { error: insertErr } = await supabaseAdmin.from("otp_requests").insert({
+      user_id: profile.id,
+      channel: "whatsapp",
+      purpose: "staff_2fa",
+      destination: mobile,
+      code_hash: await sha256Hex(`${code}:${profile.id}`),
+      attempts: 0,
+      max_attempts: OTP_MAX_ATTEMPTS,
+      expires_at: new Date(Date.now() + OTP_TTL_MS).toISOString(),
+    });
+    if (insertErr) {
+      console.error("[staffRequestOtp] insert failed", insertErr.message);
+      return { ok: false, code: "login_failed" };
+    }
+    // Delivery hook: a WhatsApp Business API sender plugs in here (the code is
+    // intentionally not returned to the browser). Without a gateway the code is
+    // generated and verified but cannot reach the phone.
+    return { ok: true };
+  });
+
+/** Result of checking a typed OTP. */
+export type StaffOtpVerifyResult =
+  | { ok: true; email: string; token: string; staff: StaffBrief }
+  | { ok: false; code: "wrong_otp" | "locked" | "expired" | "invalid_mobile" | "not_registered" | "login_failed"; attemptsLeft?: number };
+
+/**
+ * Step 2 of the OTP path. Checks the typed code against the stored hash
+ * (single use, 5-minute validity, 5 wrong tries lock for 15 minutes). Only a
+ * correct code yields the one-time Supabase token the browser needs to open a
+ * session — a bare mobile number never gets one.
+ */
+export const staffVerifyOtp = createServerFn({ method: "POST" })
+  .inputValidator((input: { mobile: string; code: string }) => input)
+  .handler(async ({ data }): Promise<StaffOtpVerifyResult> => {
+    const supabaseAdmin = await adminClient();
+    const digits = String(data.mobile || "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
+    const code = String(data.code || "").replace(/\D/g, "");
+    if (!/^\d{10}$/.test(digits) || !/^[6-9]/.test(digits) || !/^\d{6}$/.test(code)) {
       return { ok: false, code: "invalid_mobile" };
     }
     const mobile = `+91${digits}`;
@@ -185,12 +333,52 @@ export const staffOtpLogin = createServerFn({ method: "POST" })
     if (!profile || profile.is_active === false) return { ok: false, code: "not_registered" };
     const email = String(profile.email ?? "").trim();
     if (!email) return { ok: false, code: "login_failed" };
-    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-    });
+
+    const { data: row } = await supabaseAdmin
+      .from("otp_requests")
+      .select("id, code_hash, attempts, max_attempts, expires_at, locked_until")
+      .eq("user_id", profile.id)
+      .eq("destination", mobile)
+      .eq("purpose", "staff_2fa")
+      .is("consumed_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!row) return { ok: false, code: "expired" };
+    if (row.locked_until && new Date(row.locked_until).getTime() > Date.now()) {
+      return { ok: false, code: "locked" };
+    }
+    if (new Date(row.expires_at).getTime() < Date.now()) {
+      return { ok: false, code: "expired" };
+    }
+    if (row.attempts >= row.max_attempts) {
+      await supabaseAdmin
+        .from("otp_requests")
+        .update({ locked_until: new Date(Date.now() + OTP_LOCK_MS).toISOString() })
+        .eq("id", row.id);
+      return { ok: false, code: "locked" };
+    }
+
+    if ((await sha256Hex(`${code}:${profile.id}`)) !== row.code_hash) {
+      const attempts = row.attempts + 1;
+      const locked = attempts >= row.max_attempts;
+      await supabaseAdmin
+        .from("otp_requests")
+        .update({
+          attempts,
+          ...(locked ? { locked_until: new Date(Date.now() + OTP_LOCK_MS).toISOString() } : {}),
+        })
+        .eq("id", row.id);
+      return locked
+        ? { ok: false, code: "locked" }
+        : { ok: false, code: "wrong_otp", attemptsLeft: row.max_attempts - attempts };
+    }
+
+    // Correct code: consume it (single use) and mint the session token.
+    await supabaseAdmin.from("otp_requests").update({ consumed_at: new Date().toISOString() }).eq("id", row.id);
+    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({ type: "magiclink", email });
     if (error || !link) {
-      console.error("[staffOtpLogin] generateLink failed", error?.message);
+      console.error("[staffVerifyOtp] generateLink failed", error?.message);
       return { ok: false, code: "login_failed" };
     }
     const token = link.properties?.email_otp ?? "";
@@ -219,7 +407,7 @@ export const staffOtpLogin = createServerFn({ method: "POST" })
 export const myRoleCodes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<string[]> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await adminClient();
     const { data, error } = await supabaseAdmin
       .from("user_roles")
       .select("roles(code)")

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTeamAuth } from "@/lib/team-auth";
 import { LANGS, useLang, type Lang } from "@/lib/l10n";
 import { getDeviceId, getDeviceLabel } from "@/lib/device";
-import { checkDeviceStatus, staffLogin, staffOtpLogin } from "@/lib/staff-login.functions";
+import { checkDeviceStatus, staffLogin, staffRequestOtp, staffVerifyOtp } from "@/lib/staff-login.functions";
 import { haptic } from "@/lib/native";
 import { WaterLoader, BrandLogo } from "@/components/team/ui";
 
@@ -239,13 +239,17 @@ function Login() {
     if (resendTimer) clearInterval(resendTimer);
     const timer = setInterval(() => setResendIn((s) => (s <= 1 ? 0 : s - 1)), 1000);
     setResendTimer(timer);
-    const res = await staffOtpLogin({ data: { mobile: `+91${mobile}` } });
+    // The server generates the code and keeps it; the browser never receives
+    // it. Only login_without_otp accounts get an auto-verifiable session token.
+    const res = await staffRequestOtp({ data: { mobile: `+91${mobile}`, deviceId: getDeviceId() } });
     if (!res.ok) {
       setError(t(`err.${res.code}`) === `err.${res.code}` ? t("err.login_failed") : t(`err.${res.code}`));
       return;
     }
-    setOtpEmail(res.email);
-    otpToken.current = res.token;
+    if (res.auto) {
+      setOtpEmail(res.email);
+      otpToken.current = res.token;
+    }
     setTimeout(() => otpInput.current?.focus(), 250);
   }, [mobile, resendTimer, t]);
 
