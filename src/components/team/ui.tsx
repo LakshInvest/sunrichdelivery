@@ -186,7 +186,7 @@ export function DockButton({
         onClick?.();
       }}
       disabled={disabled}
-      className={`w-full rounded-lg py-4 text-base font-bold transition-opacity active:opacity-80 disabled:opacity-50 ${cls}`}
+      className={`w-full rounded-lg py-4 text-base font-bold transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none ${cls}`}
     >
       {children}
     </button>
