@@ -3216,9 +3216,17 @@ export type Database = {
       payment_proofs: {
         Row: {
           amount: number
+          balance_after: number | null
+          cash_paid_to: string | null
+          cash_paid_to_name: string | null
+          cheque_bank: string | null
+          cheque_date: string | null
+          cheque_no: string | null
+          collected_by: string | null
           company_id: string
           created_at: string
           customer_id: string
+          firm_id: string | null
           id: string
           method: string
           order_id: string | null
@@ -3229,14 +3237,23 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           screenshot_path: string | null
+          source: string
           status: string
           submitted_by: string | null
         }
         Insert: {
           amount: number
+          balance_after?: number | null
+          cash_paid_to?: string | null
+          cash_paid_to_name?: string | null
+          cheque_bank?: string | null
+          cheque_date?: string | null
+          cheque_no?: string | null
+          collected_by?: string | null
           company_id: string
           created_at?: string
           customer_id: string
+          firm_id?: string | null
           id?: string
           method: string
           order_id?: string | null
@@ -3247,14 +3264,23 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           screenshot_path?: string | null
+          source?: string
           status?: string
           submitted_by?: string | null
         }
         Update: {
           amount?: number
+          balance_after?: number | null
+          cash_paid_to?: string | null
+          cash_paid_to_name?: string | null
+          cheque_bank?: string | null
+          cheque_date?: string | null
+          cheque_no?: string | null
+          collected_by?: string | null
           company_id?: string
           created_at?: string
           customer_id?: string
+          firm_id?: string | null
           id?: string
           method?: string
           order_id?: string | null
@@ -3265,6 +3291,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           screenshot_path?: string | null
+          source?: string
           status?: string
           submitted_by?: string | null
         }
@@ -3281,6 +3308,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_proofs_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
             referencedColumns: ["id"]
           },
           {
@@ -3711,6 +3745,99 @@ export type Database = {
         }
         Relationships: []
       }
+      receipt_allocation_history: {
+        Row: {
+          action: string
+          amount: number
+          changed_at: string
+          changed_by: string | null
+          id: string
+          invoice_id: string | null
+          opening_id: string | null
+          receipt_id: string
+        }
+        Insert: {
+          action: string
+          amount: number
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          invoice_id?: string | null
+          opening_id?: string | null
+          receipt_id: string
+        }
+        Update: {
+          action?: string
+          amount?: number
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          invoice_id?: string | null
+          opening_id?: string | null
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipt_allocation_history_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_allocation_history_opening_id_fkey"
+            columns: ["opening_id"]
+            isOneToOne: false
+            referencedRelation: "customer_opening_balances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_allocation_history_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      receipt_allocation_log: {
+        Row: {
+          after: Json
+          before: Json
+          changed_at: string
+          changed_by: string | null
+          id: number
+          reason: string
+          receipt_id: string
+        }
+        Insert: {
+          after: Json
+          before: Json
+          changed_at?: string
+          changed_by?: string | null
+          id?: never
+          reason: string
+          receipt_id: string
+        }
+        Update: {
+          after?: Json
+          before?: Json
+          changed_at?: string
+          changed_by?: string | null
+          id?: never
+          reason?: string
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipt_allocation_log_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       receipt_allocations: {
         Row: {
           amount: number
@@ -3770,6 +3897,7 @@ export type Database = {
           cheque_no: string | null
           cheque_photo_url: string | null
           cheque_status: string | null
+          collected_by: string | null
           company_id: string
           created_at: string
           created_by: string | null
@@ -3778,6 +3906,8 @@ export type Database = {
           id: string
           mode: string
           notes: string | null
+          proof_name: string | null
+          proof_path: string | null
           receipt_date: string
           receipt_no: string
           reference: string | null
@@ -3794,6 +3924,7 @@ export type Database = {
           cheque_no?: string | null
           cheque_photo_url?: string | null
           cheque_status?: string | null
+          collected_by?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
@@ -3802,6 +3933,8 @@ export type Database = {
           id?: string
           mode: string
           notes?: string | null
+          proof_name?: string | null
+          proof_path?: string | null
           receipt_date?: string
           receipt_no: string
           reference?: string | null
@@ -3818,6 +3951,7 @@ export type Database = {
           cheque_no?: string | null
           cheque_photo_url?: string | null
           cheque_status?: string | null
+          collected_by?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null
@@ -3826,6 +3960,8 @@ export type Database = {
           id?: string
           mode?: string
           notes?: string | null
+          proof_name?: string | null
+          proof_path?: string | null
           receipt_date?: string
           receipt_no?: string
           reference?: string | null
@@ -5272,9 +5408,21 @@ export type Database = {
       }
     }
     Functions: {
+      _advance: {
+        Args: { p_customer_id: string; p_firm_id: string }
+        Returns: number
+      }
       _allocate: {
         Args: { p_allocations: Json; p_receipt_id: string }
         Returns: number
+      }
+      _apply_advance: {
+        Args: { p_customer_id: string; p_firm_id: string }
+        Returns: number
+      }
+      _check_allocations: {
+        Args: { p_allocations: Json; p_receipt_id: string }
+        Returns: undefined
       }
       _create_orders: {
         Args: {
@@ -5314,6 +5462,7 @@ export type Database = {
         }
         Returns: string
       }
+      _fifo_allocate: { Args: { p_receipt_id: string }; Returns: number }
       _generate_invoice: {
         Args: { p_order_id: string; p_trip_id: string }
         Returns: string
@@ -5325,10 +5474,20 @@ export type Database = {
       }
       _is_trip_order: { Args: { p_order_id: string }; Returns: boolean }
       _next_order_no: { Args: { p_firm_id: string }; Returns: string }
+      _open_bills: {
+        Args: { p_customer_id: string; p_firm_id: string }
+        Returns: {
+          balance: number
+          bill_date: string
+          kind: string
+          ref_id: string
+        }[]
+      }
       _price_lines: {
         Args: { p_customer_id: string; p_lines: Json; p_office: boolean }
         Returns: Json
       }
+      _receipt_alloc_snapshot: { Args: { p_receipt_id: string }; Returns: Json }
       _refresh_invoice_paid: {
         Args: { p_invoice_id: string }
         Returns: undefined
@@ -5494,6 +5653,10 @@ export type Database = {
         }[]
       }
       current_session_id: { Args: never; Returns: string }
+      customer_advance: {
+        Args: { p_customer_id: string; p_firm_id?: string }
+        Returns: number
+      }
       customer_location: {
         Args: { p_customer_id: string }
         Returns: Record<string, unknown>
@@ -5745,6 +5908,21 @@ export type Database = {
           trusted_at: string
         }[]
       }
+      my_khata_statement: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          balance: number
+          credit: number
+          debit: number
+          description: string
+          entry_date: string
+          entry_type: string
+          invoice_id: string
+          order_id: string
+          ref_no: string
+        }[]
+      }
+      my_khata_summary: { Args: never; Returns: Json }
       my_permissions: {
         Args: never
         Returns: {
@@ -5845,6 +6023,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      reallocate_receipt:
+        | {
+            Args: { p_allocations: Json; p_receipt_id: string }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_allocations: Json
+              p_reason: string
+              p_receipt_id: string
+            }
+            Returns: Json
+          }
       record_cash_handover: {
         Args: {
           p_amount: number
@@ -5854,16 +6045,30 @@ export type Database = {
         }
         Returns: string
       }
-      record_collection: {
-        Args: {
-          p_amount: number
-          p_mode: string
-          p_photo_url?: string
-          p_reference?: string
-          p_stop_id: string
-        }
-        Returns: string
-      }
+      record_collection:
+        | {
+            Args: {
+              p_amount: number
+              p_collected_by?: string
+              p_customer_id: string
+              p_firm_id?: string
+              p_method: string
+              p_paid_on?: string
+              p_reference?: string
+              p_source?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_mode: string
+              p_photo_url?: string
+              p_reference?: string
+              p_stop_id: string
+            }
+            Returns: string
+          }
       record_due_collection: {
         Args: {
           p_amount: number
@@ -6059,6 +6264,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_receipt_details: {
+        Args: {
+          p_collected_by?: string
+          p_proof_name?: string
+          p_proof_path?: string
+          p_receipt_id: string
+        }
+        Returns: undefined
+      }
       set_user_active: {
         Args: { p_active: boolean; p_user_id: string }
         Returns: undefined
@@ -6116,6 +6330,21 @@ export type Database = {
         Args: { p_customer_id: string; p_trip_id: string }
         Returns: Json
       }
+      submit_my_payment: {
+        Args: {
+          p_amount: number
+          p_cash_paid_to?: string
+          p_cash_paid_to_name?: string
+          p_cheque_bank?: string
+          p_cheque_date?: string
+          p_cheque_no?: string
+          p_method: string
+          p_paid_on?: string
+          p_reference?: string
+          p_screenshot_path?: string
+        }
+        Returns: string
+      }
       submit_payment_proof: {
         Args: {
           p_amount: number
@@ -6136,6 +6365,10 @@ export type Database = {
       update_my_profile: {
         Args: { p_full_name: string; p_language?: string; p_photo_url?: string }
         Returns: undefined
+      }
+      verify_payment_proof: {
+        Args: { p_allocations?: Json; p_firm_id?: string; p_id: string }
+        Returns: Json
       }
     }
     Enums: {
