@@ -2,6 +2,7 @@
 
 Prompt-3 (rename + login redesign + phone fit): complete.
 Prompt-4 (login security + vehicle-check languages): complete.
+Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting user's receive-and-verify confirmation.
 
 ## Prompt-4 Stage 1 — Login security
 - [x] Removed the mobile-only token path (staffOtpLogin returned a magic-link
