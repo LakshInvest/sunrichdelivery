@@ -1,0 +1,1 @@
+alter table public.otp_requests add column if not exists locked_until timestamptz;

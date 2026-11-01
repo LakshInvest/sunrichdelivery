@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTeamAuth } from "@/lib/team-auth";
 import { LANGS, useLang, type Lang } from "@/lib/l10n";
 import { getDeviceId, getDeviceLabel } from "@/lib/device";
-import { checkDeviceStatus, staffLogin, staffOtpLogin } from "@/lib/staff-login.functions";
+import { checkDeviceStatus, staffLogin, staffRequestOtp, staffVerifyOtp } from "@/lib/staff-login.functions";
 import { haptic } from "@/lib/native";
 import { WaterLoader, BrandLogo } from "@/components/team/ui";
 
@@ -239,26 +239,72 @@ function Login() {
     if (resendTimer) clearInterval(resendTimer);
     const timer = setInterval(() => setResendIn((s) => (s <= 1 ? 0 : s - 1)), 1000);
     setResendTimer(timer);
-    const res = await staffOtpLogin({ data: { mobile: `+91${mobile}` } });
+    // The server generates the code and keeps it; the browser never receives
+    // it. Only login_without_otp accounts get an auto-verifiable session token.
+    const res = await staffRequestOtp({ data: { mobile: `+91${mobile}`, deviceId: getDeviceId() } });
     if (!res.ok) {
       setError(t(`err.${res.code}`) === `err.${res.code}` ? t("err.login_failed") : t(`err.${res.code}`));
       return;
     }
-    setOtpEmail(res.email);
-    otpToken.current = res.token;
+    if (res.auto) {
+      setOtpEmail(res.email);
+      otpToken.current = res.token;
+    }
     setTimeout(() => otpInput.current?.focus(), 250);
   }, [mobile, resendTimer, t]);
 
   const verifyCode = async (candidate: string) => {
-    if (!otpEmail || busy) return;
+    if (busy) return;
     setBusy(true);
     setError(null);
-    const { error: vErr } = await supabase.auth.verifyOtp({ email: otpEmail, token: candidate, type: "magiclink" });
+
+    // Auto path (login_without_otp / demo): the held token opens the session.
+    if (otpEmail && otpToken.current) {
+      const { error: vErr } = await supabase.auth.verifyOtp({ email: otpEmail, token: otpToken.current, type: "magiclink" });
+      if (vErr) {
+        setBusy(false);
+        void haptic("error");
+        setOtpState("error");
+        setError(t("err.otp_mismatch"));
+        setTimeout(() => {
+          setOtpState("idle");
+          setCode("");
+        }, 500);
+        return;
+      }
+      setOtpState("success");
+      await recordLogin();
+      setBusy(false);
+      setTimeout(finish, 450);
+      return;
+    }
+
+    // Normal path: the typed code is verified on the server. Only after the
+    // server accepts it does it hand back the one-time session token.
+    const res = await staffVerifyOtp({ data: { mobile: `+91${mobile}`, code: candidate } });
+    if (!res.ok) {
+      setBusy(false);
+      void haptic("error");
+      setOtpState("error");
+      setError(
+        res.code === "wrong_otp"
+          ? t("err.wrong_otp", { n: res.attemptsLeft ?? 0 })
+          : t(`err.${res.code}`) === `err.${res.code}`
+            ? t("err.otp_mismatch")
+            : t(`err.${res.code}`),
+      );
+      setTimeout(() => {
+        setOtpState("idle");
+        setCode("");
+      }, 500);
+      return;
+    }
+    const { error: vErr } = await supabase.auth.verifyOtp({ email: res.email, token: res.token, type: "magiclink" });
     if (vErr) {
       setBusy(false);
       void haptic("error");
       setOtpState("error");
-      setError(t("err.otp_mismatch"));
+      setError(t("err.verify_failed"));
       setTimeout(() => {
         setOtpState("idle");
         setCode("");
