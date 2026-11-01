@@ -22,9 +22,9 @@ import { queueRpc } from "@/lib/offline";
 export const Route = createFileRoute("/_authenticated/driver/$tripId")({
   head: () => ({
     meta: [
-      { title: "Trip · Sunrich Team" },
+      { title: "Trip · Sunrich Delivery" },
       { name: "description", content: "Work your delivery trip." },
-      { property: "og:title", content: "Trip · Sunrich Team" },
+      { property: "og:title", content: "Trip · Sunrich Delivery" },
       { property: "og:description", content: "Work your delivery trip." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -10,9 +10,9 @@ import { ScanLine } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/security")({
   head: () => ({
     meta: [
-      { title: "Security gate · Sunrich Team" },
+      { title: "Security gate · Sunrich Delivery" },
       { name: "description", content: "Record gate out, gate in and the gate log." },
-      { property: "og:title", content: "Security gate · Sunrich Team" },
+      { property: "og:title", content: "Security gate · Sunrich Delivery" },
       { property: "og:description", content: "Record gate out, gate in and the gate log." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

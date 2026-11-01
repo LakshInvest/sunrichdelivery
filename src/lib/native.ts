@@ -23,8 +23,8 @@ let navigateFn: ((path: string) => void) | null = null;
 function routeFromUrl(url: string): string | null {
   try {
     const u = new URL(url);
-    // com.sunrich.team://driver/abc  → host "driver", path "/abc"
-    if (u.protocol === "com.sunrich.team:") return `/${u.host}${u.pathname}`.replace(/\/+$/, "") || "/";
+    // com.sunrich.delivery://driver/abc  → host "driver", path "/abc"
+    if (u.protocol === "com.sunrich.delivery:") return `/${u.host}${u.pathname}`.replace(/\/+$/, "") || "/";
     return `${u.pathname}${u.search}` || "/";
   } catch {
     return null;
@@ -91,7 +91,7 @@ export async function registerPush(language: string) {
         p_token: value,
         p_device_id: getDeviceId(),
         p_platform: "android",
-        p_app: "team",
+        p_app: "delivery",
         p_language: language,
       });
     });
@@ -136,7 +136,7 @@ export async function startTripMode(
     const id = await Bg.addWatcher(
       {
         backgroundTitle: "Trip in progress",
-        backgroundMessage: "Sunrich Team is sharing your location for this trip only.",
+        backgroundMessage: "Sunrich Delivery is sharing your location for this trip only.",
         requestPermissions: true,
         stale: false,
         distanceFilter: 25,

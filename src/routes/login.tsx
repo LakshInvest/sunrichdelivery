@@ -12,10 +12,10 @@ import { WaterLoader, BrandLogo } from "@/components/team/ui";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Sign in · Sunrich Team" },
-      { name: "description", content: "Sign in to the Sunrich Team app with your mobile number and PIN." },
-      { property: "og:title", content: "Sign in · Sunrich Team" },
-      { property: "og:description", content: "Sign in to the Sunrich Team app with your mobile number and PIN." },
+      { title: "Sign in · Sunrich Delivery" },
+      { name: "description", content: "Sign in to the Sunrich Delivery app with your mobile number and PIN." },
+      { property: "og:title", content: "Sign in · Sunrich Delivery" },
+      { property: "og:description", content: "Sign in to the Sunrich Delivery app with your mobile number and PIN." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -377,7 +377,7 @@ function Login() {
       <div className="relative overflow-hidden bg-gradient-to-b from-navy via-navy to-navy-deep pb-10 pt-[max(env(safe-area-inset-top),1.25rem)]">
         <WaterScene />
         <div className="relative flex items-center justify-between px-5">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Sunrich Team</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Sunrich Delivery</span>
           <div className="flex gap-1 rounded-full bg-white/10 p-1" role="group" aria-label="Language">
             {LANGS.map((l: { code: Lang; short: string }) => (
               <button

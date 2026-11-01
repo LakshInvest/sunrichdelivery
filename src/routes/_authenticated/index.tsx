@@ -8,10 +8,10 @@ import { Truck, Boxes, ShieldCheck, ChevronRight, UserRound } from "lucide-react
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
-      { title: "Home · Sunrich Team" },
-      { name: "description", content: "Your Sunrich Team home screen." },
-      { property: "og:title", content: "Home · Sunrich Team" },
-      { property: "og:description", content: "Your Sunrich Team home screen." },
+      { title: "Home · Sunrich Delivery" },
+      { name: "description", content: "Your Sunrich Delivery home screen." },
+      { property: "og:title", content: "Home · Sunrich Delivery" },
+      { property: "og:description", content: "Your Sunrich Delivery home screen." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

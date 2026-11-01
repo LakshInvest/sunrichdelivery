@@ -7,10 +7,10 @@ import { BrandLogo, LanguageChips, Screen, Spinner, useSignOut } from "@/compone
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
-      { title: "Profile · Sunrich Team" },
-      { name: "description", content: "Your Sunrich Team profile, language and device." },
-      { property: "og:title", content: "Profile · Sunrich Team" },
-      { property: "og:description", content: "Your Sunrich Team profile, language and device." },
+      { title: "Profile · Sunrich Delivery" },
+      { name: "description", content: "Your Sunrich Delivery profile, language and device." },
+      { property: "og:title", content: "Profile · Sunrich Delivery" },
+      { property: "og:description", content: "Your Sunrich Delivery profile, language and device." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
