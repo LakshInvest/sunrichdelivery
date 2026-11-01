@@ -91,7 +91,7 @@ function CodeBoxes({
               className={`absolute inset-0 transition-transform duration-300 ease-out ${
                 state === "success"
                   ? "bg-emerald-500"
-                  : "bg-gradient-to-t from-aqua to-[#5fc3f4]"
+                  : "bg-gradient-to-t from-aqua to-aqua/70"
               }`}
               style={{ transform: filled ? "translateY(0)" : "translateY(101%)" }}
             />
@@ -133,7 +133,7 @@ function ResendRing({ seconds, onResend, label }: { seconds: number; onResend: (
           cy="12"
           r={r}
           fill="none"
-          stroke="#0AAAED"
+          stroke="var(--color-aqua)"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeDasharray={c}
@@ -162,28 +162,8 @@ function Login() {
   const otpToken = useRef<string | null>(null);
   const [resendIn, setResendIn] = useState(0);
   const [clipboardCode, setClipboardCode] = useState<string | null>(null);
-  const [tagline, setTagline] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState<ReturnType<typeof setInterval> | null>(null);
   const otpInput = useRef<HTMLInputElement>(null);
-
-  // Brand tagline from public_app_info() so Command Center edits apply here too.
-  useEffect(() => {
-    let alive = true;
-    void (async () => {
-      try {
-        const { data } = await supabase.rpc("public_app_info");
-        if (!alive || !data) return;
-        const info = data as Record<string, unknown>;
-        const key = lang === "hi" ? "login_tagline_hi" : lang === "mr" ? "login_tagline_mr" : "login_tagline";
-        setTagline((info[key] as string) || (info["login_tagline"] as string) || null);
-      } catch {
-        // branding stays on the bundled logo/tagline fallback
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [lang]);
 
   // Remember the last number on this device (device id itself is never regenerated).
   useEffect(() => {
@@ -425,7 +405,7 @@ function Login() {
                 onClick={() => setLang(l.code)}
                 aria-pressed={lang === l.code}
                 className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
-                  lang === l.code ? "bg-white text-navy" : "text-white/80"
+                  lang === l.code ? "bg-aqua text-navy" : "text-white/80"
                 }`}
               >
                 {l.short}
@@ -435,7 +415,9 @@ function Login() {
         </div>
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-6 text-center">
           <BrandLogo tone="white" className="h-16" />
-          {tagline && <p className="mt-4 text-sm font-medium text-white/75">{tagline}</p>}
+          <p className={`mt-4 text-sm font-bold uppercase text-aqua ${lang === "en" ? "tracking-[0.35em]" : "tracking-wide"}`}>
+            {lang === "hi" ? "डिलीवरी" : lang === "mr" ? "डिलिव्हरी" : "DELIVERY"}
+          </p>
         </div>
       </div>
 
@@ -485,7 +467,7 @@ function Login() {
                 <button
                   type="submit"
                   disabled={busy || mobile.replace(/\D/g, "").length !== 10}
-                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:opacity-50"
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
                 >
                   {busy ? <WaterLoader className="h-5 w-5" light /> : <WhatsAppIcon />}
                   {busy ? t("login.verifying") : t("login.cta")}

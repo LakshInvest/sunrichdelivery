@@ -101,3 +101,11 @@ if (existsSync(gradlePath)) {
 }
 
 console.log("Android project patched for Sunrich Delivery.");
+
+// Delivery launcher icon + splash from /assets (gold DELIVERY identity).
+try {
+  const { execSync } = await import("node:child_process");
+  execSync("npx @capacitor/assets generate --android", { stdio: "inherit" });
+} catch (e) {
+  console.warn("icon/splash generation skipped:", e?.message ?? e);
+}

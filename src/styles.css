@@ -6,7 +6,7 @@
 
 /*
  * Sunrich Delivery design system — water identity.
- * Brand: navy #0D3278 (primary), aqua #0AAAED (accent), light blue-grey #F4F7FB bg.
+ * Brand: navy #0D3278 (primary), Delivery Gold #E0A526 (accent), light blue-grey #F4F7FB bg.
  * Headings: Plus Jakarta Sans (font-display). Body: Inter. Numbers: tabular.
  * Cards 20px, buttons/inputs 12–14px, chips fully round, soft shadows, no hard corners.
  */
@@ -67,8 +67,8 @@
   --radius: 1rem;
   --navy: oklch(0.34 0.127 261.6); /* #0D3278 */
   --navy-deep: oklch(0.223 0.052 258.3); /* #0B1B33 */
-  --aqua: oklch(0.698 0.149 236); /* #0AAAED */
-  --aqua-soft: oklch(0.947 0.026 236); /* pale aqua tint */
+  --aqua: oklch(0.769 0.147 78.5); /* Delivery Gold #E0A526 */
+  --aqua-soft: oklch(0.962 0.04 85); /* pale gold tint */
   --background: oklch(0.975 0.006 255.5); /* #F4F7FB */
   --foreground: oklch(0.223 0.052 258.3);
   --card: oklch(1 0 0);
@@ -81,14 +81,14 @@
   --secondary-foreground: oklch(0.34 0.127 261.6);
   --muted: oklch(0.959 0.01 252.8);
   --muted-foreground: oklch(0.522 0.039 253.9);
-  --accent: oklch(0.947 0.026 236);
+  --accent: oklch(0.962 0.04 85);
   --accent-foreground: oklch(0.34 0.127 261.6);
   --destructive: oklch(0.637 0.208 25.3);
   --destructive-foreground: oklch(0.985 0.005 247.9);
   --border: oklch(0.934 0.014 254.6); /* #E3EAF3 */
   --input: oklch(0.934 0.014 254.6);
-  --ring: oklch(0.698 0.149 236);
-  --chart-1: oklch(0.698 0.149 236);
+  --ring: oklch(0.769 0.147 78.5);
+  --chart-1: oklch(0.769 0.147 78.5);
   --chart-2: oklch(0.627 0.17 149.2);
   --chart-3: oklch(0.34 0.127 261.6);
   --chart-4: oklch(0.666 0.157 58.3);
@@ -97,10 +97,10 @@
   --sidebar-foreground: oklch(0.223 0.052 258.3);
   --sidebar-primary: oklch(0.34 0.127 261.6);
   --sidebar-primary-foreground: oklch(0.985 0.005 247.9);
-  --sidebar-accent: oklch(0.947 0.026 236);
+  --sidebar-accent: oklch(0.962 0.04 85);
   --sidebar-accent-foreground: oklch(0.34 0.127 261.6);
   --sidebar-border: oklch(0.934 0.014 254.6);
-  --sidebar-ring: oklch(0.698 0.149 236);
+  --sidebar-ring: oklch(0.769 0.147 78.5);
   --shadow-soft: 0 8px 24px -12px oklch(0.34 0.127 261.6 / 0.18);
   --shadow-card: 0 2px 10px -4px oklch(0.223 0.052 258.3 / 0.08), 0 10px 28px -18px oklch(0.34 0.127 261.6 / 0.22);
 }
@@ -112,7 +112,7 @@
   --card-foreground: oklch(0.97 0.01 250);
   --popover: oklch(0.295 0.095 263.2);
   --popover-foreground: oklch(0.97 0.01 250);
-  --primary: oklch(0.698 0.149 236);
+  --primary: oklch(0.769 0.147 78.5);
   --primary-foreground: oklch(0.248 0.077 261.1);
   --secondary: oklch(0.34 0.1 261);
   --secondary-foreground: oklch(0.97 0.01 250);
@@ -124,20 +124,20 @@
   --destructive-foreground: oklch(0.985 0.005 247.9);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.698 0.149 236);
-  --chart-1: oklch(0.698 0.149 236);
+  --ring: oklch(0.769 0.147 78.5);
+  --chart-1: oklch(0.769 0.147 78.5);
   --chart-2: oklch(0.696 0.17 162.5);
   --chart-3: oklch(0.769 0.188 70.1);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.4);
   --sidebar: oklch(0.295 0.095 263.2);
   --sidebar-foreground: oklch(0.97 0.01 250);
-  --sidebar-primary: oklch(0.698 0.149 236);
+  --sidebar-primary: oklch(0.769 0.147 78.5);
   --sidebar-primary-foreground: oklch(0.248 0.077 261.1);
   --sidebar-accent: oklch(0.34 0.1 261);
   --sidebar-accent-foreground: oklch(0.97 0.01 250);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.698 0.149 236);
+  --sidebar-ring: oklch(0.769 0.147 78.5);
 }
 
 @layer base {

@@ -45,7 +45,7 @@ const config: CapacitorConfig = {
     },
     LocalNotifications: {
       smallIcon: "ic_stat_sunrich",
-      iconColor: "#0AAAED",
+      iconColor: "#E0A526",
     },
     Keyboard: {
       resize: "body",
