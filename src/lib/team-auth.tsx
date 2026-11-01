@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { staffLogin, myRoleCodes } from "@/lib/staff-login.functions";
 import { getDeviceId, getDeviceLabel } from "@/lib/device";
@@ -40,7 +40,8 @@ const LANGS = new Set(["en", "hi", "mr"]);
 export function TeamAuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [staff, setStaff] = useState<Staff | null>(null);
-  console.info("[auth] provider mount", Math.random().toString(36).slice(2, 6));
+  const pid = useRef(Math.random().toString(36).slice(2, 6));
+  console.info("[auth] provider", pid.current, "ready", ready, "staff", !!staff);
 
   const loadStaff = useCallback(async (userId: string): Promise<Staff | null> => {
     const [profileRes, permRes, roleCodes] = await Promise.all([
