@@ -21,7 +21,9 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
       src/lib/staff-login.functions.ts: reads AISENSY_API_KEY +
       AISENSY_OTP_CAMPAIGN (badiyouserlogin) project secrets (never hard-coded),
       POSTs to backend.aisensy.com/campaign/t1/api/v2, templateParams [otp],
-      retries once with a copy-code button payload if the template demands one.
+      copy-code button parameter sent with EVERY call (AiSensy reports success
+      even when WhatsApp later rejects a Url button without parameters, so the
+      old retry-on-rejection path was removed).
 - [x] Rate limit: max 3 sends per mobile per 15 min → err.too_many_codes,
       checked before any send.
 - [x] Send failure consumes the stored code and shows err.otp_send_failed
