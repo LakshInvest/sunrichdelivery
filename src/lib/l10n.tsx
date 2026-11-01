@@ -709,6 +709,7 @@ export function LanguageProvider({
   }, [initialLang]);
 
   const setLang = (l: Lang) => {
+    console.info("[lang] setLang", l, "onPersist:", typeof onPersist);
     setLangState(l);
     try {
       window.localStorage.setItem(LANG_KEY, l);
