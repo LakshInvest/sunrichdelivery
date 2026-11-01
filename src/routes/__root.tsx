@@ -130,18 +130,17 @@ function RootShell({ children }: { children: ReactNode }) {
 /** Bridges the signed-in staff member's language into the translation provider. */
 function TeamLocale({ children }: { children: ReactNode }) {
   const { staff } = useTeamAuth();
-  console.info("[lang] TeamLocale render staff:", !!staff);
   return (
     <LanguageProvider
       initialLang={staff?.lang ?? null}
       onPersist={(lang: Lang) => {
-        try {
-          console.info("[lang] onPersist", lang, "staff:", !!staff);
-          if (!staff) return;
-          void supabase.rpc("update_my_profile", { p_full_name: staff.fullName, p_language: lang });
-        } catch (e) {
-          console.error("[lang] persist failed", e);
-        }
+        if (!staff) return;
+        // PostgREST builders only execute when awaited/then'd — never fire-and-forget.
+        void supabase
+          .rpc("update_my_profile", { p_full_name: staff.fullName, p_language: lang })
+          .then(({ error }) => {
+            if (error) console.warn("[lang] persist failed", error.message);
+          });
       }}
     >
       {children}
