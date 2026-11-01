@@ -8,7 +8,7 @@ import { PhotoInput, StatusBadge } from "@/components/team/ui";
 import { uploadDataUrl } from "@/lib/photo";
 
 /** Vehicle-check labels keyed by the English name; missing/empty → English. */
-type CheckNames = Record<string, { name_hi?: string; name_mr?: string }>;
+type CheckNames = Record<string, { name_hi?: string | undefined; name_mr?: string | undefined }>;
 let checkNamesCache: CheckNames | null = null;
 
 function useVehicleCheckNames(): CheckNames {
@@ -19,7 +19,7 @@ function useVehicleCheckNames(): CheckNames {
     // The table ships with database/20261101_043_vehicle_check_item_names.sql
     // and is not in the generated types yet — query it loosely typed.
     const req = (
-      supabase.from("vehicle_check_item_names") as unknown as {
+      supabase.from("vehicle_check_item_names" as never) as unknown as {
         select: (cols: string) => PromiseLike<{
           data: { en: string; name_hi: string | null; name_mr: string | null }[] | null;
           error: { message: string } | null;
