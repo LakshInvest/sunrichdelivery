@@ -15,9 +15,26 @@ Prompt-4 (login security + vehicle-check languages): complete.
 - [x] Tests run (browser + DB): bare mobile → no token; wrong OTP ×4 → countdown;
       5th → locked 15 min (locked_until verified); correct OTP → signed in;
       wrong PIN ×5 → locked; correct PIN on trusted phone → signed in. Test rows cleaned up.
-- [ ] OTP delivery: no WhatsApp gateway exists in this backend — the code is
-      generated and verified but cannot reach the phone yet. Integration point:
-      staffRequestOtp in src/lib/staff-login.functions.ts (marked "Delivery hook").
+## Prompt-5 — WhatsApp OTP delivery via AiSensy
+- [x] sendOtpWhatsapp wired at the former "Delivery hook" in
+      src/lib/staff-login.functions.ts: reads AISENSY_API_KEY +
+      AISENSY_OTP_CAMPAIGN (badiyouserlogin) project secrets (never hard-coded),
+      POSTs to backend.aisensy.com/campaign/t1/api/v2, templateParams [otp],
+      retries once with a copy-code button payload if the template demands one.
+- [x] Rate limit: max 3 sends per mobile per 15 min → err.too_many_codes,
+      checked before any send.
+- [x] Send failure consumes the stored code and shows err.otp_send_failed
+      ("Could not send the code. Try again.", EN/HI/MR); failure reason logged
+      server-side without the code or key.
+- [x] Tests (browser + DB): planted-code verify → signed in as Owner;
+      real send to 8698340766 accepted (row stored unconsumed, no error shown);
+      3 planted rows → 4th request refused with the too-many message, no new
+      row. Test rows cleaned up.
+- [ ] User confirmation pending: read the code on WhatsApp and type it in the
+      preview (Resend issues a fresh code; the 08:19 UTC code expires at 08:24).
+- Note: profile +918698340766 was flipped from customer to staff (was
+      user_type 'customer', full_name was '8698340766') so the team app can
+      deliver to it; it has no team roles yet.
 
 ## Prompt-4 Stage 2 — Vehicle-check names in EN/HI/MR
 - [x] SQL prepared, NOT run (user runs it): database/20261101_043_vehicle_check_item_names.sql
