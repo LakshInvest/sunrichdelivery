@@ -177,14 +177,14 @@ function Login() {
     });
   }, []);
 
-  // Offer a 6-digit code found on the clipboard when the app regains focus
+  // Offer a 4-digit code found on the clipboard when the app regains focus
   // (WhatsApp "Copy code" button).
   useEffect(() => {
     if (step !== "otp") return;
     const check = async () => {
       try {
         const text = await navigator.clipboard.readText();
-        const c = text.match(/\b(\d{6})\b/)?.[1];
+        const c = text.match(/\b(\d{4})\b/)?.[1];
         if (c && c !== code) setClipboardCode(c);
         else setClipboardCode(null);
       } catch {
@@ -309,11 +309,10 @@ function Login() {
   };
 
   const onOtpChange = (raw: string) => {
-    const digits = raw.replace(/\D/g, "").slice(0, 6);
+    const digits = raw.replace(/\D/g, "").slice(0, 4);
     setCode(digits);
     setError(null);
     setOtpState("idle");
-    if (digits.length === 6) void verifyCode(digits);
   };
 
   const checkMobile = async () => {
@@ -382,7 +381,6 @@ function Login() {
     setPin(digits);
     setError(null);
     setPinState("idle");
-    if (digits.length === 4) void submitPin(digits);
   };
 
   const formatted = (digits: string) => (digits.length > 5 ? `${digits.slice(0, 5)} ${digits.slice(5)}` : digits);
@@ -442,11 +440,11 @@ function Login() {
                 }}
                 className="mt-6"
               >
-                <label htmlFor="mobile" className="mb-1 block text-sm font-medium text-foreground">
+                <label htmlFor="mobile" className="mb-1.5 block text-center text-sm font-medium text-foreground">
                   {t("login.mobile")}
                 </label>
-                <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 focus-within:border-aqua focus-within:ring-2 focus-within:ring-aqua/30">
-                  <span className="text-sm font-semibold text-muted-foreground">+91</span>
+                <div className="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 focus-within:border-aqua focus-within:ring-2 focus-within:ring-aqua/30">
+                  <span className="text-xl font-semibold tabular-nums text-foreground">+91</span>
                   <input
                     id="mobile"
                     inputMode="numeric"
@@ -454,7 +452,9 @@ function Login() {
                     maxLength={11}
                     value={formatted(mobile.replace(/\D/g, ""))}
                     onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    className="w-full bg-transparent py-3.5 text-lg font-semibold tracking-wide text-foreground outline-none"
+                    size={11}
+                    style={{ width: "11ch" }}
+                    className="bg-transparent py-3.5 text-left text-xl font-semibold tabular-nums text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground/50"
                     placeholder="98765 43210"
                     required
                   />
@@ -490,8 +490,15 @@ function Login() {
               </button>
               <h1 className="font-display text-2xl font-bold text-foreground">{t("login.welcome", { name: name ?? "" })}</h1>
               <p className="mt-1 text-sm text-muted-foreground">{t("login.pinHint")}</p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (pin.length === 4 && !busy) void submitPin(pin);
+                }}
+              >
               <div className="relative mt-6">
                 <input
+                  enterKeyHint="done"
                   ref={(el) => {
                     if (el) setTimeout(() => el.focus(), 200);
                   }}
@@ -505,6 +512,14 @@ function Login() {
                 />
                 <CodeBoxes count={4} code={pin} state={pinState} />
               </div>
+              <button
+                type="submit"
+                disabled={busy || pin.length !== 4}
+                className="mt-5 flex w-full items-center justify-center rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+              >
+                {t("login.continue")}
+              </button>
+              </form>
               {error && (
                 <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive" role="alert">
                   {error}
@@ -531,8 +546,15 @@ function Login() {
               </button>
               <h1 className="font-display text-2xl font-bold text-foreground">{t("login.otpTitle")}</h1>
               <p className="mt-1 text-sm text-muted-foreground">{t("login.otpSent", { mobile: maskedMobile })}</p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (code.length === 4 && !busy) void verifyCode(code);
+                }}
+              >
               <div className="relative mt-6">
                 <input
+                  enterKeyHint="done"
                   ref={otpInput}
                   inputMode="numeric"
                   autoComplete="one-time-code"
@@ -545,8 +567,16 @@ function Login() {
                   className="absolute inset-0 h-16 w-full cursor-pointer opacity-0"
                   aria-label={t("login.otpTitle")}
                 />
-                <CodeBoxes count={6} code={code} state={otpState} />
+                <CodeBoxes count={4} code={code} state={otpState} />
               </div>
+              <button
+                type="submit"
+                disabled={busy || code.length !== 4}
+                className="mt-5 flex w-full items-center justify-center rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+              >
+                {t("login.verify")}
+              </button>
+              </form>
               {clipboardCode && (
                 <button
                   type="button"
