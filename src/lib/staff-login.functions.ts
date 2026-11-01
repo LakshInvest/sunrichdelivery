@@ -381,7 +381,7 @@ export const staffRequestOtp = createServerFn({ method: "POST" })
     if (!sent.ok) {
       // Mark the stored code unusable so a failed send can never be verified.
       await supabaseAdmin.from("otp_requests").update({ consumed_at: new Date().toISOString() }).eq("id", inserted.id);
-      return { ok: false, code: sent.reason === "missing_aisensy_secret" ? "otp_send_failed" : "otp_send_failed" };
+      return { ok: false, code: "otp_send_failed" };
     }
     return { ok: true };
   });
