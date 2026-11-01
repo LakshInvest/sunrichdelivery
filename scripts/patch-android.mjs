@@ -77,6 +77,14 @@ if (!m.includes("foregroundServiceType")) {
     `    <service android:name="com.equimaps.capacitor_background_geolocation.BackgroundGeolocationService" android:enabled="true" android:exported="false" android:foregroundServiceType="location" />\n    $1`,
   );
 }
+// Manifest merger: the plugin's own service declares android:exported too.
+if (!m.includes("xmlns:tools")) {
+  m = m.replace(/<manifest\b/, '<manifest xmlns:tools="http://schemas.android.com/tools"');
+}
+m = m.replace(
+  /(<service android:name="com\.equimaps\.capacitor_background_geolocation\.BackgroundGeolocationService")(?![^>]*tools:replace)/,
+  '$1 tools:replace="android:exported"',
+);
 writeFileSync(manifestPath, m);
 
 // Notification icon (white, simple vector).

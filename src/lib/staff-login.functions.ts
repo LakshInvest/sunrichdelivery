@@ -1,7 +1,7 @@
 // Mobile + PIN/OTP login. Runs server-side:
 // - PIN sign-in is verified by check_pin (trusted device required unless the
 //   profile allows skipping OTP).
-// - OTP sign-in: the 6-digit code is generated, stored hashed and verified on
+// - OTP sign-in: the 4-digit code is generated, stored hashed and verified on
 //   the server. A bare mobile number NEVER returns a session token; the token
 //   is minted only after a correct PIN or a correct, unexpired OTP.
 import { createServerFn } from "@tanstack/react-start";
@@ -43,10 +43,10 @@ const sha256Hex = async (s: string): Promise<string> => {
     .join("");
 };
 
-const sixDigitCode = (): string => {
+const fourDigitCode = (): string => {
   const buf = new Uint32Array(1);
   crypto.getRandomValues(buf);
-  return String((buf[0] ?? 0) % 1_000_000).padStart(6, "0");
+  return String((buf[0] ?? 0) % 10_000).padStart(4, "0");
 };
 
 /** Audit-log a login_without_otp sign-in (flag set from Command Center). */
@@ -254,7 +254,7 @@ export type StaffOtpRequestResult =
   | { ok: false; code: string };
 
 /**
- * Step 1 of the OTP path. Generates a 6-digit code, stores only its hash
+ * Step 1 of the OTP path. Generates a 4-digit code, stores only its hash
  * (5-minute validity, max 5 wrong tries then a 15-minute lock, single use) and
  * sends nothing sensitive back to the browser.
  *
@@ -343,7 +343,7 @@ export const staffRequestOtp = createServerFn({ method: "POST" })
       .eq("purpose", "staff_2fa")
       .is("consumed_at", null);
 
-    const code = sixDigitCode();
+    const code = fourDigitCode();
     const { data: inserted, error: insertErr } = await supabaseAdmin
       .from("otp_requests")
       .insert({
@@ -391,7 +391,7 @@ export const staffVerifyOtp = createServerFn({ method: "POST" })
     const supabaseAdmin = await adminClient();
     const digits = String(data.mobile || "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
     const code = String(data.code || "").replace(/\D/g, "");
-    if (!/^\d{10}$/.test(digits) || !/^[6-9]/.test(digits) || !/^\d{6}$/.test(code)) {
+    if (!/^\d{10}$/.test(digits) || !/^[6-9]/.test(digits) || !/^\d{4}$/.test(code)) {
       return { ok: false, code: "invalid_mobile" };
     }
     const mobile = `+91${digits}`;
