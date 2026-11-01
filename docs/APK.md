@@ -1,6 +1,6 @@
-# Build the Sunrich Team APK (Windows)
+# Build the Sunrich Delivery APK (Windows)
 
-The APK is a "live-site" app: it opens https://sunrichteam.lovable.app, so new features
+The APK is a "live-site" app: it opens https://sunrich-delivery.lovable.app, so new features
 appear automatically. Rebuild only to change the version number.
 
 ## 1. Install once
@@ -13,8 +13,8 @@ appear automatically. Rebuild only to change the version number.
 Open **Command Prompt** and run:
 ```
 cd %USERPROFILE%\Documents
-git clone <your GitHub repo URL> sunrich-team
-cd sunrich-team
+git clone <your GitHub repo URL> sunrich-delivery
+cd sunrich-delivery
 npm install
 ```
 
@@ -27,9 +27,9 @@ npm run android:patch
 background location service, deep links, notification icon and the push guard.
 
 ## 4. Push notifications (optional)
-1. In Firebase console, add an Android app with package name `com.sunrich.team`.
-2. Download `google-services.json` and copy it to:
-   `sunrich-team\android\app\google-services.json`
+1. In Firebase console, add an Android app with package name `com.sunrich.delivery`.
+2. Download `google-services-delivery.json` and copy it to:
+   `sunrich-delivery\android\app\google-services-delivery.json`
 
 Without this file the app still builds and runs; it just skips push registration
 (the console shows "push skipped").
@@ -46,7 +46,7 @@ writes every launcher icon density plus the adaptive icon (navy background).
 npx cap sync android
 npm run android:patch
 ```
-Run both again any time you add/replace `google-services.json` or update packages.
+Run both again any time you add/replace `google-services-delivery.json` or update packages.
 
 ## 6. Build the APK
 ```
@@ -56,7 +56,7 @@ In Android Studio wait for "Gradle sync" to finish, then:
 **Build → Build App Bundle(s) / APK(s) → Build APK(s)**.
 
 The APK lands at:
-`sunrich-team\android\app\build\outputs\apk\debug\app-debug.apk`
+`sunrich-delivery\android\app\build\outputs\apk\debug\app-debug.apk`
 (Android Studio shows a "locate" link when done.)
 
 For a Play Store / signed release: **Build → Generate Signed App Bundle / APK**, create a
@@ -78,6 +78,6 @@ Edit `android\app\build.gradle` → `versionCode` (+1) and `versionName`, then r
 Push (FCM, saved with `save_my_push_token`, app `team`, tap opens the trip/screen), local
 notifications (channels "Trips" and "Alerts"), GPS, background location during active trips
 only, QR scanning (gate / pickup pass), camera, offline photo storage, keep screen on during
-trips, splash screen, status bar, back button + deep links (`com.sunrich.team://driver/<id>`
-and `https://sunrichteam.lovable.app/...`), in-app browser, share, network status,
+trips, splash screen, status bar, back button + deep links (`com.sunrich.delivery://driver/<id>`
+and `https://sunrich-delivery.lovable.app/...`), in-app browser, share, network status,
 preferences, keyboard and haptics. In a normal browser every feature falls back to web behaviour.

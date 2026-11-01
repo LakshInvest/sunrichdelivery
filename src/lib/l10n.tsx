@@ -5,15 +5,15 @@ export type Lang = "en" | "hi" | "mr";
 export const LANGS: { code: Lang; label: string; short: string }[] = [
   { code: "en", label: "English", short: "EN" },
   { code: "hi", label: "हिन्दी", short: "हिं" },
-  { code: "mr", label: "मराठी", short: "म" },
+  { code: "mr", label: "मराठी", short: "मरा" },
 ];
 
 type Dict = Record<string, string>;
 
 const en: Dict = {
   // login
-  "login.title": "Sunrich Team",
-  "login.subtitle": "Sign in with your mobile number and PIN",
+  "login.title": "Sunrich Delivery",
+  "login.subtitle": "Sign in with your mobile number",
   "login.mobile": "Mobile number",
   "login.pin": "4-digit PIN",
   "login.submit": "Sign in",
@@ -44,7 +44,7 @@ const en: Dict = {
   "err.verify_failed": "Could not finish sign-in. Try again.",
   "err.offline": "You are offline. Connect to the internet to sign in.",
   // common
-  "c.appName": "Sunrich Team",
+  "c.appName": "Sunrich Delivery",
   "c.loading": "Loading…",
   "c.save": "Save",
   "c.submit": "Submit",
@@ -73,7 +73,7 @@ const en: Dict = {
   "c.none": "Nothing here yet",
   // home
   "home.greeting": "Hello, {name}",
-  "home.sub": "Sunrich Team app",
+  "home.sub": "Sunrich Delivery app",
   "home.yourRoles": "{roles}",
   "home.driverCard": "Driver",
   "home.driverCardSub": "Trips, deliveries, collections",
@@ -237,8 +237,8 @@ const en: Dict = {
 };
 
 const hi: Dict = {
-  "login.title": "सनरिच टीम",
-  "login.subtitle": "मोबाइल नंबर और PIN से साइन इन करें",
+  "login.title": "सनरिच डिलीवरी",
+  "login.subtitle": "मोबाइल नंबर से साइन इन करें",
   "login.mobile": "मोबाइल नंबर",
   "login.pin": "4 अंकों का PIN",
   "login.submit": "साइन इन",
@@ -268,7 +268,7 @@ const hi: Dict = {
   "err.login_failed": "साइन इन नहीं हो सका। कनेक्शन जाँचें और फिर कोशिश करें।",
   "err.verify_failed": "साइन इन पूरा नहीं हुआ। दोबारा कोशिश करें।",
   "err.offline": "आप ऑफ़लाइन हैं। साइन इन के लिए इंटरनेट चाहिए।",
-  "c.appName": "सनरिच टीम",
+  "c.appName": "सनरिच डिलीवरी",
   "c.loading": "लोड हो रहा है…",
   "c.save": "सेव",
   "c.submit": "जमा करें",
@@ -296,7 +296,7 @@ const hi: Dict = {
   "c.camera": "कैमरा",
   "c.none": "अभी कुछ नहीं है",
   "home.greeting": "नमस्ते, {name}",
-  "home.sub": "सनरिच टीम ऐप",
+  "home.sub": "सनरिच डिलीवरी ऐप",
   "home.yourRoles": "{roles}",
   "home.driverCard": "ड्राइवर",
   "home.driverCardSub": "ट्रिप, डिलीवरी, वसूली",
@@ -454,8 +454,8 @@ const hi: Dict = {
 };
 
 const mr: Dict = {
-  "login.title": "सनरिच टीम",
-  "login.subtitle": "मोबाइल नंबर आणि PIN ने साइन इन करा",
+  "login.title": "सनरिच डिलिव्हरी",
+  "login.subtitle": "मोबाइल नंबर ने साइन इन करा",
   "login.mobile": "मोबाइल नंबर",
   "login.pin": "4 अंकांचा PIN",
   "login.submit": "साइन इन",
@@ -485,7 +485,7 @@ const mr: Dict = {
   "err.login_failed": "साइन इन झाले नाही. कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.",
   "err.verify_failed": "साइन इन पूर्ण झाले नाही. पुन्हा प्रयत्न करा.",
   "err.offline": "तुम्ही ऑफलाइन आहात. साइन इनसाठी इंटरनेट लागते.",
-  "c.appName": "सनरिच टीम",
+  "c.appName": "सनरिच डिलिव्हरी",
   "c.loading": "लोड होत आहे…",
   "c.save": "सेव्ह",
   "c.submit": "सबमिट",
@@ -513,7 +513,7 @@ const mr: Dict = {
   "c.camera": "कॅमेरा",
   "c.none": "अजून काहीही नाही",
   "home.greeting": "नमस्कार, {name}",
-  "home.sub": "सनरिच टीम अ‍ॅप",
+  "home.sub": "सनरिच डिलिव्हरी अ‍ॅप",
   "home.yourRoles": "{roles}",
   "home.driverCard": "ड्रायव्हर",
   "home.driverCardSub": "ट्रिप, डिलिव्हरी, वसुली",
