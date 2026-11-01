@@ -134,6 +134,7 @@ function TeamLocale({ children }: { children: ReactNode }) {
     <LanguageProvider
       initialLang={staff?.lang ?? null}
       onPersist={(lang: Lang) => {
+        console.info("[lang] persist", lang, "staff:", !!staff);
         if (!staff) return;
         void supabase.rpc("update_my_profile", { p_full_name: staff.fullName, p_language: lang });
       }}
