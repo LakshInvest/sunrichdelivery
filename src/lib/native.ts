@@ -52,6 +52,7 @@ export async function initNative(navigate: (path: string) => void) {
     ]);
     void StatusBar.setStyle({ style: Style.Light }).catch(() => {});
     void StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
+    void StatusBar.setBackgroundColor({ color: "#0D3278" }).catch(() => {});
     void SplashScreen.hide().catch(() => {});
     void Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});
 

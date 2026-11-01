@@ -145,10 +145,17 @@
     border-color: var(--color-border);
   }
 
+  html,
+  body {
+    height: 100%;
+    overscroll-behavior: none;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-variant-numeric: tabular-nums;
+    overflow-x: hidden;
   }
 
   h1,
