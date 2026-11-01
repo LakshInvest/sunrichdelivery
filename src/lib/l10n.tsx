@@ -697,11 +697,6 @@ export function LanguageProvider({
   onPersist?: (lang: Lang) => void;
   children: ReactNode;
 }) {
-  const idRef = useRef(Math.random().toString(36).slice(2, 6));
-  useEffect(() => {
-    console.info("[lang] provider mounted", idRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   const [lang, setLangState] = useState<Lang>(() => {
     if (typeof window === "undefined") return "en";
     const stored = window.localStorage.getItem(LANG_KEY) as Lang | null;
@@ -714,7 +709,6 @@ export function LanguageProvider({
   }, [initialLang]);
 
   const setLang = (l: Lang) => {
-    console.info("[lang] setLang", l, "onPersist:", typeof onPersist, "prov:", idRef.current);
     setLangState(l);
     try {
       window.localStorage.setItem(LANG_KEY, l);
