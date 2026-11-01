@@ -29,7 +29,9 @@ background location service, deep links, notification icon and the push guard.
 ## 4. Push notifications (optional)
 1. In Firebase console, add an Android app with package name `com.sunrich.delivery`.
 2. Download `google-services-delivery.json` and copy it to:
-   `sunrich-delivery\android\app\google-services-delivery.json`
+   `sunrich-delivery\android\app\google-services.json`
+   (Android's build plugin always reads `google-services.json` from that exact path,
+   so the downloaded file is renamed on copy.)
 
 Without this file the app still builds and runs; it just skips push registration
 (the console shows "push skipped").
@@ -75,7 +77,7 @@ active trip) and Notifications.
 Edit `android\app\build.gradle` → `versionCode` (+1) and `versionName`, then repeat step 6.
 
 ## Included native features
-Push (FCM, saved with `save_my_push_token`, app `team`, tap opens the trip/screen), local
+Push (FCM, saved with `save_my_push_token`, app `delivery`, tap opens the trip/screen), local
 notifications (channels "Trips" and "Alerts"), GPS, background location during active trips
 only, QR scanning (gate / pickup pass), camera, offline photo storage, keep screen on during
 trips, splash screen, status bar, back button + deep links (`com.sunrich.delivery://driver/<id>`
