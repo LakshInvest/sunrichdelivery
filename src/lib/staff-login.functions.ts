@@ -33,6 +33,8 @@ const PIN_RESULT_CODES: Record<string, string> = {
 const OTP_TTL_MS = 5 * 60 * 1000; // codes live 5 minutes
 const OTP_LOCK_MS = 15 * 60 * 1000; // 15-minute lock after 5 wrong tries
 const OTP_MAX_ATTEMPTS = 5;
+const OTP_SEND_WINDOW_MS = 15 * 60 * 1000; // rate-limit window
+const OTP_MAX_SENDS = 3; // max codes per mobile per window
 
 const sha256Hex = async (s: string): Promise<string> => {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
@@ -62,6 +64,61 @@ const auditFlaggedLogin = (
 };
 
 const adminClient = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+
+type AiSensySend = { ok: boolean; reason?: string };
+
+/**
+ * WhatsApp OTP delivery via AiSensy (the same sender the customer app uses).
+ * Runs server-only: the code and the API key never reach the browser. On a
+ * template rejection because the campaign expects a copy-code button, retries
+ * once with the button payload. The failure reason is logged without the OTP
+ * or the key.
+ */
+const sendOtpWhatsapp = async (mobile10: string, otp: string, userName: string): Promise<AiSensySend> => {
+  const apiKey = process.env["AISENSY_API_KEY"];
+  const campaignName = process.env["AISENSY_OTP_CAMPAIGN"];
+  if (!apiKey || !campaignName) return { ok: false, reason: "missing_aisensy_secret" };
+
+  const payload = (withButton: boolean) => ({
+    apiKey,
+    campaignName,
+    destination: `91${mobile10}`,
+    userName,
+    templateParams: [otp],
+    ...(withButton
+      ? { buttons: [{ type: "button", sub_type: "url", index: 0, parameters: [{ type: "text", text: otp }] }] }
+      : {}),
+  });
+
+  const call = async (withButton: boolean) => {
+    try {
+      const res = await fetch("https://backend.aisensy.com/campaign/t1/api/v2", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload(withButton)),
+      });
+      const body: unknown = await res.json().catch(() => null);
+      const msg = typeof (body as { message?: unknown })?.message === "string" ? (body as { message: string }).message : "";
+      const success = res.ok && (body as { success?: unknown })?.success !== false;
+      return { ok: success, status: res.status, msg };
+    } catch (e) {
+      return { ok: false, status: 0, msg: e instanceof Error ? e.message : "network_error" };
+    }
+  };
+
+  const first = await call(false);
+  if (first.ok) return { ok: true };
+
+  // The campaign template may require a copy-code button; retry once with it.
+  if (/button|template/i.test(first.msg)) {
+    const second = await call(true);
+    if (second.ok) return { ok: true };
+    console.error("[sendOtpWhatsapp] send failed", second.status, second.msg);
+    return { ok: false, reason: `aisensy_${second.status || "error"}` };
+  }
+  console.error("[sendOtpWhatsapp] send failed", first.status, first.msg);
+  return { ok: false, reason: `aisensy_${first.status || "error"}` };
+};
 
 export const staffLogin = createServerFn({ method: "POST" })
   .inputValidator((input: LoginInput) => input)
@@ -276,6 +333,19 @@ export const staffRequestOtp = createServerFn({ method: "POST" })
       return { ok: false, code: "locked" };
     }
 
+    // Rate limit: max 3 codes per mobile per 15 minutes, counting every row
+    // (sent, consumed or not) in the window.
+    const { count: recentSends } = await supabaseAdmin
+      .from("otp_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profile.id)
+      .eq("destination", mobile)
+      .eq("purpose", "staff_2fa")
+      .gte("created_at", new Date(Date.now() - OTP_SEND_WINDOW_MS).toISOString());
+    if ((recentSends ?? 0) >= OTP_MAX_SENDS) {
+      return { ok: false, code: "too_many_codes" };
+    }
+
     // Single use: any earlier outstanding code is invalidated.
     await supabaseAdmin
       .from("otp_requests")
@@ -286,23 +356,33 @@ export const staffRequestOtp = createServerFn({ method: "POST" })
       .is("consumed_at", null);
 
     const code = sixDigitCode();
-    const { error: insertErr } = await supabaseAdmin.from("otp_requests").insert({
-      user_id: profile.id,
-      channel: "whatsapp",
-      purpose: "staff_2fa",
-      destination: mobile,
-      code_hash: await sha256Hex(`${code}:${profile.id}`),
-      attempts: 0,
-      max_attempts: OTP_MAX_ATTEMPTS,
-      expires_at: new Date(Date.now() + OTP_TTL_MS).toISOString(),
-    });
-    if (insertErr) {
-      console.error("[staffRequestOtp] insert failed", insertErr.message);
+    const { data: inserted, error: insertErr } = await supabaseAdmin
+      .from("otp_requests")
+      .insert({
+        user_id: profile.id,
+        channel: "whatsapp",
+        purpose: "staff_2fa",
+        destination: mobile,
+        code_hash: await sha256Hex(`${code}:${profile.id}`),
+        attempts: 0,
+        max_attempts: OTP_MAX_ATTEMPTS,
+        expires_at: new Date(Date.now() + OTP_TTL_MS).toISOString(),
+      })
+      .select("id")
+      .single();
+    if (insertErr || !inserted) {
+      console.error("[staffRequestOtp] insert failed", insertErr?.message);
       return { ok: false, code: "login_failed" };
     }
-    // Delivery hook: a WhatsApp Business API sender plugs in here (the code is
-    // intentionally not returned to the browser). Without a gateway the code is
-    // generated and verified but cannot reach the phone.
+
+    // Delivery hook: AiSensy WhatsApp sender. The code is intentionally never
+    // returned to the browser; only the pass/fail outcome is.
+    const sent = await sendOtpWhatsapp(digits, code, profile.full_name?.trim() || "Sunrich");
+    if (!sent.ok) {
+      // Mark the stored code unusable so a failed send can never be verified.
+      await supabaseAdmin.from("otp_requests").update({ consumed_at: new Date().toISOString() }).eq("id", inserted.id);
+      return { ok: false, code: "otp_send_failed" };
+    }
     return { ok: true };
   });
 
