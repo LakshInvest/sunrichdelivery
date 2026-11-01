@@ -8,10 +8,10 @@ import { Truck, Boxes, ShieldCheck, ChevronRight, UserRound } from "lucide-react
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
-      { title: "Home · Sunrich Team" },
-      { name: "description", content: "Your Sunrich Team home screen." },
-      { property: "og:title", content: "Home · Sunrich Team" },
-      { property: "og:description", content: "Your Sunrich Team home screen." },
+      { title: "Home · Sunrich Delivery" },
+      { name: "description", content: "Your Sunrich Delivery home screen." },
+      { property: "og:title", content: "Home · Sunrich Delivery" },
+      { property: "og:description", content: "Your Sunrich Delivery home screen." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -37,7 +37,7 @@ function Home() {
 
   if (!staff) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6">
+      <main className="mx-auto flex h-[100dvh] max-w-md flex-col items-center justify-center gap-4 px-6">
         <BrandLogo />
         <p className="text-center text-sm text-muted-foreground">{t("home.noRoles")}</p>
         <button onClick={() => void signOut()} className="rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-soft">

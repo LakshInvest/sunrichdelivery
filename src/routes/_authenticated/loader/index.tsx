@@ -7,9 +7,9 @@ import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge } from "@/components
 export const Route = createFileRoute("/_authenticated/loader/")({
   head: () => ({
     meta: [
-      { title: "Loading bay · Sunrich Team" },
+      { title: "Loading bay · Sunrich Delivery" },
       { name: "description", content: "Load vehicles for today's Sunrich trips." },
-      { property: "og:title", content: "Loading bay · Sunrich Team" },
+      { property: "og:title", content: "Loading bay · Sunrich Delivery" },
       { property: "og:description", content: "Load vehicles for today's Sunrich trips." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

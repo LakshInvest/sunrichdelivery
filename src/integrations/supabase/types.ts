@@ -5646,39 +5646,23 @@ export type Database = {
         }
         Returns: number
       }
-      plan_trip:
-        | {
-            Args: {
-              p_allow_short?: boolean
-              p_customer_vehicle_no?: string
-              p_driver_user_id: string
-              p_helper_ids?: string[]
-              p_order_ids: string[]
-              p_route_id?: string
-              p_trip_date: string
-              p_trip_type?: string
-              p_unit_id: string
-              p_vehicle_id: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_allow_short?: boolean
-              p_customer_vehicle_no?: string
-              p_driver_user_id: string
-              p_helper_ids?: string[]
-              p_hired_driver_mobile?: string
-              p_hired_driver_name?: string
-              p_order_ids: string[]
-              p_route_id?: string
-              p_trip_date: string
-              p_trip_type?: string
-              p_unit_id: string
-              p_vehicle_id: string
-            }
-            Returns: string
-          }
+      plan_trip: {
+        Args: {
+          p_allow_short?: boolean
+          p_customer_vehicle_no?: string
+          p_driver_user_id: string
+          p_helper_ids?: string[]
+          p_hired_driver_mobile?: string
+          p_hired_driver_name?: string
+          p_order_ids: string[]
+          p_route_id?: string
+          p_trip_date: string
+          p_trip_type?: string
+          p_unit_id: string
+          p_vehicle_id: string
+        }
+        Returns: string
+      }
       price_plan_for_customer: {
         Args: { p_customer_id: string }
         Returns: string

@@ -23,8 +23,8 @@ let navigateFn: ((path: string) => void) | null = null;
 function routeFromUrl(url: string): string | null {
   try {
     const u = new URL(url);
-    // com.sunrich.team://driver/abc  → host "driver", path "/abc"
-    if (u.protocol === "com.sunrich.team:") return `/${u.host}${u.pathname}`.replace(/\/+$/, "") || "/";
+    // com.sunrich.delivery://driver/abc  → host "driver", path "/abc"
+    if (u.protocol === "com.sunrich.delivery:") return `/${u.host}${u.pathname}`.replace(/\/+$/, "") || "/";
     return `${u.pathname}${u.search}` || "/";
   } catch {
     return null;
@@ -52,6 +52,7 @@ export async function initNative(navigate: (path: string) => void) {
     ]);
     void StatusBar.setStyle({ style: Style.Light }).catch(() => {});
     void StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
+    void StatusBar.setBackgroundColor({ color: "#0D3278" }).catch(() => {});
     void SplashScreen.hide().catch(() => {});
     void Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});
 
@@ -87,13 +88,17 @@ export async function registerPush(language: string) {
     if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") perm = await PushNotifications.requestPermissions();
     if (perm.receive !== "granted") return;
     await PushNotifications.addListener("registration", ({ value }) => {
-      void supabase.rpc("save_my_push_token", {
-        p_token: value,
-        p_device_id: getDeviceId(),
-        p_platform: "android",
-        p_app: "team",
-        p_language: language,
-      });
+      void supabase
+        .rpc("save_my_push_token", {
+          p_token: value,
+          p_device_id: getDeviceId(),
+          p_platform: "android",
+          p_app: "delivery",
+          p_language: language,
+        })
+        .then(({ error }) => {
+          if (error) console.warn("[native] save push token failed", error.message);
+        });
     });
     await PushNotifications.addListener("registrationError", (err) => console.warn("[native] push registration error", err));
     await PushNotifications.addListener("pushNotificationActionPerformed", (a) => {
@@ -136,7 +141,7 @@ export async function startTripMode(
     const id = await Bg.addWatcher(
       {
         backgroundTitle: "Trip in progress",
-        backgroundMessage: "Sunrich Team is sharing your location for this trip only.",
+        backgroundMessage: "Sunrich Delivery is sharing your location for this trip only.",
         requestPermissions: true,
         stale: false,
         distanceFilter: 25,

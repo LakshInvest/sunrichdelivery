@@ -10,9 +10,9 @@ import { haptic } from "@/lib/native";
 export const Route = createFileRoute("/_authenticated/loader/$tripId")({
   head: () => ({
     meta: [
-      { title: "Load vehicle · Sunrich Team" },
+      { title: "Load vehicle · Sunrich Delivery" },
       { name: "description", content: "Record loading and finish the trip." },
-      { property: "og:title", content: "Load vehicle · Sunrich Team" },
+      { property: "og:title", content: "Load vehicle · Sunrich Delivery" },
       { property: "og:description", content: "Record loading and finish the trip." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

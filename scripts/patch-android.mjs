@@ -12,7 +12,7 @@ if (!existsSync(manifestPath)) {
 let m = readFileSync(manifestPath, "utf8");
 
 const perms = [
-  ["android.permission.INTERNET", "Needed to load the Sunrich Team app and sync your work."],
+  ["android.permission.INTERNET", "Needed to load the Sunrich Delivery app and sync your work."],
   ["android.permission.ACCESS_NETWORK_STATE", "Lets the app know when you are offline so work can be saved and sent later."],
   ["android.permission.CAMERA", "Take photos of deliveries, bills, odometer and scan gate pass QR codes."],
   ["android.permission.READ_MEDIA_IMAGES", "Attach a photo you already took."],
@@ -40,8 +40,8 @@ if (!m.includes('android:name="android.hardware.camera"')) {
   m = m.replace(/<\/manifest>\s*$/, `    <uses-feature android:name="android.hardware.camera" android:required="false" />\n</manifest>\n`);
 }
 
-// Deep links: com.sunrich.team://... and https://sunrichteam.lovable.app/...
-if (!m.includes('android:scheme="com.sunrich.team"')) {
+// Deep links: com.sunrich.delivery://... and https://sunrich-delivery.lovable.app/...
+if (!m.includes('android:scheme="com.sunrich.delivery"')) {
   m = m.replace(
     /(<activity[\s\S]*?MainActivity[\s\S]*?>)/,
     `$1
@@ -49,13 +49,13 @@ if (!m.includes('android:scheme="com.sunrich.team"')) {
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="sunrichteam.lovable.app" />
+                <data android:scheme="https" android:host="sunrich-delivery.lovable.app" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.sunrich.team" />
+                <data android:scheme="com.sunrich.delivery" />
             </intent-filter>`,
   );
 }
@@ -100,4 +100,4 @@ if (existsSync(gradlePath)) {
   }
 }
 
-console.log("Android project patched for Sunrich Team.");
+console.log("Android project patched for Sunrich Delivery.");

@@ -110,15 +110,17 @@ export function StatusBadge({ status }: { status: string }) {
   return <span className={`rounded-full px-3 py-1 text-xs font-semibold ${tone}`}>{label}</span>;
 }
 
-/** Standard screen shell: roomy header, 20px cards, one-hand friendly width. */
+/** Standard screen shell: full phone height (no page scroll — content scrolls inside), safe-area aware. */
 export function Screen({ title, children, right }: { title: string; children: ReactNode; right?: ReactNode }) {
   return (
-    <main className="mx-auto w-full max-w-md px-4 pb-32 pt-5">
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">{title}</h1>
-        {right}
+    <main className="mx-auto flex h-[100dvh] w-full max-w-md flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-32 pt-[max(env(safe-area-inset-top),1rem)]">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">{title}</h1>
+          {right}
+        </div>
+        {children}
       </div>
-      {children}
     </main>
   );
 }

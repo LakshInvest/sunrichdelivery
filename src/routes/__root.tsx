@@ -82,12 +82,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Sunrich Team" },
-      { name: "description", content: "Sunrich Team app for drivers, loaders and gate security." },
+      { title: "Sunrich Delivery" },
+      { name: "description", content: "Sunrich Delivery app for drivers, loaders and gate security." },
       { name: "author", content: "Sunrich" },
       { name: "theme-color", content: "#0D3278" },
-      { property: "og:title", content: "Sunrich Team" },
-      { property: "og:description", content: "Sunrich Team app for drivers, loaders and gate security." },
+      { property: "og:title", content: "Sunrich Delivery" },
+      { property: "og:description", content: "Sunrich Delivery app for drivers, loaders and gate security." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -135,7 +135,12 @@ function TeamLocale({ children }: { children: ReactNode }) {
       initialLang={staff?.lang ?? null}
       onPersist={(lang: Lang) => {
         if (!staff) return;
-        void supabase.rpc("update_my_profile", { p_full_name: staff.fullName, p_language: lang });
+        // PostgREST builders only execute when awaited/then'd — never fire-and-forget.
+        void supabase
+          .rpc("update_my_profile", { p_full_name: staff.fullName, p_language: lang })
+          .then(({ error }) => {
+            if (error) console.warn("[lang] persist failed", error.message);
+          });
       }}
     >
       {children}

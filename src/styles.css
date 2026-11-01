@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Sunrich Team design system — water identity.
+ * Sunrich Delivery design system — water identity.
  * Brand: navy #0D3278 (primary), aqua #0AAAED (accent), light blue-grey #F4F7FB bg.
  * Headings: Plus Jakarta Sans (font-display). Body: Inter. Numbers: tabular.
  * Cards 20px, buttons/inputs 12–14px, chips fully round, soft shadows, no hard corners.
@@ -145,10 +145,17 @@
     border-color: var(--color-border);
   }
 
+  html,
+  body {
+    height: 100%;
+    overscroll-behavior: none;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-variant-numeric: tabular-nums;
+    overflow-x: hidden;
   }
 
   h1,
