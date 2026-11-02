@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { useTeamAuth } from "@/lib/team-auth";
-import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge } from "@/components/team/ui";
+import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge, AvatarLink } from "@/components/team/ui";
 
 export const Route = createFileRoute("/_authenticated/driver/")({
   head: () => ({

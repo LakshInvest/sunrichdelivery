@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { istDisplay } from "@/lib/ist";
-import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge, ActionDock, DockButton } from "@/components/team/ui";
+import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge, AvatarLink, ActionDock, DockButton } from "@/components/team/ui";
 import { queueRpc } from "@/lib/offline";
 import { haptic, isNative, scanQr } from "@/lib/native";
 import { ScanLine, LogOut, LogIn, ClipboardList, PackageCheck } from "lucide-react";

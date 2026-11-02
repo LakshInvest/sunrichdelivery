@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Truck, Boxes, ShieldCheck, ChevronRight } from "lucide-react";
 import { useTeamAuth } from "@/lib/team-auth";
 import { useLang } from "@/lib/l10n";
 import { getDeviceLabel } from "@/lib/device";
-import { BrandLogo, LanguageChips, Screen, Spinner, useSignOut } from "@/components/team/ui";
+import { BrandLogo, LanguageChips, NoRoleScreen, Screen, Spinner } from "@/components/team/ui";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -21,16 +22,9 @@ export const Route = createFileRoute("/_authenticated/profile")({
 function Profile() {
   const { ready, staff, signOut } = useTeamAuth();
   const { t } = useLang();
-  const signOutFn = useSignOut();
 
   if (!ready) return <Spinner label={t("c.loading")} />;
-  if (!staff) {
-    return (
-      <Screen title={t("profile.title")}>
-        <p className="text-sm text-muted-foreground">{t("home.noRoles")}</p>
-      </Screen>
-    );
-  }
+  if (!staff) return <NoRoleScreen />;
 
   const initials = staff.fullName
     .split(" ")
@@ -38,6 +32,15 @@ function Profile() {
     .map((w) => w[0] ?? "")
     .join("")
     .toUpperCase();
+
+  const ROLE_LINKS = {
+    DRIVER: { to: "/driver" as const, key: "home.driverCard", icon: <Truck className="h-5 w-5" /> },
+    LOADER: { to: "/loader" as const, key: "home.loaderCard", icon: <Boxes className="h-5 w-5" /> },
+    SECURITY: { to: "/security" as const, key: "home.securityCard", icon: <ShieldCheck className="h-5 w-5" /> },
+  };
+  const roleLinks = staff.roles
+    .map((r) => ROLE_LINKS[r as keyof typeof ROLE_LINKS])
+    .filter((x): x is (typeof ROLE_LINKS)["DRIVER"] | (typeof ROLE_LINKS)["LOADER"] | (typeof ROLE_LINKS)["SECURITY"] => Boolean(x));
 
   const rows: [string, string][] = [
     [t("profile.name"), staff.fullName || "—"],
@@ -67,6 +70,19 @@ function Profile() {
         ))}
       </div>
 
+      {roleLinks.length > 1 && (
+        <div className="mt-4 overflow-hidden rounded-xl border border-border bg-card shadow-card">
+          <p className="px-4 pt-3 text-sm font-medium text-foreground">{t("profile.switchRole")}</p>
+          {roleLinks.map((r) => (
+            <Link key={r.to} to={r.to} className="flex items-center gap-3 px-4 py-3.5 active:bg-accent">
+              <span className="text-navy">{r.icon}</span>
+              <span className="flex-1 text-sm font-semibold text-foreground">{t(r.key)}</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          ))}
+        </div>
+      )}
+
       <div className="mt-4 rounded-xl border border-border bg-card p-4 shadow-card">
         <p className="mb-2 text-sm font-medium text-foreground">{t("profile.language")}</p>
         <LanguageChips />
@@ -80,7 +96,7 @@ function Profile() {
       </div>
 
       <button
-        onClick={() => void signOutFn().then(() => signOut())}
+        onClick={() => void signOut()}
         className="mt-8 w-full rounded-lg border border-destructive/40 bg-card py-3.5 text-sm font-bold text-destructive shadow-card active:bg-destructive/10"
       >
         {t("c.signOut")}
