@@ -104,7 +104,11 @@ export function RegisterPanel() {
             <span className="truncate font-display font-bold text-foreground">{r.title}</span>
             <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">{t(`sec.kind.${r.kind}`)}</span>
           </div>
-          {r.detail && <p className="mt-0.5 break-words text-xs text-muted-foreground">{r.detail}</p>}
+          {r.detail && (
+            <p className="mt-0.5 break-words text-xs text-muted-foreground">
+              {r.detail.replace(/^(visitor|parcel|supplier|other|staff)\b/, (m) => t(`sec.type.${m}`))}
+            </p>
+          )}
           <p className="text-xs text-muted-foreground">
             {istDisplay(r.at)}
             {r.by_name ? ` · ${r.by_name}` : ""}
