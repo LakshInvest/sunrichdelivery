@@ -40,7 +40,7 @@ if (!m.includes('android:name="android.hardware.camera"')) {
   m = m.replace(/<\/manifest>\s*$/, `    <uses-feature android:name="android.hardware.camera" android:required="false" />\n</manifest>\n`);
 }
 
-// Deep links: com.sunrich.delivery://... and https://sunrich-delivery.lovable.app/...
+// Deep links: com.sunrich.delivery://... and https://delivery.sunrich.in/... (old lovable.app host kept)
 if (!m.includes('android:scheme="com.sunrich.delivery"')) {
   m = m.replace(
     /(<activity[\s\S]*?MainActivity[\s\S]*?>)/,
@@ -49,6 +49,7 @@ if (!m.includes('android:scheme="com.sunrich.delivery"')) {
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="delivery.sunrich.in" />
                 <data android:scheme="https" android:host="sunrich-delivery.lovable.app" />
             </intent-filter>
             <intent-filter>
