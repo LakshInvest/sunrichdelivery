@@ -773,8 +773,23 @@ export function LanguageProvider({
     return initialLang ?? "en";
   });
 
+  // The language picked on this device (login screen chips) wins over the saved
+  // profile language; when they differ, push the device choice to the profile.
   useEffect(() => {
-    if (initialLang) setLangState(initialLang);
+    if (!initialLang) return;
+    let stored: string | null = null;
+    try {
+      stored = window.localStorage.getItem(LANG_KEY);
+    } catch {
+      stored = null;
+    }
+    if (stored === "en" || stored === "hi" || stored === "mr") {
+      setLangState(stored);
+      if (stored !== initialLang) onPersist?.(stored);
+    } else {
+      setLangState(initialLang);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialLang]);
 
   const setLang = (l: Lang) => {
