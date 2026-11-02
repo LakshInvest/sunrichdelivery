@@ -652,6 +652,8 @@ function AskOfficePanel({ tripId, stopId, due, onDecision }: { tripId: string; s
   const [left, setLeft] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const decide = useRef(onDecision);
+  decide.current = onDecision;
 
   useEffect(() => {
     if (!alertId || result) return;
@@ -666,13 +668,13 @@ function AskOfficePanel({ tripId, stopId, due, onDecision }: { tripId: string; s
       if (d.resolution) {
         setResult(d.resolution);
         const ok = d.resolution === "approved" || d.resolution === "no_reply:deliver_and_flag";
-        onDecision(ok);
+        decide.current(ok);
       }
     };
     void tick();
     const id = window.setInterval(() => void tick(), 10000);
     return () => { stop = true; window.clearInterval(id); };
-  }, [alertId, result, onDecision]);
+  }, [alertId, result]);
 
   const choose = (v: "full" | "part" | "none") => {
     setPay(v);
