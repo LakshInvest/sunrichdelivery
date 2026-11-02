@@ -1,6 +1,24 @@
 // Compress a camera image and upload it to the private `operations` bucket.
 // Returns the storage path stored in DB columns (photo_url columns hold paths).
 import { supabase } from "@/integrations/supabase/client";
+import { isNetworkError, isOffline, queuePhoto, queuedPhotoData } from "@/lib/offline";
+
+function blobToDataUrl(b: Blob): Promise<string> {
+  return new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = () => no(r.error); r.readAsDataURL(b); });
+}
+
+/** Upload, or keep the photo locally under its final path when offline. */
+async function uploadOrQueue(path: string, blob: Blob, type: string): Promise<string> {
+  if (isOffline()) { queuePhoto(path, await blobToDataUrl(blob), type); return path; }
+  try {
+    const { error } = await supabase.storage.from("operations").upload(path, blob, { contentType: type, upsert: true });
+    if (error) { if (isNetworkError(error)) { queuePhoto(path, await blobToDataUrl(blob), type); return path; } throw error; }
+  } catch (e) {
+    if (!isNetworkError(e)) throw e;
+    queuePhoto(path, await blobToDataUrl(blob), type);
+  }
+  return path;
+}
 
 export async function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -35,17 +53,15 @@ async function compressToJpeg(file: File, maxDim = 1600, quality = 0.82): Promis
 export async function uploadPhoto(file: File, userId: string, kind: string): Promise<string> {
   const blob = await compressToJpeg(file);
   const path = `team/${userId}/${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-  const { error } = await supabase.storage
-    .from("operations")
-    .upload(path, blob, { contentType: "image/jpeg", upsert: false });
-  if (error) throw error;
-  return path;
+  return uploadOrQueue(path, blob, "image/jpeg");
 }
 
 /** Short-lived URL for displaying a private-bucket photo path. */
 export async function photoUrl(path: string | null | undefined): Promise<string | null> {
   if (!path) return null;
   if (path.startsWith("http") || path.startsWith("data:")) return path;
+  const local = queuedPhotoData(path);
+  if (local) return local;
   const { data } = await supabase.storage.from("operations").createSignedUrl(path, 60 * 60);
   return data?.signedUrl ?? null;
 }
@@ -55,7 +71,5 @@ export async function uploadDataUrl(dataUrl: string, userId: string, kind: strin
   const res = await fetch(dataUrl);
   const blob = await res.blob();
   const path = `team/${userId}/${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.png`;
-  const { error } = await supabase.storage.from("operations").upload(path, blob, { contentType: "image/png" });
-  if (error) throw error;
-  return path;
+  return uploadOrQueue(path, blob, "image/png");
 }

@@ -4,12 +4,13 @@ import { useLang } from "@/lib/l10n";
 import { istDayEnd, istDayStart, istDisplay, istToday } from "@/lib/ist";
 import { haptic } from "@/lib/native";
 import { useTeamAuth } from "@/lib/team-auth";
+import { queueRpc } from "@/lib/offline";
 import { DockButton, ErrorCard, PhotoInput, Spinner } from "@/components/team/ui";
 import { Field, inputCls } from "@/components/team/gate-entry";
 
 const PROBLEMS = ["vehicle", "person", "material", "safety", "other"] as const;
 
-export function ProblemPanel({ onDone }: { onDone: () => void }) {
+export function ProblemPanel({ onDone }: { onDone: (queued?: boolean) => void }) {
   const { t } = useLang();
   const { staff } = useTeamAuth();
   const [type, setType] = useState<(typeof PROBLEMS)[number]>("vehicle");
@@ -22,11 +23,11 @@ export function ProblemPanel({ onDone }: { onDone: () => void }) {
     setError(null);
     if (!note.trim()) return setError(t("sec.problemNote"));
     setBusy(true);
-    const r = await supabase.rpc("gate_report_problem", { p_type: type, p_note: note, p_photo: photo ?? "" });
+    const r = await queueRpc("gate_report_problem", { p_type: type, p_note: note, p_photo: photo ?? "" });
     setBusy(false);
-    if (r.error) return setError(r.error.message);
+    if (r.error) return setError(r.error);
     void haptic("success");
-    onDone();
+    onDone(r.queued);
   };
 
   return (

@@ -4,6 +4,7 @@ import { useLang } from "@/lib/l10n";
 import { istDisplay } from "@/lib/ist";
 import { haptic } from "@/lib/native";
 import { useTeamAuth } from "@/lib/team-auth";
+import { isOffline, queueRpc } from "@/lib/offline";
 import { DockButton, ErrorCard, PhotoInput, Spinner, Stepper } from "@/components/team/ui";
 
 type EntryType = "visitor" | "parcel" | "supplier" | "other";
@@ -30,6 +31,10 @@ type Entry = {
   vehicle_no: string | null;
   people_count: number;
   in_at: string;
+  parcel_count: number | null;
+  courier_name: string | null;
+  handed_at: string | null;
+  handed_to: string | null;
 };
 
 export const inputCls =
@@ -43,7 +48,7 @@ function errKey(msg: string): string {
 }
 
 /** Entry: +91 search, then the same form every time (staff = one tap). */
-export function GateEntryPanel({ onDone }: { onDone: () => void }) {
+export function GateEntryPanel({ onDone }: { onDone: (queued?: boolean) => void }) {
   const { t } = useLang();
   const { staff } = useTeamAuth();
   const [mobile, setMobile] = useState("");
@@ -58,6 +63,7 @@ export function GateEntryPanel({ onDone }: { onDone: () => void }) {
   const [courier, setCourier] = useState("");
   const [parcels, setParcels] = useState(1);
   const [photo, setPhoto] = useState<string | null>(null);
+  const [challan, setChallan] = useState<string | null>(null);
   const [photoRule, setPhotoRule] = useState<"off" | "optional" | "required">("optional");
   const [staffList, setStaffList] = useState<{ id: string; full_name: string }[]>([]);
   const [busy, setBusy] = useState(false);
@@ -80,6 +86,10 @@ export function GateEntryPanel({ onDone }: { onDone: () => void }) {
   const find = async () => {
     setError(null);
     if (mobile.length !== 10) return setError(t("sec.mobile"));
+    if (isOffline()) {
+      setFound({ mobile, found: false });
+      return;
+    }
     setBusy(true);
     const r = await supabase.rpc("gate_find_person", { p_mobile: mobile });
     setBusy(false);
@@ -100,9 +110,10 @@ export function GateEntryPanel({ onDone }: { onDone: () => void }) {
     if (!found?.is_staff) {
       if (!name.trim()) return setError(t("sec.err.name_required"));
       if (photoRule === "required" && !photo) return setError(t("sec.err.photo_required"));
+      if (type === "supplier" && !vehicle.trim()) return setError(t("sec.err.vehicle_required"));
     }
     setBusy(true);
-    const r = await supabase.rpc("gate_entry_in", {
+    const r = await queueRpc("gate_entry_in", {
       p: {
         mobile,
         entry_type: type,
@@ -115,12 +126,13 @@ export function GateEntryPanel({ onDone }: { onDone: () => void }) {
         photo_path: photo ?? "",
         courier_name: type === "parcel" ? courier : "",
         parcel_count: type === "parcel" ? parcels : "",
+        challan_photo_path: type === "supplier" ? (challan ?? "") : "",
       },
     });
     setBusy(false);
-    if (r.error) return showErr(r.error.message);
+    if (r.error) return showErr(r.error);
     void haptic("success");
-    onDone();
+    onDone(r.queued);
   };
 
   const chip = (on: boolean) =>
@@ -181,7 +193,7 @@ export function GateEntryPanel({ onDone }: { onDone: () => void }) {
           <Field label={t("sec.name")}>
             <input aria-label={t("sec.name")} value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
           </Field>
-          <Field label={t("sec.from")}>
+          <Field label={type === "supplier" ? t("sec.supplier") : t("sec.from")}>
             <input aria-label={t("sec.from")} value={from} onChange={(e) => setFrom(e.target.value)} className={inputCls} />
           </Field>
           {type === "parcel" && (
@@ -213,6 +225,9 @@ export function GateEntryPanel({ onDone }: { onDone: () => void }) {
           <Field label={t("sec.people")}>
             <Stepper value={people} onChange={setPeople} min={1} max={50} label={t("sec.people")} />
           </Field>
+          {type === "supplier" && staff && (
+            <PhotoInput userId={staff.id} kind="gate-challan" label={t("sec.challanPhoto")} value={challan} onChange={setChallan} />
+          )}
           {photoRule !== "off" && staff && (
             <PhotoInput userId={staff.id} kind="gate-visitor" required={photoRule === "required"} label={t("sec.photo")} value={photo} onChange={setPhoto} />
           )}
@@ -246,7 +261,7 @@ export function GateExitPanel({ onChange }: { onChange: () => void }) {
   const load = useCallback(async () => {
     const r = await supabase
       .from("gate_entries")
-      .select("id, mobile, name, person_type, entry_type, purpose, from_place, vehicle_no, people_count, in_at")
+      .select("id, mobile, name, person_type, entry_type, purpose, from_place, vehicle_no, people_count, in_at, parcel_count, courier_name, handed_at, handed_to")
       .is("out_at", null)
       .order("in_at", { ascending: false });
     if (r.error) setError(r.error.message);
@@ -259,12 +274,24 @@ export function GateExitPanel({ onChange }: { onChange: () => void }) {
 
   const markOut = async (id: string) => {
     setError(null);
-    const r = await supabase.rpc("gate_entry_out", { p_entry_id: id });
-    if (r.error) return setError(r.error.message);
+    const r = await queueRpc("gate_entry_out", { p_entry_id: id });
+    if (r.error) return setError(r.error);
     void haptic("success");
-    setMsg(t("sec.exitDone"));
+    setMsg(r.queued ? t("sec.savedOffline") : t("sec.exitDone"));
+    if (r.queued) setInside((l) => (l ?? []).filter((x) => x.id !== id));
     onChange();
-    await load();
+    if (!r.queued) await load();
+  };
+
+  const handOver = async (id: string, who: string) => {
+    setError(null);
+    if (!who.trim()) return setError(t("sec.receivedBy"));
+    const r = await queueRpc("gate_parcel_handover", { p_entry_id: id, p_received_by: who });
+    if (r.error) return setError(r.error);
+    void haptic("success");
+    setMsg(r.queued ? t("sec.savedOffline") : t("sec.handedDone"));
+    if (r.queued) setInside((l) => (l ?? []).map((x) => (x.id === id ? { ...x, handed_at: new Date().toISOString(), handed_to: who } : x)));
+    else await load();
   };
 
   return (
@@ -286,6 +313,15 @@ export function GateExitPanel({ onChange }: { onChange: () => void }) {
               {[e.mobile, e.from_place, e.vehicle_no, e.people_count > 1 ? `${e.people_count} ${t("sec.peopleShort")}` : null].filter(Boolean).join(" · ")}
             </p>
             <p className="text-xs text-muted-foreground">{istDisplay(e.in_at)}</p>
+            {e.entry_type === "parcel" && (
+              e.handed_at ? (
+                <p className="text-xs font-semibold text-emerald-700" data-testid="handed">
+                  {t("sec.handedTo", { name: e.handed_to ?? "", time: istDisplay(e.handed_at) })}
+                </p>
+              ) : (
+                <HandOver onSave={(who) => void handOver(e.id, who)} />
+              )
+            )}
           </div>
           <button
             type="button"
@@ -296,6 +332,26 @@ export function GateExitPanel({ onChange }: { onChange: () => void }) {
           </button>
         </div>
       ))}
+    </div>
+  );
+}
+
+function HandOver({ onSave }: { onSave: (who: string) => void }) {
+  const { t } = useLang();
+  const [open, setOpen] = useState(false);
+  const [who, setWho] = useState("");
+  if (!open)
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="mt-1 text-xs font-bold text-primary underline">
+        {t("sec.handOver")}
+      </button>
+    );
+  return (
+    <div className="mt-2 flex gap-2">
+      <input aria-label={t("sec.receivedBy")} placeholder={t("sec.receivedBy")} value={who} onChange={(e) => setWho(e.target.value)} className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-2 text-sm" />
+      <button type="button" onClick={() => onSave(who)} className="rounded-md bg-primary px-3 text-xs font-bold text-primary-foreground">
+        {t("c.save")}
+      </button>
     </div>
   );
 }

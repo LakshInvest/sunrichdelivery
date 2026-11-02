@@ -64,7 +64,7 @@ const en: Dict = {
   "c.today": "Today",
   "c.signOut": "Sign out",
   "c.offline": "Offline",
-  "c.pendingSync": "{n} action(s) waiting to sync",
+  "c.pendingSync": "{n} waiting to upload",
   "c.synced": "Synced",
   "c.tryAgainOffline": "Saved on this phone. Will sync when you're online.",
   "c.takePhoto": "Take photo",
@@ -394,6 +394,15 @@ const en: Dict = {
   "sec.guardDone": "{name} is now on duty",
   "sec.guardSignIn": "Sign out now so the new guard can sign in on this phone.",
   "sec.signOutNow": "Sign out",
+  "sec.supplier": "Supplier",
+  "sec.challanPhoto": "Challan photo",
+  "sec.err.vehicle_required": "Type the vehicle number",
+  "sec.handOver": "Handed over",
+  "sec.receivedBy": "Received by (name)",
+  "sec.handedDone": "Parcel handed over",
+  "sec.handedTo": "Handed to {name} · {time}",
+  "sec.savedOffline": "Saved — will upload when the network is back",
+  "sec.offlineScan": "No network. What is this pass?",
 };
 
 const hi: Dict = {
@@ -448,7 +457,7 @@ const hi: Dict = {
   "c.today": "आज",
   "c.signOut": "साइन आउट",
   "c.offline": "ऑफ़लाइन",
-  "c.pendingSync": "{n} काम सिंक होना बाकी",
+  "c.pendingSync": "{n} अपलोड बाकी",
   "c.synced": "सिंक पूरा",
   "c.tryAgainOffline": "इस फोन पर सेव हुआ। ऑनलाइन होने पर सिंक होगा।",
   "c.takePhoto": "फोटो लें",
@@ -771,6 +780,15 @@ const hi: Dict = {
   "sec.guardDone": "{name} अब ड्यूटी पर हैं",
   "sec.guardSignIn": "अब साइन आउट करें ताकि नया गार्ड इस फोन पर साइन इन करे।",
   "sec.signOutNow": "साइन आउट",
+  "sec.supplier": "सप्लायर",
+  "sec.challanPhoto": "चालान फोटो",
+  "sec.err.vehicle_required": "गाड़ी नंबर लिखें",
+  "sec.handOver": "सौंप दिया",
+  "sec.receivedBy": "किसने लिया (नाम)",
+  "sec.handedDone": "पार्सल सौंपा",
+  "sec.handedTo": "{name} को सौंपा · {time}",
+  "sec.savedOffline": "सेव हुआ — नेटवर्क आने पर अपलोड होगा",
+  "sec.offlineScan": "नेटवर्क नहीं। यह कौन सा पास है?",
 };
 
 const mr: Dict = {
@@ -825,7 +843,7 @@ const mr: Dict = {
   "c.today": "आज",
   "c.signOut": "साइन आउट",
   "c.offline": "ऑफलाइन",
-  "c.pendingSync": "{n} कृती सिंक बाकी",
+  "c.pendingSync": "{n} अपलोड बाकी",
   "c.synced": "सिंक पूर्ण",
   "c.tryAgainOffline": "या फोनवर सेव्ह झाले. ऑनलाइन आल्यावर सिंक होईल.",
   "c.takePhoto": "फोटो घ्या",
@@ -1148,6 +1166,15 @@ const mr: Dict = {
   "sec.guardDone": "{name} आता ड्युटीवर आहेत",
   "sec.guardSignIn": "आता साइन आउट करा म्हणजे नवीन गार्ड या फोनवर साइन इन करेल.",
   "sec.signOutNow": "साइन आउट",
+  "sec.supplier": "पुरवठादार",
+  "sec.challanPhoto": "चलन फोटो",
+  "sec.err.vehicle_required": "गाडी नंबर लिहा",
+  "sec.handOver": "दिले",
+  "sec.receivedBy": "कोणी घेतले (नाव)",
+  "sec.handedDone": "पार्सल दिले",
+  "sec.handedTo": "{name} यांना दिले · {time}",
+  "sec.savedOffline": "सेव झाले — नेटवर्क आल्यावर अपलोड होईल",
+  "sec.offlineScan": "नेटवर्क नाही. हा कोणता पास आहे?",
 };
 
 const dicts: Record<Lang, Dict> = { en, hi, mr };
