@@ -186,6 +186,12 @@ function TripScreen() {
         if (!pid) continue;
         handedOver[pid] = (handedOver[pid] ?? 0) + Number(d.delivered_qty ?? 0);
       }
+      const keptByLine: Record<string, number> = {};
+      for (const d of (dlRes.data ?? []) as unknown as { order_line_id: string; delivered_qty: number }[]) {
+        keptByLine[d.order_line_id] = (keptByLine[d.order_line_id] ?? 0) + Number(d.delivered_qty ?? 0);
+      }
+      for (const k of Object.keys(map)) map[k] = (map[k] ?? []).map((l) => (l.id in keptByLine ? { ...l, kept: keptByLine[l.id] } : l));
+      setLines({ ...map });
       setVehicleStock(
         ((ldRes.data ?? []) as unknown as LoadRow[])
           .map((r) => ({
