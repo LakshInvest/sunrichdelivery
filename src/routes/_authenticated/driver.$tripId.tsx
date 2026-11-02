@@ -109,6 +109,9 @@ function TripScreen() {
   const [showPass, setShowPass] = useState(false);
   const [plant, setPlant] = useState<{ lat: number; lng: number } | null>(null);
 
+  // Cash expenses paid from the bag reduce what the driver must hand over (same rule as settle_trip).
+  const [cashSpent, setCashSpent] = useState(0);
+
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -131,6 +134,15 @@ function TripScreen() {
       return;
     }
     setTrip(tripRes.data as unknown as Trip);
+    void supabase
+      .from("trip_expenses")
+      .select("amount, approved")
+      .eq("trip_id", tripId)
+      .eq("paid_from_cash", true)
+      .then(({ data }) => {
+        const rows = (data ?? []) as { amount: number | null; approved: boolean | null }[];
+        setCashSpent(rows.filter((r) => r.approved !== false).reduce((a, r) => a + Number(r.amount ?? 0), 0));
+      });
     // Gate pass token + loaded item count for the driver's QR screen.
     const [gpRes, ldRes] = await Promise.all([
       supabase.from("gate_passes").select("qr_token").eq("trip_id", tripId).order("issued_at", { ascending: false }).limit(1).maybeSingle(),
@@ -773,7 +785,14 @@ function TripScreen() {
       {returned && (
         <div className="rounded-xl border border-border bg-card p-4 shadow-card">
           <p className="text-sm font-bold text-foreground">{t("dr.settle")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{t("dr.cashExpected")}: ₹{trip.cash_expected ?? 0}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("dr.cashExpected")}: <span className="font-bold text-foreground">₹{Math.max(0, Number(trip.cash_expected ?? 0) - cashSpent)}</span>
+          </p>
+          {cashSpent > 0 && (
+            <p className="text-xs text-muted-foreground">
+              ₹{Number(trip.cash_expected ?? 0)} − {t("dr.expenses")} ₹{cashSpent}
+            </p>
+          )}
           {canSettle ? (
             <div className="mt-3 grid gap-2">
               <input inputMode="decimal" value={settleAmount} onChange={(e) => setSettleAmount(e.target.value)} placeholder={t("dr.cashReceived")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
