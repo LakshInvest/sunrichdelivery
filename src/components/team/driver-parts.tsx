@@ -211,9 +211,6 @@ export function StartTripPanel({
   const [checkPhoto, setCheckPhoto] = useState<string | null>(null);
   const [checks, setChecks] = useState<string[]>([]);
   const [localErr, setLocalErr] = useState<string | null>(null);
-  // Cash/UPI orders: the driver must say what was paid. Part/None needs the office's OK.
-  const needsPayCheck = (o?.payment_mode ?? "") === "cod" && Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0) > 0;
-  const [officeOk, setOfficeOk] = useState(false);
 
   const submit = async () => {
     setLocalErr(null);
@@ -389,6 +386,9 @@ export function StopDetailPanel({
   const [signature, setSignature] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
   const [localErr, setLocalErr] = useState<string | null>(null);
+  // Cash/UPI orders: the driver must say what was paid. Part/None needs the office's OK.
+  const needsPayCheck = (o?.payment_mode ?? "") === "cod" && Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0) > 0;
+  const [officeOk, setOfficeOk] = useState(false);
 
   // Collection mode must be a payment channel (cash/upi/cheque), not the
   // order's payment_mode (cod/credit/prepaid) — trip_collections validates it.
