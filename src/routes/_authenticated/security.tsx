@@ -110,7 +110,7 @@ function SecurityGate() {
     setBusy(true);
     const r = await supabase.rpc("gate_scan_lookup", { p_token: v });
     setBusy(false);
-    if (r.error) return setError(friendlyError(r.error, t));
+    if (r.error) return setError(friendlyError(r.error.message, t));
     const h = r.data as unknown as ScanHit;
     if (h.kind === "unknown") return setError(t("sec.scanUnknown"));
     if (h.kind === "trip_done" || h.kind === "material_done") return setError(t("sec.scanUsed"));
@@ -138,7 +138,7 @@ function SecurityGate() {
         finish(`${t("sec.gateOutDone")}: ${hit.trip_no}`);
       } else if (hit.kind === "material") {
         const r = await supabase.rpc("gate_material_scan", { p_token: typed.trim() });
-        if (r.error) return setError(friendlyError(r.error, t));
+        if (r.error) return setError(friendlyError(r.error.message, t));
         void haptic("success");
         finish(`${t("sec.materialDone")}: ${hit.pass_no}`);
       } else if (hit.kind === "pickup") {
