@@ -6218,6 +6218,14 @@ export type Database = {
         Args: { p_reason?: string; p_user_id: string }
         Returns: number
       }
+      free_stock: {
+        Args: {
+          p_company_id: string
+          p_exclude_order?: string
+          p_product_id: string
+        }
+        Returns: number
+      }
       gate_change_guard: {
         Args: { p_mobile: string; p_pin: string; p_selfie: string }
         Returns: Json
@@ -6455,6 +6463,15 @@ export type Database = {
         Returns: string
       }
       order_payment_hold: { Args: { p_order_id: string }; Returns: boolean }
+      order_stock_shortage: {
+        Args: { p_order_id: string }
+        Returns: {
+          free: number
+          needed: number
+          product_id: string
+          product_name: string
+        }[]
+      }
       pending_ask_office: {
         Args: never
         Returns: {
