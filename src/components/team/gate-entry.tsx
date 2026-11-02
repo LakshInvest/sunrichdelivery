@@ -197,7 +197,7 @@ export function GateEntryPanel({ onDone }: { onDone: (queued?: boolean) => void 
             <input aria-label={t("sec.from")} value={from} onChange={(e) => setFrom(e.target.value)} className={inputCls} />
           </Field>
           {type === "parcel" && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3">
               <Field label={t("sec.courier")}>
                 <input aria-label={t("sec.courier")} value={courier} onChange={(e) => setCourier(e.target.value)} className={inputCls} />
               </Field>
