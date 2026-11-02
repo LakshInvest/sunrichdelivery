@@ -2,7 +2,7 @@
 
 Staff app for Sunrich Delivery drivers, loaders and gate security.
 
-**Live app**: https://sunrich-delivery.lovable.app
+**Live app**: https://delivery.sunrich.in
 
 ## Quick start
 ```bash

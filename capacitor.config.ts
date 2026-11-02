@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import type { CapacitorConfig } from "@capacitor/cli";
 
 // Live-site APK: the app loads the published website, so feature updates never need a rebuild.
-const LIVE_URL = "https://sunrich-delivery.lovable.app";
+const LIVE_URL = "https://delivery.sunrich.in";
 
 // Push only turns on when Firebase config is bundled; otherwise the app skips registration
 // instead of crashing. Re-run `npx cap sync android` after adding google-services.json.
@@ -18,6 +18,7 @@ const config: CapacitorConfig = {
     cleartext: false,
     androidScheme: "https",
     allowNavigation: [
+      "delivery.sunrich.in",
       "sunrich-delivery.lovable.app",
       "nxlmiovntfdsunqydrqd.supabase.co",
       "*.supabase.co",
