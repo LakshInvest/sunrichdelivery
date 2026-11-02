@@ -48,6 +48,7 @@ type Trip = {
   start_odometer: number | null;
   gate_out_at: string | null;
   gate_in_at: string | null;
+  driver_user_id: string | null;
   driver_started_at: string | null;
   unit_id: string | null;
   vehicles: { reg_no: string } | null;
@@ -123,7 +124,7 @@ function TripScreen() {
     const [tripRes, stopsRes, settingsRes] = await Promise.all([
       supabase
         .from("trips")
-        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, start_odometer, gate_out_at, gate_in_at, driver_started_at, unit_id, vehicles(reg_no)")
+        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, start_odometer, gate_out_at, gate_in_at, driver_user_id, driver_started_at, unit_id, vehicles(reg_no)")
         .eq("id", tripId)
         .single(),
       supabase
@@ -582,8 +583,10 @@ function TripScreen() {
   const showBackPass = onRoad && !trip.gate_in_at && Boolean(gatePass) && (Boolean(trip.ended_at) || (stops.length > 0 && stops.every((x) => x.status !== "pending")));
   // Cash settlement is an office action (dispatch:approve / finance:create);
   // drivers see the handover summary only.
+  // The trip's own driver hands cash to a cashier; office staff opening someone else's trip can settle directly.
   const canSettle =
     !!staff &&
+    trip.driver_user_id !== staff.id &&
     (staff.permissions.includes("dispatch:approve") || staff.permissions.includes("finance:create"));
 
   const toolBtn = (id: string, label: string, danger = false) => (
