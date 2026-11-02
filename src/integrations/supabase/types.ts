@@ -1600,6 +1600,7 @@ export type Database = {
           expense_types: string[]
           expenses_enabled: boolean
           failed_reasons: string[]
+          gate_pass_print: boolean
           location_at_each_stop: boolean
           location_interval_minutes: number
           location_tracking_enabled: boolean
@@ -1644,6 +1645,7 @@ export type Database = {
           expense_types?: string[]
           expenses_enabled?: boolean
           failed_reasons?: string[]
+          gate_pass_print?: boolean
           location_at_each_stop?: boolean
           location_interval_minutes?: number
           location_tracking_enabled?: boolean
@@ -1688,6 +1690,7 @@ export type Database = {
           expense_types?: string[]
           expenses_enabled?: boolean
           failed_reasons?: string[]
+          gate_pass_print?: boolean
           location_at_each_stop?: boolean
           location_interval_minutes?: number
           location_tracking_enabled?: boolean
@@ -5161,6 +5164,7 @@ export type Database = {
           fuel_litres: number | null
           gate_in_at: string | null
           gate_in_by: string | null
+          gate_in_manual: boolean
           gate_out_at: string | null
           gate_out_by: string | null
           helper_user_ids: string[]
@@ -5202,6 +5206,7 @@ export type Database = {
           fuel_litres?: number | null
           gate_in_at?: string | null
           gate_in_by?: string | null
+          gate_in_manual?: boolean
           gate_out_at?: string | null
           gate_out_by?: string | null
           helper_user_ids?: string[]
@@ -5243,6 +5248,7 @@ export type Database = {
           fuel_litres?: number | null
           gate_in_at?: string | null
           gate_in_by?: string | null
+          gate_in_manual?: boolean
           gate_out_at?: string | null
           gate_out_by?: string | null
           helper_user_ids?: string[]
@@ -6066,6 +6072,13 @@ export type Database = {
         Args: { p_reason: string; p_trip_id: string }
         Returns: undefined
       }
+      cashier_list: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
       check_pin: {
         Args: {
           p_device_id: string
@@ -6237,6 +6250,7 @@ export type Database = {
         Args: {
           p_fuel_amount?: number
           p_fuel_litres?: number
+          p_manual?: boolean
           p_odometer?: number
           p_trip_id: string
         }
@@ -6275,6 +6289,17 @@ export type Database = {
         Returns: {
           full_name: string
           id: string
+        }[]
+      }
+      gate_vehicles_out: {
+        Args: never
+        Returns: {
+          driver: string
+          ended: boolean
+          gate_out_at: string
+          reg_no: string
+          trip_id: string
+          trip_no: string
         }[]
       }
       geo_find_shape: {
@@ -6324,6 +6349,17 @@ export type Database = {
         Returns: undefined
       }
       my_approval_limit: { Args: never; Returns: number }
+      my_cash_to_confirm: {
+        Args: never
+        Returns: {
+          amount: number
+          created_at: string
+          from_name: string
+          id: string
+          note: string
+          trip_no: string
+        }[]
+      }
       my_catalogue: {
         Args: never
         Returns: {
@@ -6387,6 +6423,7 @@ export type Database = {
           expense_types: string[]
           expenses_enabled: boolean
           failed_reasons: string[]
+          gate_pass_print: boolean
           location_at_each_stop: boolean
           location_interval_minutes: number
           location_tracking_enabled: boolean
