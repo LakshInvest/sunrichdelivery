@@ -161,8 +161,33 @@ function TripScreen() {
         (map[l.order_id] ??= []).push({ id: l.id, product_name: l.product_name, pack_label: l.pack_label, qty: l.qty });
       }
       setLines(map);
+      // Stock left on the vehicle: what was loaded minus what has been handed over.
+      const dlRes = await supabase
+        .from("delivery_lines")
+        .select("order_line_id, delivered_qty")
+        .in("stop_id", stopRows.map((s) => s.id));
+      const lineProduct: Record<string, string> = {};
+      for (const l of (lineRes.data ?? []) as unknown as { id: string; product_id: string }[]) {
+        lineProduct[l.id] = l.product_id;
+      }
+      const handedOver: Record<string, number> = {};
+      for (const d of (dlRes.data ?? []) as unknown as { order_line_id: string; delivered_qty: number }[]) {
+        const pid = lineProduct[d.order_line_id];
+        if (!pid) continue;
+        handedOver[pid] = (handedOver[pid] ?? 0) + Number(d.delivered_qty ?? 0);
+      }
+      setVehicleStock(
+        ((ldRes.data ?? []) as unknown as LoadRow[])
+          .map((r) => ({
+            product_id: r.product_id,
+            name: r.products?.name ?? "",
+            left: Math.max(0, Number(r.loaded_qty ?? r.planned_qty ?? 0) - (handedOver[r.product_id] ?? 0)),
+          }))
+          .filter((r) => r.left > 0),
+      );
     } else {
       setLines({});
+      setVehicleStock([]);
     }
     // Firm UPI details for the QR shown at collection time.
     const firmId = stopRows.find((s) => s.orders?.firm_id)?.orders?.firm_id;
@@ -326,7 +351,8 @@ function TripScreen() {
         return;
       }
       setMessage(res.queued ? t("c.tryAgainOffline") : t("dr.stopDone"));
-      setSelected(null);
+      // Money still owed? Keep the stop open so the driver can collect it on the spot.
+      if (Number(stop.orders?.grand_total ?? 0) - Number(stop.orders?.amount_paid ?? 0) <= 0) setSelected(null);
       await fetchAll();
     });
   };
@@ -704,10 +730,13 @@ function TripScreen() {
                 </select>
                 <select value={spotProduct} onChange={(e) => setSpotProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
                   <option value="">{t("dr.pickupProduct")}</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                  {vehicleStock.map((p) => (
+                    <option key={p.product_id} value={p.product_id}>
+                      {p.name} · {t("dr.leftOnVehicle", { n: p.left })}
+                    </option>
                   ))}
                 </select>
+                {vehicleStock.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
                 <input inputMode="numeric" value={spotQty} onChange={(e) => setSpotQty(e.target.value.replace(/\D/g, ""))} placeholder={t("c.qty")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
                 <label className="flex items-center gap-2 text-sm text-foreground">
                   <input type="checkbox" checked={spotPaid} onChange={(e) => setSpotPaid(e.target.checked)} className="h-4 w-4 rounded border-input" />
