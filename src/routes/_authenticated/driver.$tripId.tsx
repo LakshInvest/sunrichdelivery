@@ -112,8 +112,11 @@ function TripScreen() {
   // Cash expenses paid from the bag reduce what the driver must hand over (same rule as settle_trip).
   const [cashSpent, setCashSpent] = useState(0);
 
+  // Spinner only on the first load: swapping the screen for a spinner on every
+  // refresh unmounted the live Google map and made it throw IntersectionObserver errors.
+  const loadedOnce = useRef(false);
   const fetchAll = useCallback(async () => {
-    setLoading(true);
+    if (!loadedOnce.current) setLoading(true);
     setError(null);
     const [tripRes, stopsRes, settingsRes] = await Promise.all([
       supabase
@@ -220,6 +223,7 @@ function TripScreen() {
     if (!settingsRes.error && settingsRes.data) {
       setSettings({ ...DEFAULT_SETTINGS, ...(settingsRes.data as unknown as Settings) });
     }
+    loadedOnce.current = true;
     setLoading(false);
   }, [tripId]);
 
