@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useTeamAuth } from "@/lib/team-auth";
 import { useLang } from "@/lib/l10n";
+import { CashToConfirm } from "@/components/team/cash-handover";
 import { AvatarLink, LanguageChips, NoRoleScreen, Screen, Spinner, SyncBadge } from "@/components/team/ui";
 import { Truck, Boxes, ShieldCheck, ChevronRight } from "lucide-react";
 
@@ -40,7 +41,8 @@ function Home() {
   const cards = staff.roles
     .map((r) => ROLE_CARDS[r])
     .filter((c): c is (typeof ROLE_CARDS)[string] => Boolean(c));
-  if (cards.length === 0) return <NoRoleScreen />;
+  const isCashier = staff.permissions.includes("finance:create");
+  if (cards.length === 0 && !isCashier) return <NoRoleScreen />;
 
   return (
     <Screen
@@ -52,6 +54,8 @@ function Home() {
         <div className="flex-1" />
         <LanguageChips />
       </div>
+
+      <CashToConfirm />
 
       {(
         <div className="grid gap-3">

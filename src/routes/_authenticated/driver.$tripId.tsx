@@ -557,6 +557,14 @@ function TripScreen() {
     });
   };
 
+  // Watch for security's gate-in while the vehicle is out or waiting for cash confirmation.
+  const live = trip.status === "in_progress" || trip.status === "returned";
+  useEffect(() => {
+    if (!live) return;
+    const id = window.setInterval(() => void fetchAll(), 15000);
+    return () => window.clearInterval(id);
+  }, [live, fetchAll]);
+
   const doneCount = stops.filter((s) => s.status === "delivered").length;
   // Order: loading done -> security gate out -> driver start checks -> on road.
   const loadingNotDone = trip.status === "planned" || trip.status === "loading";
