@@ -78,6 +78,14 @@ if (!m.includes("foregroundServiceType")) {
     `    <service android:name="com.equimaps.capacitor_background_geolocation.BackgroundGeolocationService" android:enabled="true" android:exported="false" android:foregroundServiceType="location" />\n    $1`,
   );
 }
+// Barcode scanner: download Google's ML Kit scanner UI module.
+if (!m.includes("com.google.mlkit.vision.DEPENDENCIES")) {
+  m = m.replace(
+    /(<application[^>]*>)/,
+    `$1
+        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui" />`,
+  );
+}
 // Manifest merger: the plugin's own service declares android:exported too.
 if (!m.includes("xmlns:tools")) {
   m = m.replace(/<manifest\b/, '<manifest xmlns:tools="http://schemas.android.com/tools"');
