@@ -811,7 +811,7 @@ function TripScreen() {
         <div className="rounded-xl border border-border bg-card p-4 text-center">
           <p className="text-sm font-semibold text-foreground">{t("dr.settled")}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t("dr.cashExpected")}: ₹{trip.cash_expected ?? 0} · {t("dr.cashReceived")}: ₹{trip.cash_received ?? 0}
+            {t("dr.cashExpected")}: ₹{Math.max(0, Number(trip.cash_expected ?? 0) - cashSpent)} · {t("dr.cashReceived")}: ₹{trip.cash_received ?? 0}
           </p>
         </div>
       )}
