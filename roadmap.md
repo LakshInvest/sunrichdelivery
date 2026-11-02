@@ -48,6 +48,6 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 
 ## Delivery v2 (Prompt-5) — one part per run
 - [x] 1. Login, PIN and profile
-- [x] 2. Trip chain: Do later, Full/Part/None + Ask office (wait + no-reply rule), loader count-difference reason flagged, unload/returns with stock back + difference flag. Not yet tried in the browser. Office Approve/Reject needs a Command Center screen.
+- [x] 2. Trip chain: Do later, Full/Part/None + Ask office (wait + no-reply rule), loader count-difference reason flagged, unload/returns with stock back + difference flag. Tested end to end on QA trip TRP/261102/0019. Office answers via pending_ask_office + answer_ask_office (permission ask_office:answer); Command Center screen still to build.
 - [ ] 3. Security extras (entry/exit/parcels/problem/register/change guard/material pass)
 - [ ] 4. Offline queue + final full test
