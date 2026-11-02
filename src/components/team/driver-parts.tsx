@@ -390,6 +390,7 @@ export function StopDetailPanel({
   // Cash/UPI orders: the driver must say what was paid. Part/None needs the office's OK.
   const needsPayCheck = (o?.payment_mode ?? "") === "cod" && Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0) > 0;
   const [officeOk, setOfficeOk] = useState(false);
+  const [officeRejected, setOfficeRejected] = useState(false);
 
   // Collection mode must be a payment channel (cash/upi/cheque), not the
   // order's payment_mode (cod/credit/prepaid) — trip_collections validates it.
@@ -574,6 +575,9 @@ export function StopDetailPanel({
               <input value={failNote} onChange={(e) => setFailNote(e.target.value)} placeholder={t("dr.failNote")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
             </div>
           )}
+          {officeRejected && failMode && (
+            <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">{t("dr.officeRejected")}</p>
+          )}
           {needsPayCheck && !failMode && (
             <AskOfficePanel
               tripId={tripId}
@@ -582,7 +586,10 @@ export function StopDetailPanel({
               onChoose={(full) => setOfficeOk(full)}
               onDecision={(ok) => {
                 setOfficeOk(ok);
-                if (!ok) setFailMode(true);
+                if (!ok) {
+                  setOfficeRejected(true);
+                  setFailMode(true);
+                }
               }}
             />
           )}
