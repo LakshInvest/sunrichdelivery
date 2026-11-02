@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { useTeamAuth } from "@/lib/team-auth";
 import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge, AvatarLink, DockButton } from "@/components/team/ui";
-import { queueRpc } from "@/lib/offline";
+import { isOffline, queueRpc } from "@/lib/offline";
 import { haptic, isNative, scanQr } from "@/lib/native";
 import { ScanLine, LogIn, LogOut, TriangleAlert, ArrowLeft, ClipboardList, UserRoundCog } from "lucide-react";
 import { friendlyError } from "@/lib/friendly-error";
@@ -30,7 +30,8 @@ type ScanHit =
   | { kind: "trip_out" | "trip_in" | "trip_done"; trip_id: string; trip_no: string; reg_no: string | null; status: string }
   | { kind: "material" | "material_done"; id: string; pass_no: string; direction: string; party: string | null; vehicle_no: string | null; items: string }
   | { kind: "pickup"; order: string; otp: string }
-  | { kind: "unknown" };
+  | { kind: "unknown" }
+  | { kind: "offline" };
 
 function istLongDate(): string {
   return new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(new Date());
@@ -107,6 +108,10 @@ function SecurityGate() {
       setHit({ kind: "pickup", order: decodeURIComponent(ord), otp });
       return;
     }
+    if (isOffline()) {
+      setHit({ kind: "offline" });
+      return;
+    }
     setBusy(true);
     const r = await supabase.rpc("gate_scan_lookup", { p_token: v });
     setBusy(false);
@@ -137,10 +142,14 @@ function SecurityGate() {
         void haptic("success");
         finish(`${t("sec.gateOutDone")}: ${hit.trip_no}`);
       } else if (hit.kind === "material") {
-        const r = await supabase.rpc("gate_material_scan", { p_token: typed.trim() });
-        if (r.error) return setError(friendlyError(r.error.message, t));
+        const r = await queueRpc("gate_material_scan", { p_token: typed.trim() });
+        if (r.queued) return finish(t("sec.savedOffline"));
+        if (r.error) return setError(friendlyError(r.error, t));
         void haptic("success");
         finish(`${t("sec.materialDone")}: ${hit.pass_no}`);
+      } else if (hit.kind === "offline") {
+        // No network: the guard says what the pass is; it is checked when it uploads.
+        return;
       } else if (hit.kind === "pickup") {
         const res = await queueRpc("gate_pickup_handover", { p_order_no: hit.order, p_otp: hit.otp });
         if (res.queued) return finish(t("c.tryAgainOffline"));
@@ -256,7 +265,16 @@ function SecurityGate() {
             </>
           )}
 
-          {hit && hit.kind !== "trip_in" && hit.kind !== "unknown" && hit.kind !== "trip_done" && hit.kind !== "material_done" && (
+          {hit && hit.kind === "offline" && (
+            <div className="grid gap-2 rounded-xl border-2 border-amber-500 bg-card p-4 shadow-card" data-testid="scan-hit">
+              <p className="text-sm font-bold text-foreground">{t("sec.offlineScan")}</p>
+              <DockButton onClick={() => void queueRpc("gate_out", { p_qr_token: typed.trim(), p_odometer: null }).then(() => finish(t("sec.savedOffline")))}>{t("sec.gateOut")}</DockButton>
+              <DockButton onClick={() => void queueRpc("gate_material_scan", { p_token: typed.trim() }).then(() => finish(t("sec.savedOffline")))}>{t("sec.materialPass")}</DockButton>
+              <button type="button" onClick={() => setHit(null)} className="text-sm font-bold text-muted-foreground">{t("c.cancel")}</button>
+            </div>
+          )}
+
+          {hit && hit.kind !== "offline" && hit.kind !== "trip_in" && hit.kind !== "unknown" && hit.kind !== "trip_done" && hit.kind !== "material_done" && (
             <div className="grid gap-3 rounded-xl border-2 border-primary bg-card p-4 shadow-card" data-testid="scan-hit">
               <span className="w-fit rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-primary-foreground">
                 {hit.kind === "trip_out" ? t("sec.gateOut") : hit.kind === "material" ? t("sec.materialPass") : t("sec.pickup")}
@@ -294,9 +312,9 @@ function SecurityGate() {
       )}
 
       {view !== "home" && back}
-      {view === "entry" && <GateEntryPanel onDone={() => finish(t("sec.entryDone"))} />}
+      {view === "entry" && <GateEntryPanel onDone={(q) => finish(q ? t("sec.savedOffline") : t("sec.entryDone"))} />}
       {view === "exit" && <GateExitPanel onChange={() => void loadCounts()} />}
-      {view === "problem" && <ProblemPanel onDone={() => finish(t("sec.problemDone"))} />}
+      {view === "problem" && <ProblemPanel onDone={(q) => finish(q ? t("sec.savedOffline") : t("sec.problemDone"))} />}
       {view === "register" && <RegisterPanel />}
       {view === "guard" && <ChangeGuardPanel />}
 
