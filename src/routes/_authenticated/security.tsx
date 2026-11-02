@@ -224,7 +224,7 @@ function SecurityGate() {
 
   return (
     <>
-      <Screen title={t("sec.title")} right={<SyncBadge />}>
+      <Screen title={t("sec.title")} right={<div className="flex items-center gap-2"><SyncBadge /><AvatarLink /></div>}>
         {tab === "out" && (
           <>
             {/* The one big action, right at the top: scan the gate pass. */}

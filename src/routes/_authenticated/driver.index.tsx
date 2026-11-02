@@ -58,7 +58,7 @@ function DriverHome() {
   }, [load]);
 
   return (
-    <Screen title={t("dr.title")} right={<SyncBadge />}>
+    <Screen title={t("dr.title")} right={<div className="flex items-center gap-2"><SyncBadge /><AvatarLink /></div>}>
       {rows === null && !error ? (
         <Spinner label={t("c.loading")} />
       ) : (

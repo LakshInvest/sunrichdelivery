@@ -87,7 +87,7 @@ function LoaderHome() {
   );
 
   return (
-    <Screen title={t("ld.title")} right={<SyncBadge />}>
+    <Screen title={t("ld.title")} right={<div className="flex items-center gap-2"><SyncBadge /><AvatarLink /></div>}>
       {rows === null && !error ? (
         <Spinner label={t("c.loading")} />
       ) : (
