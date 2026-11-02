@@ -319,7 +319,12 @@ export type StopRow = {
   } | null;
 };
 
-export type LineRow = { id: string; product_name: string; pack_label: string | null; qty: number };
+export type LineRow = { id: string; product_name: string; pack_label: string | null; qty: number; value?: number; line_total?: number | null; deposit_total?: number | null; kept?: number };
+
+/** Value of what the customer keeps: delivered good qty × order price (short/refused/damaged not charged). */
+export function keptValue(lines: LineRow[], keptQty: (l: LineRow) => number) {
+  return Math.round(lines.reduce((a, l) => a + (l.qty > 0 ? (Number(l.value ?? 0) * Math.max(0, Math.min(l.qty, keptQty(l)))) / l.qty : 0), 0) * 100) / 100;
+}
 
 export function StopCard({
   stop,
@@ -388,7 +393,7 @@ export function StopDetailPanel({
   const [otp, setOtp] = useState("");
   const [localErr, setLocalErr] = useState<string | null>(null);
   // Cash/UPI orders: the driver must say what was paid. Part/None needs the office's OK.
-  const needsPayCheck = stop.status === "pending" && (o?.payment_mode ?? "") === "cod" && Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0) > 0;
+  const needsPayCheckBase = stop.status === "pending" && (o?.payment_mode ?? "") === "cod";
   const [officeOk, setOfficeOk] = useState(false);
   const [officeRejected, setOfficeRejected] = useState(false);
 
@@ -406,7 +411,12 @@ export function StopDetailPanel({
     setQty(Object.fromEntries(lines.map((l) => [l.id, { delivered: String(l.qty), damaged: "", refused: "", empties: "" }])));
   }, [lines]);
 
-  const due = Math.max(0, Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0));
+  const hasValues = lines.some((l) => l.value != null);
+  const kept = hasValues
+    ? keptValue(lines, (l) => (stop.status === "pending" ? (failMode ? 0 : Number(qty[l.id]?.delivered ?? l.qty)) : Number(l.kept ?? l.qty)))
+    : Number(o?.grand_total ?? 0);
+  const due = Math.max(0, kept - Number(o?.amount_paid ?? 0));
+  const needsPayCheck = needsPayCheckBase && due > 0;
 
   const submitDelivery = async () => {
     setLocalErr(null);
@@ -582,7 +592,7 @@ export function StopDetailPanel({
             <AskOfficePanel
               tripId={tripId}
               stopId={stop.id}
-              due={Math.max(0, Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0))}
+              due={due}
               onChoose={(full) => setOfficeOk(full)}
               onDecision={(ok) => {
                 setOfficeOk(ok);

@@ -164,11 +164,11 @@ function TripScreen() {
     if (!stopsRes.error && stopRows.length > 0) {
       const lineRes = await supabase
         .from("order_lines")
-        .select("id, order_id, product_id, product_name, pack_label, qty")
+        .select("id, order_id, product_id, product_name, pack_label, qty, line_total, deposit_total")
         .in("order_id", stopRows.map((s) => s.orders?.id).filter((x): x is string => Boolean(x)));
       const map: Record<string, LineRow[]> = {};
       for (const l of (lineRes.data ?? []) as unknown as (LineRow & { order_id: string })[]) {
-        (map[l.order_id] ??= []).push({ id: l.id, product_name: l.product_name, pack_label: l.pack_label, qty: l.qty });
+        (map[l.order_id] ??= []).push({ id: l.id, product_name: l.product_name, pack_label: l.pack_label, qty: l.qty, value: Number(l.line_total ?? 0) + Number(l.deposit_total ?? 0) });
       }
       setLines(map);
       // Stock left on the vehicle: what was loaded minus what has been handed over.
