@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { staffLogin, myRoleCodes } from "@/lib/staff-login.functions";
-import { getDeviceId, getDeviceLabel } from "@/lib/device";
+import { getDeviceId, getDeviceLabel, initDeviceId } from "@/lib/device";
 import { installReplayListeners } from "@/lib/offline";
 import type { Lang } from "@/lib/l10n";
 
@@ -74,6 +74,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     const boot = async () => {
+      await initDeviceId().catch(() => {});
       const { data } = await supabase.auth.getSession();
       const uid = data.session?.user?.id;
       if (uid && !cancelled) {
@@ -136,6 +137,8 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
     [loadStaff],
   );
 
+  // Clears session, cached profile and roles, then hard-replaces to /login so
+  // nothing in memory survives and Back can't return. The device id is kept.
   const signOut = useCallback(async () => {
     try {
       await supabase.rpc("record_logout");
@@ -144,6 +147,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
     }
     await supabase.auth.signOut();
     setStaff(null);
+    window.location.replace("/login");
   }, []);
 
   const refresh = useCallback(async () => {
@@ -151,7 +155,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
     const uid = data.session?.user?.id;
     if (!uid) return;
     const s = await loadStaff(uid);
-    if (s) setStaff(s);
+    setStaff(s);
   }, [loadStaff]);
 
   const value = useMemo<AuthCtx>(() => ({ ready, staff, signIn, signOut, refresh }), [ready, staff, signIn, signOut, refresh]);
