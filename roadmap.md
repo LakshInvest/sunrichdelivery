@@ -58,11 +58,11 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 - Credit note MFCN/26-27/00001 (pending, QA)
 
 ## Open
-- [ ] App icon swap — waiting for the three icon files (not attached)
+- [x] App icon swap — icons copied into assets
 - [x] Part 3 Security extras — home redesign, Entry (types, parcels), Exit, Problem, Register, Change guard, Material pass scan done
 
 ## Part 3 — Security extras
 - [x] 1. Entry + Inside-now exit list (+91 search, STAFF tag) — tested as QA Loader
-- [ ] 2. Parcels + Problem
-- [ ] 3. Register with filters + Change guard (PIN + selfie)
-- [ ] 4. Material pass scan (needs one QA test pass)
+- [x] 2. Parcels + Problem
+- [x] 3. Register with filters + Change guard (PIN + selfie)
+- [x] 4. Material pass scan (needs one QA test pass)
