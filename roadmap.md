@@ -45,3 +45,9 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
       current items; read-only for authenticated).
 - [x] App reads the table and falls back to English when a translation is empty
       or the table is missing (useVehicleCheckNames in driver-parts.tsx).
+
+## Delivery v2 (Prompt-5) — one part per run
+- [x] 1. Login, PIN and profile
+- [ ] 2. Trip chain (loader → gate pass → scan out → stops/ask office → end → scan arrived → unload) — waiting for "next"
+- [ ] 3. Security extras (entry/exit/parcels/problem/register/change guard/material pass)
+- [ ] 4. Offline queue + final full test
