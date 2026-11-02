@@ -1,8 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
-import { istToday } from "@/lib/ist";
 import { useTeamAuth } from "@/lib/team-auth";
 import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge, AvatarLink, DockButton } from "@/components/team/ui";
 import { queueRpc } from "@/lib/offline";
@@ -101,6 +100,7 @@ function SecurityGate() {
     setMsg(null);
     setError(null);
     if (!v) return;
+    setTyped(v);
     const ord = v.match(/order[=:]([^&\s]+)/i)?.[1];
     if (ord) {
       const otp = v.match(/(?:otp|code)[=:](\d{4,6})/i)?.[1] ?? v.match(/\b(\d{6})\b/)?.[1] ?? "";
@@ -130,7 +130,7 @@ function SecurityGate() {
     setBusy(true);
     try {
       if (hit.kind === "trip_out") {
-        const tok = typed.trim() || "";
+        const tok = typed.trim();
         const res = await queueRpc("gate_out", { p_qr_token: tok, p_odometer: odo === "" ? null : Number(odo) });
         if (res.queued) return finish(t("c.tryAgainOffline"));
         if (res.error) return setError(friendlyError(res.error, t));
@@ -302,7 +302,6 @@ function SecurityGate() {
 
       {msg && <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300" role="status">{msg}</p>}
       {error && <div className="mt-4"><ErrorCard message={error} /></div>}
-      <Link to="/" className="sr-only">home</Link>
     </Screen>
   );
 }
@@ -377,5 +376,3 @@ function GateInCard({
   );
 }
 
-// keep istToday referenced for tree-shaking parity with register defaults
-void istToday;
