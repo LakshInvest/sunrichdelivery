@@ -6,8 +6,9 @@ import { istDisplay } from "@/lib/ist";
 import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge, AvatarLink, ActionDock, DockButton } from "@/components/team/ui";
 import { queueRpc } from "@/lib/offline";
 import { haptic, isNative, scanQr } from "@/lib/native";
-import { ScanLine, LogOut, LogIn, ClipboardList, PackageCheck } from "lucide-react";
+import { ScanLine, LogOut, LogIn, ClipboardList, PackageCheck, UserCheck } from "lucide-react";
 import { friendlyError } from "@/lib/friendly-error";
+import { GateEntryPanel } from "@/components/team/gate-entry";
 
 export const Route = createFileRoute("/_authenticated/security")({
   head: () => ({
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/security")({
   component: SecurityGate,
 });
 
-type Tab = "out" | "in" | "log" | "pickup";
+type Tab = "out" | "in" | "entry" | "log" | "pickup";
 
 type OutTrip = { id: string; trip_no: string; gate_out_at: string | null; gate_in_at: string | null; status: string; vehicles: { reg_no: string } | null };
 type PickupOrder = {
@@ -218,6 +219,7 @@ function SecurityGate() {
   const tabs: { id: Tab; label: string }[] = [
     { id: "out", label: t("sec.tabOut") },
     { id: "in", label: t("sec.tabIn") },
+    { id: "entry", label: t("sec.tabEntry") },
     { id: "log", label: t("sec.tabLog") },
     { id: "pickup", label: t("sec.tabPickup") },
   ];
@@ -270,6 +272,8 @@ function SecurityGate() {
             ))}
           </div>
         )}
+
+        {tab === "entry" && <GateEntryPanel />}
 
         {tab === "log" && (
           <div className="grid gap-2">
@@ -353,7 +357,7 @@ function SecurityGate() {
       )}
       {/* Tab switcher docked at the bottom, thumb-reachable */}
       <ActionDock tone="plain">
-        <div className="grid grid-cols-4 gap-1 rounded-2xl bg-navy p-1 shadow-soft">
+        <div className="grid grid-cols-5 gap-1 rounded-2xl bg-navy p-1 shadow-soft">
           {tabs.map((x) => (
             <button
               key={x.id}
@@ -367,7 +371,7 @@ function SecurityGate() {
                 tab === x.id ? "bg-card text-navy shadow-soft" : "text-primary-foreground/80"
               }`}
             >
-              {x.id === "out" ? <LogOut className="h-5 w-5" /> : x.id === "in" ? <LogIn className="h-5 w-5" /> : x.id === "log" ? <ClipboardList className="h-5 w-5" /> : <PackageCheck className="h-5 w-5" />}
+              {x.id === "out" ? <LogOut className="h-5 w-5" /> : x.id === "in" ? <LogIn className="h-5 w-5" /> : x.id === "entry" ? <UserCheck className="h-5 w-5" /> : x.id === "log" ? <ClipboardList className="h-5 w-5" /> : <PackageCheck className="h-5 w-5" />}
               <span className="block w-full truncate whitespace-nowrap text-center">{x.label}</span>
             </button>
           ))}
