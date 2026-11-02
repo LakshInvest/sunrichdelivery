@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useTeamAuth } from "@/lib/team-auth";
 import { useLang } from "@/lib/l10n";
-import { BrandLogo, LanguageChips, Screen, Spinner, SyncBadge } from "@/components/team/ui";
-import { Truck, Boxes, ShieldCheck, ChevronRight, UserRound } from "lucide-react";
+import { AvatarLink, LanguageChips, NoRoleScreen, Screen, Spinner, SyncBadge } from "@/components/team/ui";
+import { Truck, Boxes, ShieldCheck, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -35,40 +35,17 @@ function Home() {
 
   if (!ready) return <Spinner label={t("c.loading")} />;
 
-  if (!staff) {
-    return (
-      <main className="mx-auto flex h-[100dvh] max-w-md flex-col items-center justify-center gap-4 px-6">
-        <BrandLogo />
-        <p className="text-center text-sm text-muted-foreground">{t("home.noRoles")}</p>
-        <button onClick={() => void signOut()} className="rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-soft">
-          {t("c.signOut")}
-        </button>
-      </main>
-    );
-  }
+  if (!staff) return <NoRoleScreen />;
 
   const cards = staff.roles
     .map((r) => ROLE_CARDS[r])
     .filter((c): c is (typeof ROLE_CARDS)[string] => Boolean(c));
-  const initials = staff.fullName
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0] ?? "")
-    .join("")
-    .toUpperCase();
+  if (cards.length === 0) return <NoRoleScreen />;
 
   return (
     <Screen
       title={t("home.greeting", { name: staff.fullName.split(" ")[0] ?? staff.fullName })}
-      right={
-        <Link
-          to="/profile"
-          aria-label={t("home.profile")}
-          className="grid h-11 w-11 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-soft"
-        >
-          {initials || <UserRound className="h-5 w-5" />}
-        </Link>
-      }
+      right={<AvatarLink />}
     >
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <SyncBadge />
@@ -76,11 +53,7 @@ function Home() {
         <LanguageChips />
       </div>
 
-      {cards.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card p-5 text-center shadow-card">
-          <p className="text-sm text-muted-foreground">{t("home.noRoles")}</p>
-        </div>
-      ) : (
+      {(
         <div className="grid gap-3">
           {cards.map((c, i) => (
             <Link

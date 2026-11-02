@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { istToday } from "@/lib/ist";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
-import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge } from "@/components/team/ui";
+import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge, AvatarLink } from "@/components/team/ui";
 
 export const Route = createFileRoute("/_authenticated/loader/")({
   head: () => ({
@@ -87,7 +87,7 @@ function LoaderHome() {
   );
 
   return (
-    <Screen title={t("ld.title")} right={<SyncBadge />}>
+    <Screen title={t("ld.title")} right={<div className="flex items-center gap-2"><SyncBadge /><AvatarLink /></div>}>
       {rows === null && !error ? (
         <Spinner label={t("c.loading")} />
       ) : (

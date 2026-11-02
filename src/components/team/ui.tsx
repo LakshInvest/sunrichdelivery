@@ -6,6 +6,9 @@ import { pendingCount, subscribe } from "@/lib/offline";
 import { supabase } from "@/integrations/supabase/client";
 import { fileToDataUrl, photoUrl, uploadPhoto } from "@/lib/photo";
 import { isNative, takeNativePhoto, haptic } from "@/lib/native";
+import { Link } from "@tanstack/react-router";
+import { UserRound } from "lucide-react";
+import { useTeamAuth } from "@/lib/team-auth";
 import logoNavy from "@/assets/sunrich-logo-navy.png.asset.json";
 import logoWhite from "@/assets/sunrich-logo-white.png.asset.json";
 
@@ -343,13 +346,65 @@ export function PhotoImg({ path, className = "" }: { path: string | null; classN
 }
 
 /** Sign out helper used by headers. */
+/** Sign out through the team auth provider (clears session + cached profile, goes to /login). */
 export function useSignOut() {
-  return async () => {
-    try {
-      await supabase.rpc("record_logout");
-    } catch {
-      // ignore
-    }
-    await supabase.auth.signOut();
-  };
+  const { signOut } = useTeamAuth();
+  return signOut;
+}
+
+/** Profile avatar shown top-right on every role home. */
+export function AvatarLink() {
+  const { staff } = useTeamAuth();
+  const { t } = useLang();
+  const initials = (staff?.fullName ?? "")
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0] ?? "")
+    .join("")
+    .toUpperCase();
+  return (
+    <Link
+      to="/profile"
+      aria-label={t("home.profile")}
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-soft"
+    >
+      {initials || <UserRound className="h-5 w-5" />}
+    </Link>
+  );
+}
+
+/** Signed in, but no Delivery role (or no staff profile): name, mobile, Sign out, Try again. */
+export function NoRoleScreen() {
+  const { staff, signOut, refresh } = useTeamAuth();
+  const { t } = useLang();
+  const [busy, setBusy] = useState(false);
+  return (
+    <main className="mx-auto flex h-[100dvh] w-full max-w-md flex-col items-center justify-center gap-4 px-6 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[max(env(safe-area-inset-top),1rem)] text-center">
+      <BrandLogo className="h-10" />
+      <h1 className="font-display text-2xl font-bold text-foreground">{t("noRole.title")}</h1>
+      {staff && (
+        <div>
+          <p className="font-semibold text-foreground">{staff.fullName || "—"}</p>
+          <p className="text-sm text-muted-foreground">{staff.mobile}</p>
+        </div>
+      )}
+      <p className="text-sm text-muted-foreground">{t("home.noRoles")}</p>
+      <button
+        disabled={busy}
+        onClick={() => {
+          setBusy(true);
+          void refresh().finally(() => setBusy(false));
+        }}
+        className="mt-2 w-full rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft disabled:bg-muted disabled:text-muted-foreground"
+      >
+        {busy ? t("c.loading") : t("noRole.tryAgain")}
+      </button>
+      <button
+        onClick={() => void signOut()}
+        className="w-full rounded-lg border border-input bg-card py-3.5 text-sm font-semibold text-foreground shadow-card"
+      >
+        {t("c.signOut")}
+      </button>
+    </main>
+  );
 }
