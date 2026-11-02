@@ -3,7 +3,7 @@
 // API lazily with the server-minted key; renders nothing until mounted.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/l10n";
-import { getGoogleMapsKey } from "@/lib/maps.functions";
+import { getGoogleMapsKey, getTripRoute } from "@/lib/maps.functions";
 import { getCoords } from "@/components/team/driver-parts";
 import { openExternal, haptic } from "@/lib/native";
 import { Navigation, Loader } from "lucide-react";
@@ -24,6 +24,28 @@ const STATUS_COLORS: Record<string, string> = {
   partial: "#16A34A",
   failed: "#EF4444",
 };
+
+const LATUR = { lat: 18.402252, lng: 76.584212 }; // Ganj Golai, Latur
+
+/** Decode a Google encoded polyline. */
+function decodePolyline(str: string): { lat: number; lng: number }[] {
+  const out: { lat: number; lng: number }[] = [];
+  let i = 0, lat = 0, lng = 0;
+  while (i < str.length) {
+    for (const which of [0, 1]) {
+      let shift = 0, result = 0, b: number;
+      do {
+        b = str.charCodeAt(i++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20 && i < str.length);
+      const d = result & 1 ? ~(result >> 1) : result >> 1;
+      if (which === 0) lat += d; else lng += d;
+    }
+    out.push({ lat: lat / 1e5, lng: lng / 1e5 });
+  }
+  return out;
+}
 
 let loadPromise: Promise<void> | null = null;
 
@@ -62,7 +84,7 @@ type GoogleMap = {
 
 type GoogleMarker = { addListener?: (event: string, handler: () => void) => void };
 
-export function StopMap({ stops }: { stops: MapStop[] }) {
+export function StopMap({ stops, origin = null }: { stops: MapStop[]; origin?: { lat: number; lng: number } | null }) {
   const { t } = useLang();
   const holder = useRef<HTMLDivElement>(null);
   const map = useRef<GoogleMap | null>(null);
@@ -107,14 +129,38 @@ export function StopMap({ stops }: { stops: MapStop[] }) {
         const iw = new google.maps.InfoWindow({ content: `<div style="font-family:Inter,sans-serif;font-size:13px;font-weight:600">${s.seq}. ${s.label}</div>` });
         marker.addListener?.("click", () => iw.open(mapObj, marker));
       }
-      if (pts.length > 1) {
-        new google.maps.Polyline({
-          path: pts.map(({ pos }) => pos),
+      // Plant first, then every stop in order.
+      const path = [...(origin ? [origin] : []), ...pts.map(({ pos }) => pos)];
+      if (origin) {
+        new google.maps.Marker({
+          position: origin,
           map: mapObj,
-          strokeColor: "#E0A526",
-          strokeOpacity: 0.9,
-          strokeWeight: 3,
+          title: "Plant",
+          label: { text: "P", color: "#FFFFFF", fontSize: "12px", fontWeight: "700" },
+          icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: "#0D3278", fillOpacity: 1, strokeColor: "#FFFFFF", strokeWeight: 2, scale: 14 },
         });
+      }
+      if (path.length > 1) {
+        const line = (p: { lat: number; lng: number }[], dashed: boolean) =>
+          new google.maps.Polyline({
+            path: p,
+            map: mapObj,
+            strokeColor: "#E0A526",
+            strokeOpacity: dashed ? 0.7 : 0.95,
+            strokeWeight: dashed ? 3 : 5,
+          });
+        void getTripRoute({ data: { points: path.slice(0, 27) } })
+          .then((r) => {
+            if (r.polyline) line(decodePolyline(r.polyline), false);
+            else {
+              console.error("[map] road route unavailable, drawing straight lines:", r.error);
+              line(path, true);
+            }
+          })
+          .catch((e: unknown) => {
+            console.error("[map] route request failed:", e);
+            line(path, true);
+          });
       }
       if (ext) {
         const CORNER = 0.004;
@@ -124,12 +170,12 @@ export function StopMap({ stops }: { stops: MapStop[] }) {
           north: ext.maxLat + CORNER,
           east: ext.maxLng + CORNER,
         });
-      } else if (me) {
-        mapObj.setCenter(me);
+      } else {
+        mapObj.setCenter(LATUR);
         mapObj.setZoom(14);
       }
     },
-    [stops, me],
+    [stops, origin],
   );
 
   // Load the API once and draw.
@@ -147,7 +193,8 @@ export function StopMap({ stops }: { stops: MapStop[] }) {
         if (!map.current) {
           map.current = new google.maps.Map(holder.current, {
             zoom: 13,
-            center: { lat: 19.076, lng: 72.8777 },
+            center: LATUR,
+            clickableIcons: false,
             disableDefaultUI: true,
             zoomControl: true,
             gestureHandling: "greedy",
