@@ -579,6 +579,7 @@ export function StopDetailPanel({
               tripId={tripId}
               stopId={stop.id}
               due={Math.max(0, Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0))}
+              onChoose={(full) => setOfficeOk(full)}
               onDecision={(ok) => {
                 setOfficeOk(ok);
                 if (!ok) setFailMode(true);
@@ -643,7 +644,7 @@ export async function signatureToPath(dataUrl: string | null, staffId: string, s
 const PAY_REASONS = ["dr.rsnLater", "dr.rsnCheque", "dr.rsnRefused", "dr.rsnOwnerAway"] as const;
 
 /** Full / Part / None. Part or None → "Ask office" and wait for Approve / Reject (or the no-reply rule). */
-function AskOfficePanel({ tripId, stopId, due, onDecision }: { tripId: string; stopId: string; due: number; onDecision: (ok: boolean) => void }) {
+function AskOfficePanel({ tripId, stopId, due, onChoose, onDecision }: { tripId: string; stopId: string; due: number; onChoose: (full: boolean) => void; onDecision: (ok: boolean) => void }) {
   const { t } = useLang();
   const [pay, setPay] = useState<"full" | "part" | "none" | null>(null);
   const [amount, setAmount] = useState("");
@@ -680,7 +681,7 @@ function AskOfficePanel({ tripId, stopId, due, onDecision }: { tripId: string; s
   const choose = (v: "full" | "part" | "none") => {
     setPay(v);
     setErr(null);
-    onDecision(v === "full");
+    onChoose(v === "full");
   };
 
   const ask = async () => {
