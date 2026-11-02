@@ -9,6 +9,7 @@ import { haptic, isNative, scanQr } from "@/lib/native";
 import { ScanLine, LogIn, LogOut, TriangleAlert, ArrowLeft, ClipboardList, UserRoundCog } from "lucide-react";
 import { friendlyError } from "@/lib/friendly-error";
 import { GateEntryPanel, GateExitPanel, inputCls } from "@/components/team/gate-entry";
+import { VehiclesOutList } from "@/components/team/vehicles-out";
 import { ChangeGuardPanel, ProblemPanel, RegisterPanel } from "@/components/team/gate-extras";
 
 export const Route = createFileRoute("/_authenticated/security")({
@@ -250,6 +251,7 @@ function SecurityGate() {
                 <button type="button" onClick={() => go("register")} className="flex items-center gap-1 text-sm font-bold text-primary underline-offset-2 hover:underline">
                   <ClipboardList className="h-4 w-4" /> {t("sec.register")}
                 </button>
+                  <VehiclesOutList refreshKey={counts?.vehicles ?? 0} onArrived={() => finish(t("sec.arrived"))} />
                 <button type="button" onClick={() => go("guard")} className="flex items-center gap-1 text-sm font-bold text-muted-foreground">
                   <UserRoundCog className="h-4 w-4" /> {t("sec.changeGuard")}
                 </button>
