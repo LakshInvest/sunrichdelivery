@@ -89,8 +89,6 @@ function TripScreen() {
   const [expAmount, setExpAmount] = useState("");
   const [expNote, setExpNote] = useState("");
   const [expPhoto, setExpPhoto] = useState<string | null>(null);
-  const [extraProduct, setExtraProduct] = useState("");
-  const [extraQty, setExtraQty] = useState("");
   const [pickupCustomer, setPickupCustomer] = useState("");
   const [pickupProduct, setPickupProduct] = useState("");
   const [pickupQty, setPickupQty] = useState("");
@@ -417,23 +415,6 @@ function TripScreen() {
     });
   };
 
-  const addExtra = async () => {
-    await run(async () => {
-      const res = await queueRpc("set_extra_load", {
-        p_trip_id: tripId,
-        p_product_id: extraProduct,
-        p_qty: Number(extraQty),
-      });
-      if (res.error && !res.queued) {
-        setError(friendlyError(res.error, t));
-        return;
-      }
-      setShowTools(null);
-      setMessage(res.queued ? t("c.tryAgainOffline") : t("c.saved"));
-      setExtraQty("");
-    });
-  };
-
   const addPickup = async () => {
     if (!pickupCustomer) return;
     await run(async () => {
@@ -650,7 +631,6 @@ function TripScreen() {
           </div>
           <div className="mb-3 flex flex-wrap gap-2">
             {settings.expenses_enabled && toolBtn("expense", t("dr.expenses"))}
-            {settings.allow_extra_load && toolBtn("extras", t("dr.extras"))}
             {toolBtn("pickup", t("dr.pickup"))}
             {settings.allow_spot_sale && toolBtn("spot", t("dr.spotSale"))}
             {settings.sos_enabled && toolBtn("sos", t("dr.sos"), true)}
@@ -670,24 +650,6 @@ function TripScreen() {
                 <input value={expNote} onChange={(e) => setExpNote(e.target.value)} placeholder={t("c.notes")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
                 <PhotoInput userId={staff?.id ?? "anon"} kind="expense-bill" label={t("dr.expenseBill")} required={settings.expense_bill_photo_required} value={expPhoto} onChange={setExpPhoto} />
                 <button onClick={() => void addExpense()} disabled={busy || expAmount === ""} className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-50">
-                  {t("c.submit")}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {showTools === "extras" && (
-            <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-card">
-              <p className="mb-2 text-sm font-bold text-foreground">{t("dr.extras")}</p>
-              <div className="grid gap-2">
-                <select value={extraProduct} onChange={(e) => setExtraProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
-                  <option value="">{t("dr.pickupProduct")}</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-                <input inputMode="numeric" value={extraQty} onChange={(e) => setExtraQty(e.target.value.replace(/\D/g, ""))} placeholder={t("c.qty")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
-                <button onClick={() => void addExtra()} disabled={busy || !extraProduct || extraQty === ""} className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-50">
                   {t("c.submit")}
                 </button>
               </div>
