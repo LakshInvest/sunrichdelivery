@@ -2112,6 +2112,57 @@ export type Database = {
           },
         ]
       }
+      gate_entries: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          in_at: string
+          in_by: string
+          mobile: string
+          name: string
+          out_at: string | null
+          out_by: string | null
+          person_type: string
+          purpose: string | null
+          staff_user_id: string | null
+          updated_at: string
+          vehicle_no: string | null
+        }
+        Insert: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          in_at?: string
+          in_by?: string
+          mobile: string
+          name: string
+          out_at?: string | null
+          out_by?: string | null
+          person_type?: string
+          purpose?: string | null
+          staff_user_id?: string | null
+          updated_at?: string
+          vehicle_no?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          in_at?: string
+          in_by?: string
+          mobile?: string
+          name?: string
+          out_at?: string | null
+          out_by?: string | null
+          person_type?: string
+          purpose?: string | null
+          staff_user_id?: string | null
+          updated_at?: string
+          vehicle_no?: string | null
+        }
+        Relationships: []
+      }
       gate_passes: {
         Row: {
           id: string
@@ -5933,6 +5984,17 @@ export type Database = {
         Args: { p_reason?: string; p_user_id: string }
         Returns: number
       }
+      gate_entry_in: {
+        Args: {
+          p_mobile: string
+          p_name: string
+          p_purpose?: string
+          p_vehicle?: string
+        }
+        Returns: string
+      }
+      gate_entry_out: { Args: { p_entry_id: string }; Returns: undefined }
+      gate_find_person: { Args: { p_mobile: string }; Returns: Json }
       gate_in: {
         Args: {
           p_fuel_amount?: number

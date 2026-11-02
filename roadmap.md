@@ -60,3 +60,9 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 ## Open
 - [ ] App icon swap — waiting for the three icon files (not attached)
 - [ ] Part 3 Security extras — not started
+
+## Part 3 — Security extras
+- [x] 1. Entry + Inside-now exit list (+91 search, STAFF tag) — tested as QA Loader
+- [ ] 2. Parcels + Problem
+- [ ] 3. Register with filters + Change guard (PIN + selfie)
+- [ ] 4. Material pass scan (needs one QA test pass)
