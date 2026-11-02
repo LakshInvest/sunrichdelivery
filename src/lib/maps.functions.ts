@@ -37,7 +37,7 @@ export const getTripRoute = createServerFn({ method: "POST" })
         "X-Goog-Api-Key": key,
         "X-Goog-FieldMask": "routes.polyline.encodedPolyline",
         // The key may be restricted to the app's web address.
-        Referer: "https://sunrich-delivery.lovable.app/",
+        Referer: "https://delivery.sunrich.in/",
       },
       body: JSON.stringify({
         origin: wp(pts[0] as Pt),

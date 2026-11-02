@@ -1,6 +1,6 @@
 # Build the Sunrich Delivery APK (Windows)
 
-The APK is a "live-site" app: it opens https://sunrich-delivery.lovable.app, so new features
+The APK is a "live-site" app: it opens https://delivery.sunrich.in, so new features
 appear automatically. Rebuild only to change the version number.
 
 ## 1. Install once
@@ -83,5 +83,5 @@ Push (FCM, saved with `save_my_push_token`, app `delivery`, tap opens the trip/s
 notifications (channels "Trips" and "Alerts"), GPS, background location during active trips
 only, QR scanning (gate / pickup pass), camera, offline photo storage, keep screen on during
 trips, splash screen, status bar, back button + deep links (`com.sunrich.delivery://driver/<id>`
-and `https://sunrich-delivery.lovable.app/...`), in-app browser, share, network status,
+and `https://delivery.sunrich.in/...`), in-app browser, share, network status,
 preferences, keyboard and haptics. In a normal browser every feature falls back to web behaviour.
