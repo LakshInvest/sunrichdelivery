@@ -112,8 +112,11 @@ function TripScreen() {
   // Cash expenses paid from the bag reduce what the driver must hand over (same rule as settle_trip).
   const [cashSpent, setCashSpent] = useState(0);
 
+  // Spinner only on the first load: swapping the screen for a spinner on every
+  // refresh unmounted the live Google map and made it throw IntersectionObserver errors.
+  const loadedOnce = useRef(false);
   const fetchAll = useCallback(async () => {
-    setLoading(true);
+    if (!loadedOnce.current) setLoading(true);
     setError(null);
     const [tripRes, stopsRes, settingsRes] = await Promise.all([
       supabase
@@ -190,7 +193,7 @@ function TripScreen() {
       for (const d of (dlRes.data ?? []) as unknown as { order_line_id: string; delivered_qty: number }[]) {
         keptByLine[d.order_line_id] = (keptByLine[d.order_line_id] ?? 0) + Number(d.delivered_qty ?? 0);
       }
-      for (const k of Object.keys(map)) map[k] = (map[k] ?? []).map((l) => (l.id in keptByLine ? { ...l, kept: keptByLine[l.id] } : l));
+      for (const k of Object.keys(map)) map[k] = (map[k] ?? []).map((l) => (keptByLine[l.id] != null ? { ...l, kept: keptByLine[l.id] ?? 0 } : l));
       setLines({ ...map });
       setVehicleStock(
         ((ldRes.data ?? []) as unknown as LoadRow[])
@@ -220,6 +223,7 @@ function TripScreen() {
     if (!settingsRes.error && settingsRes.data) {
       setSettings({ ...DEFAULT_SETTINGS, ...(settingsRes.data as unknown as Settings) });
     }
+    loadedOnce.current = true;
     setLoading(false);
   }, [tripId]);
 

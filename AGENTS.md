@@ -21,3 +21,5 @@
 - Sign-out goes only through `useTeamAuth().signOut` (record_logout → signOut → `location.replace("/login")`) so no cached profile/roles survive and Back cannot return.
 - Trip goods go back into stock only in `receive_returns` (loader unload count), and only undelivered good packs; `gate_in` moves no stock — so damaged/refused never re-enter sellable stock and nothing is counted twice.
 - An order's chosen `payment_method` (passed in `p_delivery.payment_method` to `_create_orders`) decides cod vs credit; credit checks run only for credit — customers with a limit can still pay cash/UPI/bank/cheque.
+- Stop outcomes are handled by the `trip_stops` status trigger: partial → pending credit note per GST rate (invoice never edited); failed → order back to `approved` with `redeliver_reason` (invoice reused on re-delivery, no note).
+- The driver screen shows its spinner only on first load — unmounting the live Google map on refresh throws IntersectionObserver errors.
