@@ -4711,6 +4711,7 @@ export type Database = {
         Row: {
           arrived_at: string | null
           delivered_at: string | null
+          do_later_at: string | null
           fail_reason: string | null
           id: string
           is_spot_sale: boolean
@@ -4728,6 +4729,7 @@ export type Database = {
         Insert: {
           arrived_at?: string | null
           delivered_at?: string | null
+          do_later_at?: string | null
           fail_reason?: string | null
           id?: string
           is_spot_sale?: boolean
@@ -4745,6 +4747,7 @@ export type Database = {
         Update: {
           arrived_at?: string | null
           delivered_at?: string | null
+          do_later_at?: string | null
           fail_reason?: string | null
           id?: string
           is_spot_sale?: boolean
@@ -6397,6 +6400,10 @@ export type Database = {
           p_proof_path?: string
           p_receipt_id: string
         }
+        Returns: undefined
+      }
+      set_stop_later: {
+        Args: { p_later: boolean; p_stop_id: string }
         Returns: undefined
       }
       set_user_active: {
