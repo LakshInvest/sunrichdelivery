@@ -485,6 +485,33 @@ export type Database = {
           },
         ]
       }
+      client_ops: {
+        Row: {
+          created_at: string
+          id: string
+          result: Json | null
+          rpc: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          result?: Json | null
+          rpc: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          result?: Json | null
+          rpc?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           brand_accent: string
@@ -2117,11 +2144,15 @@ export type Database = {
       }
       gate_entries: {
         Row: {
+          challan_photo_path: string | null
           company_id: string
           courier_name: string | null
           created_at: string
           entry_type: string
           from_place: string | null
+          handed_at: string | null
+          handed_by: string | null
+          handed_to: string | null
           id: string
           in_at: string
           in_by: string
@@ -2140,11 +2171,15 @@ export type Database = {
           vehicle_no: string | null
         }
         Insert: {
+          challan_photo_path?: string | null
           company_id?: string
           courier_name?: string | null
           created_at?: string
           entry_type?: string
           from_place?: string | null
+          handed_at?: string | null
+          handed_by?: string | null
+          handed_to?: string | null
           id?: string
           in_at?: string
           in_by?: string
@@ -2163,11 +2198,15 @@ export type Database = {
           vehicle_no?: string | null
         }
         Update: {
+          challan_photo_path?: string | null
           company_id?: string
           courier_name?: string | null
           created_at?: string
           entry_type?: string
           from_place?: string | null
+          handed_at?: string | null
+          handed_by?: string | null
+          handed_to?: string | null
           id?: string
           in_at?: string
           in_by?: string
@@ -6200,6 +6239,10 @@ export type Database = {
         Args: { p_odometer?: number; p_qr_token: string }
         Returns: string
       }
+      gate_parcel_handover: {
+        Args: { p_entry_id: string; p_received_by: string }
+        Returns: undefined
+      }
       gate_pickup_handover: {
         Args: { p_order_no: string; p_otp: string }
         Returns: string
@@ -6671,6 +6714,10 @@ export type Database = {
       }
       revoke_my_device: { Args: { p_device_id: string }; Returns: undefined }
       revoke_user_devices: { Args: { p_user_id: string }; Returns: number }
+      run_op: {
+        Args: { p_args: Json; p_op_id: string; p_rpc: string }
+        Returns: Json
+      }
       save_my_address: {
         Args: {
           p_address_line1: string
