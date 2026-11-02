@@ -6,7 +6,8 @@ import { istDisplay } from "@/lib/ist";
 import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge, ActionDock, DockButton } from "@/components/team/ui";
 import { queueRpc } from "@/lib/offline";
 import { haptic, isNative, scanQr } from "@/lib/native";
-import { ScanLine } from "lucide-react";
+import { ScanLine, LogOut, LogIn, ClipboardList, PackageCheck } from "lucide-react";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/security")({
   head: () => ({
@@ -117,10 +118,11 @@ function SecurityGate() {
       return;
     }
     if (res.error) {
-      setError(res.error);
+      setError(friendlyError(res.error, t));
       return;
     }
     void haptic("success");
+    await confirmTrip(res.data);
     setMsg(t("sec.gateOutDone"));
     setToken("");
     setOdo("");
@@ -135,7 +137,7 @@ function SecurityGate() {
       p_fuel_amount: fuelA === "" ? null : Number(fuelA),
     });
     if (res.queued) return t("c.tryAgainOffline");
-    if (res.error) throw new Error(res.error);
+    if (res.error) throw new Error(friendlyError(res.error, t));
     void haptic("success");
     await fetchLists();
     return t("sec.gateInDone");
@@ -157,7 +159,7 @@ function SecurityGate() {
       return;
     }
     if (res.error) {
-      setError(res.error);
+      setError(friendlyError(res.error, t));
       return;
     }
     void haptic("success");
@@ -192,20 +194,32 @@ function SecurityGate() {
       return;
     }
     if (res.error) {
-      setError(res.error);
+      setError(friendlyError(res.error, t));
       return;
     }
     void haptic("success");
+    await confirmTrip(res.data);
     setMsg(t("sec.gateOutDone"));
     setToken("");
     await fetchLists();
   };
 
+  const [confirm, setConfirm] = useState<{ no: string; reg: string } | null>(null);
+  const confirmTrip = async (tripId: unknown) => {
+    if (typeof tripId !== "string") return;
+    const r = await supabase.from("trips").select("trip_no, vehicles(reg_no)").eq("id", tripId).maybeSingle();
+    const d = r.data as unknown as { trip_no: string; vehicles: { reg_no: string } | null } | null;
+    if (!d) return;
+    setConfirm({ no: d.trip_no, reg: d.vehicles?.reg_no ?? "" });
+    await new Promise((ok) => setTimeout(ok, 1000));
+    setConfirm(null);
+  };
+
   const tabs: { id: Tab; label: string }[] = [
-    { id: "out", label: t("sec.gateOut") },
-    { id: "in", label: t("sec.gateIn") },
-    { id: "log", label: t("sec.gateLog") },
-    { id: "pickup", label: t("sec.pickup") },
+    { id: "out", label: t("sec.tabOut") },
+    { id: "in", label: t("sec.tabIn") },
+    { id: "log", label: t("sec.tabLog") },
+    { id: "pickup", label: t("sec.tabPickup") },
   ];
 
   return (
@@ -328,9 +342,18 @@ function SecurityGate() {
         {error && <div className="mt-4"><ErrorCard message={error} /></div>}
       </Screen>
 
+      {confirm && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-navy/90 p-6" role="status">
+          <div className="rounded-2xl bg-card px-8 py-6 text-center shadow-soft">
+            <p className="text-sm font-semibold text-emerald-600">{t("sec.scanned")}</p>
+            <p className="mt-1 font-display text-2xl font-bold text-foreground">{confirm.no}</p>
+            <p className="text-base font-semibold text-muted-foreground">{confirm.reg}</p>
+          </div>
+        </div>
+      )}
       {/* Tab switcher docked at the bottom, thumb-reachable */}
       <ActionDock tone="plain">
-        <div className="flex rounded-full bg-navy p-1 shadow-soft">
+        <div className="grid grid-cols-4 gap-1 rounded-2xl bg-navy p-1 shadow-soft">
           {tabs.map((x) => (
             <button
               key={x.id}
@@ -340,11 +363,12 @@ function SecurityGate() {
                 setMsg(null);
                 setError(null);
               }}
-              className={`flex-1 rounded-full px-2 py-2.5 text-xs font-bold transition-colors ${
-                tab === x.id ? "bg-card text-navy shadow-soft" : "text-white/80"
+              className={`flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-[11px] font-bold leading-tight transition-colors ${
+                tab === x.id ? "bg-card text-navy shadow-soft" : "text-primary-foreground/80"
               }`}
             >
-              {x.label}
+              {x.id === "out" ? <LogOut className="h-5 w-5" /> : x.id === "in" ? <LogIn className="h-5 w-5" /> : x.id === "log" ? <ClipboardList className="h-5 w-5" /> : <PackageCheck className="h-5 w-5" />}
+              <span className="block w-full truncate whitespace-nowrap text-center">{x.label}</span>
             </button>
           ))}
         </div>

@@ -496,7 +496,7 @@ function Login() {
                   if (pin.length === 4 && !busy) void submitPin(pin);
                 }}
               >
-              <div className="relative mt-6">
+              <div className="relative mt-6" onPointerDown={(e) => { const el = e.currentTarget.querySelector("input"); if (el) { el.focus(); } }}>
                 <input
                   enterKeyHint="done"
                   ref={(el) => {
@@ -506,7 +506,7 @@ function Login() {
                   autoComplete="one-time-code"
                   value={pin}
                   onChange={(e) => onPinChange(e.target.value)}
-                  className="absolute inset-0 h-16 w-full cursor-pointer opacity-0"
+                  className="absolute inset-0 z-10 h-16 w-full cursor-pointer bg-transparent text-[16px] text-transparent caret-transparent opacity-[0.01] outline-none"
                   aria-label={t("login.pin")}
                   autoFocus
                 />
@@ -552,7 +552,7 @@ function Login() {
                   if (code.length === 4 && !busy) void verifyCode(code);
                 }}
               >
-              <div className="relative mt-6">
+              <div className="relative mt-6" onPointerDown={(e) => { const el = e.currentTarget.querySelector("input"); if (el) { el.focus(); } }}>
                 <input
                   enterKeyHint="done"
                   ref={otpInput}
@@ -564,7 +564,7 @@ function Login() {
                     e.preventDefault();
                     onOtpChange(e.clipboardData.getData("text"));
                   }}
-                  className="absolute inset-0 h-16 w-full cursor-pointer opacity-0"
+                  className="absolute inset-0 z-10 h-16 w-full cursor-pointer bg-transparent text-[16px] text-transparent caret-transparent opacity-[0.01] outline-none"
                   aria-label={t("login.otpTitle")}
                 />
                 <CodeBoxes count={4} code={code} state={otpState} />

@@ -271,6 +271,17 @@
   will-change: transform, opacity;
 }
 
+@keyframes water-rise {
+  0% { transform: translateY(18px); }
+  80%, 100% { transform: translateY(0); }
+}
+@keyframes water-wave {
+  from { transform: translateX(0); }
+  to { transform: translateX(-6px); }
+}
+.water-rise { animation: water-rise 1.8s ease-in-out infinite; will-change: transform; }
+.water-wave { animation: water-wave 0.9s linear infinite; will-change: transform; }
+
 @utility shake {
   animation: shake-x 0.4s ease-in-out;
 }
@@ -286,7 +297,9 @@
 @media (prefers-reduced-motion: reduce) {
   .wave-blob,
   .bubble,
-  .shake {
+  .shake,
+  .water-rise,
+  .water-wave {
     animation: none !important;
   }
 }

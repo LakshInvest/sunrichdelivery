@@ -349,3 +349,16 @@ export async function localNotify(title: string, body: string, opts: { channel?:
     // ignore
   }
 }
+
+/** Push screen brightness to max while the gate pass is shown; returns a restore function. */
+export async function maxBrightness(): Promise<() => void> {
+  if (!isNative()) return () => {};
+  try {
+    const { ScreenBrightness } = await import("@capacitor-community/screen-brightness");
+    const { brightness } = await ScreenBrightness.getBrightness();
+    await ScreenBrightness.setBrightness({ brightness: 1 });
+    return () => void ScreenBrightness.setBrightness({ brightness }).catch(() => {});
+  } catch {
+    return () => {};
+  }
+}

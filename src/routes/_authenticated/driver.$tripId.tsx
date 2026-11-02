@@ -6,6 +6,9 @@ import { useLang } from "@/lib/l10n";
 import { useTeamAuth } from "@/lib/team-auth";
 import { ErrorCard, PhotoInput, Screen, Spinner, StatusBadge } from "@/components/team/ui";
 import { StopMap } from "@/components/team/stop-map";
+import { GatePassScreen } from "@/components/team/gate-pass";
+import { QrCode } from "lucide-react";
+import { friendlyError } from "@/lib/friendly-error";
 import {
   DEFAULT_SETTINGS,
   StartTripPanel,
@@ -42,6 +45,9 @@ type Trip = {
   cash_expected: number | null;
   cash_received: number | null;
   start_odometer: number | null;
+  gate_out_at: string | null;
+  driver_started_at: string | null;
+  unit_id: string | null;
   vehicles: { reg_no: string } | null;
 };
 
@@ -88,6 +94,10 @@ function TripScreen() {
   const [firmUpi, setFirmUpi] = useState<{ id: string; payee: string | null } | null>(null);
 
   const locTimer = useRef<number | null>(null);
+  const [gatePass, setGatePass] = useState<string | null>(null);
+  const [itemCount, setItemCount] = useState(0);
+  const [showPass, setShowPass] = useState(false);
+  const [plant, setPlant] = useState<{ lat: number; lng: number } | null>(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -95,7 +105,7 @@ function TripScreen() {
     const [tripRes, stopsRes, settingsRes] = await Promise.all([
       supabase
         .from("trips")
-        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, start_odometer, vehicles(reg_no)")
+        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, start_odometer, gate_out_at, driver_started_at, unit_id, vehicles(reg_no)")
         .eq("id", tripId)
         .single(),
       supabase
@@ -111,6 +121,19 @@ function TripScreen() {
       return;
     }
     setTrip(tripRes.data as unknown as Trip);
+    // Gate pass token + loaded item count for the driver's QR screen.
+    const [gpRes, ldRes] = await Promise.all([
+      supabase.from("gate_passes").select("qr_token").eq("trip_id", tripId).order("issued_at", { ascending: false }).limit(1).maybeSingle(),
+      supabase.from("trip_loading").select("loaded_qty").eq("trip_id", tripId),
+    ]);
+    const unitId = (tripRes.data as unknown as Trip).unit_id;
+    if (unitId) {
+      const u = await supabase.from("units").select("latitude, longitude").eq("id", unitId).maybeSingle();
+      const ud = u.data as { latitude: number | null; longitude: number | null } | null;
+      setPlant(ud?.latitude != null && ud.longitude != null ? { lat: Number(ud.latitude), lng: Number(ud.longitude) } : null);
+    }
+    setGatePass((gpRes.data as { qr_token: string } | null)?.qr_token ?? null);
+    setItemCount(((ldRes.data ?? []) as { loaded_qty: number | null }[]).reduce((a, r) => a + Number(r.loaded_qty ?? 0), 0));
     const stopRows = (stopsRes.data ?? []) as unknown as StopRow[];
     setStops(stopRows);
     if (!stopsRes.error && stopRows.length > 0) {
@@ -240,7 +263,7 @@ function TripScreen() {
         p_vehicle_check: v.checkItems,
       });
       if (res.error && !res.queued) {
-        setError(res.error);
+        setError(friendlyError(res.error, t));
         return;
       }
       setMessage(res.queued ? t("c.tryAgainOffline") : t("c.saved"));
@@ -282,7 +305,7 @@ function TripScreen() {
         p_fail_reason: v.fail ? (v.failNote ? `${v.failReason}: ${v.failNote}` : v.failReason) : null,
       });
       if (res.error && !res.queued) {
-        setError(res.error);
+        setError(friendlyError(res.error, t));
         return;
       }
       setMessage(res.queued ? t("c.tryAgainOffline") : t("dr.stopDone"));
@@ -302,7 +325,7 @@ function TripScreen() {
         p_photo_url: v.photo,
       });
       if (res.error && !res.queued) {
-        setError(res.error);
+        setError(friendlyError(res.error, t));
         return;
       }
       setMessage(res.queued ? t("c.tryAgainOffline") : t("c.saved"));
@@ -323,7 +346,7 @@ function TripScreen() {
         p_stop_id: stop.id,
       });
       if (res.error && !res.queued) {
-        setError(res.error);
+        setError(friendlyError(res.error, t));
         return;
       }
       setMessage(res.queued ? t("c.tryAgainOffline") : t("c.saved"));
@@ -340,7 +363,7 @@ function TripScreen() {
         p_note: expNote || null,
       });
       if (res.error && !res.queued) {
-        setError(res.error);
+        setError(friendlyError(res.error, t));
         return;
       }
       setShowTools(null);
@@ -359,7 +382,7 @@ function TripScreen() {
         p_qty: Number(extraQty),
       });
       if (res.error && !res.queued) {
-        setError(res.error);
+        setError(friendlyError(res.error, t));
         return;
       }
       setShowTools(null);
@@ -381,7 +404,7 @@ function TripScreen() {
         ...(coords ? { p_latitude: coords.latitude, p_longitude: coords.longitude } : {}),
       });
       if (res.error && !res.queued) {
-        setError(res.error);
+        setError(friendlyError(res.error, t));
         return;
       }
       setShowTools(null);
@@ -402,7 +425,7 @@ function TripScreen() {
         ...(coords ? { p_latitude: coords.latitude, p_longitude: coords.longitude } : {}),
       });
       if (res.error && !res.queued) {
-        setError(res.error);
+        setError(friendlyError(res.error, t));
         return;
       }
       setShowTools(null);
@@ -421,7 +444,7 @@ function TripScreen() {
         ...(coords ? { p_latitude: coords.latitude, p_longitude: coords.longitude } : {}),
       });
       if (res.error && !res.queued) {
-        setError(res.error);
+        setError(friendlyError(res.error, t));
         return;
       }
       setShowTools(null);
@@ -446,7 +469,7 @@ function TripScreen() {
         p_odometer_photo_url: endOdoPhoto,
       });
       if (res.error && !res.queued) {
-        setError(res.error);
+        setError(friendlyError(res.error, t));
         return;
       }
       setShowTools(null);
@@ -463,7 +486,7 @@ function TripScreen() {
         p_note: settleNote || null,
       });
       if (res.error && !res.queued) {
-        setError(res.error);
+        setError(friendlyError(res.error, t));
         return;
       }
       setShowTools(null);
@@ -473,11 +496,11 @@ function TripScreen() {
   };
 
   const doneCount = stops.filter((s) => s.status === "delivered").length;
-  const canStart = ["planned", "loading", "loaded"].includes(trip.status);
-  const onRoad = trip.status === "in_progress";
-  // start_trip records the driver's checks but the vehicle leaves only when
-  // security records gate out — show that waiting state instead of the form.
-  const startedAwaitingGateOut = canStart && trip.start_odometer != null;
+  // Order: loading done -> security gate out -> driver start checks -> on road.
+  const loadingNotDone = trip.status === "planned" || trip.status === "loading";
+  const awaitingGateOut = (trip.status === "loaded" || trip.status === "in_progress") && !trip.gate_out_at;
+  const canStart = trip.status === "in_progress" && !!trip.gate_out_at && !trip.driver_started_at;
+  const onRoad = trip.status === "in_progress" && !!trip.driver_started_at;
   const returned = trip.status === "returned";
   const settled = trip.status === "settled";
   // The driver records the closing odometer, but the vehicle is only "returned"
@@ -523,13 +546,42 @@ function TripScreen() {
       {message && <p className="mb-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">{message}</p>}
       {error && <div className="mb-4"><ErrorCard message={error} /></div>}
 
-      {startedAwaitingGateOut && (
-        <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-card">
-          <p className="text-sm font-semibold text-foreground">{t("dr.awaitingGateOut")}</p>
+      {loadingNotDone && (
+        <div className="mb-4 rounded-xl border border-border bg-card p-4 text-center shadow-card">
+          <p className="text-sm font-semibold text-foreground">{t("dr.loadingNotDone")}</p>
         </div>
       )}
 
-      {canStart && !startedAwaitingGateOut && (
+      {awaitingGateOut && (
+        <div className="mb-4 grid gap-3">
+          <button
+            type="button"
+            onClick={() => setShowPass(true)}
+            disabled={!gatePass}
+            className="flex w-full items-center justify-center gap-3 rounded-xl bg-primary px-6 py-6 text-primary-foreground shadow-soft active:scale-[0.99] disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+          >
+            <QrCode className="h-8 w-8" />
+            <span className="font-display text-xl font-bold">{t("dr.gatePass")}</span>
+          </button>
+          <p className="text-center text-sm text-muted-foreground">{t("dr.waitGateOut")}</p>
+        </div>
+      )}
+
+      {showPass && gatePass && (
+        <GatePassScreen
+          token={gatePass}
+          tripNo={trip.trip_no}
+          vehicle={trip.vehicles?.reg_no ?? ""}
+          driver={staff?.fullName ?? ""}
+          items={itemCount}
+          onClose={() => {
+            setShowPass(false);
+            void fetchAll();
+          }}
+        />
+      )}
+
+      {canStart && (
         <StartTripPanel
           staffId={staff?.id ?? "anon"}
           tripId={tripId}
@@ -551,7 +603,7 @@ function TripScreen() {
       {onRoad && !endedAwaitingGateIn && (
         <>
           <div className="mb-3">
-            <StopMap stops={mapStops} />
+            <StopMap stops={mapStops} origin={plant} />
           </div>
           <div className="mb-3 flex flex-wrap gap-2">
             {settings.expenses_enabled && toolBtn("expense", t("dr.expenses"))}
