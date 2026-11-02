@@ -4,7 +4,7 @@ import { Check, Lock, ChevronLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeamAuth } from "@/lib/team-auth";
 import { LANGS, useLang, type Lang } from "@/lib/l10n";
-import { getDeviceId, getDeviceLabel } from "@/lib/device";
+import { getDeviceId, getDeviceLabel, initDeviceId } from "@/lib/device";
 import { checkDeviceStatus, staffLogin, staffRequestOtp, staffVerifyOtp } from "@/lib/staff-login.functions";
 import { haptic } from "@/lib/native";
 import { WaterLoader, BrandLogo } from "@/components/team/ui";
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/login")({
   component: Login,
 });
 
-type Step = "mobile" | "pin" | "otp";
+type Step = "mobile" | "pin" | "otp" | "setpin";
 
 const LAST_MOBILE_KEY = "sunrich_last_mobile";
 
@@ -164,6 +164,9 @@ function Login() {
   const [clipboardCode, setClipboardCode] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState<ReturnType<typeof setInterval> | null>(null);
   const otpInput = useRef<HTMLInputElement>(null);
+  const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [pinStage, setPinStage] = useState<"new" | "confirm">("new");
 
   // Remember the last number on this device (device id itself is never regenerated).
   useEffect(() => {
@@ -294,7 +297,55 @@ function Login() {
     setOtpState("success");
     await recordLogin();
     setBusy(false);
-    setTimeout(finish, 450);
+    // First OTP on this phone (or Forgot PIN / locked PIN): set a PIN, which
+    // also trusts this device so next time it's mobile + PIN only.
+    setTimeout(() => {
+      setNewPin("");
+      setConfirmPin("");
+      setPinStage("new");
+      setPinState("idle");
+      setError(null);
+      setStep("setpin");
+    }, 350);
+  };
+
+  const savePin = async () => {
+    if (busy) return;
+    if (pinStage === "new") {
+      if (newPin.length !== 4) return;
+      setPinStage("confirm");
+      setConfirmPin("");
+      setError(null);
+      return;
+    }
+    if (confirmPin !== newPin) {
+      void haptic("error");
+      setPinState("error");
+      setError(t("err.pin_mismatch"));
+      setTimeout(() => {
+        setPinState("idle");
+        setNewPin("");
+        setConfirmPin("");
+        setPinStage("new");
+      }, 600);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const { error: pErr } = await supabase.rpc("set_my_pin", {
+      p_device_id: await initDeviceId(),
+      p_device_label: getDeviceLabel(),
+      p_pin: newPin,
+    });
+    setBusy(false);
+    if (pErr) {
+      console.warn("[login] set_my_pin failed", pErr.message);
+      setPinState("error");
+      setError(t("err.pin_save_failed"));
+      return;
+    }
+    setPinState("success");
+    setTimeout(finish, 400);
   };
 
   const autoVerify = async () => {
@@ -324,7 +375,8 @@ function Login() {
     }
     setBusy(true);
     setError(null);
-    const status = await checkDeviceStatus({ data: { mobile: `+91${digits}`, deviceId: getDeviceId() } });
+    const deviceId = await initDeviceId().catch(() => getDeviceId());
+    const status = await checkDeviceStatus({ data: { mobile: `+91${digits}`, deviceId } });
     setBusy(false);
     if (!status.registered) {
       setError(t("err.not_registered"));
@@ -357,7 +409,7 @@ function Login() {
       return;
     }
     setBusy(false);
-    if (res.code === "locked_use_otp") {
+    if (res.code === "locked_use_otp" || res.code === "locked") {
       void goOtp();
       return;
     }
@@ -424,7 +476,7 @@ function Login() {
         <div aria-hidden className="mx-auto mb-5 h-1 w-20 shrink-0 overflow-hidden rounded-full bg-muted">
           <div
             className="h-full rounded-full bg-aqua transition-all duration-300"
-            style={{ width: step === "mobile" ? "50%" : "100%" }}
+            style={{ width: step === "mobile" ? "34%" : step === "setpin" ? "100%" : "67%" }}
           />
         </div>
 
@@ -606,6 +658,57 @@ function Login() {
                   {t("login.otpAuto")}
                 </button>
               </div>
+            </div>
+          )}
+
+          {step === "setpin" && (
+            <div key={`setpin-${pinStage}`} className="animate-in text-center fade-in slide-in-from-right-3 duration-300">
+              <h1 className="font-display text-2xl font-bold text-foreground">
+                {pinStage === "new" ? t("login.setPinTitle") : t("login.confirmPinTitle")}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {pinStage === "new" ? t("login.setPinHint") : t("login.confirmPinHint")}
+              </p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void savePin();
+                }}
+              >
+                <div className="relative mt-6" onPointerDown={(e) => { const el = e.currentTarget.querySelector("input"); if (el) el.focus(); }}>
+                  <input
+                    enterKeyHint="done"
+                    ref={(el) => {
+                      if (el) setTimeout(() => el.focus(), 200);
+                    }}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    value={pinStage === "new" ? newPin : confirmPin}
+                    onChange={(e) => {
+                      const d = e.target.value.replace(/\D/g, "").slice(0, 4);
+                      if (pinStage === "new") setNewPin(d);
+                      else setConfirmPin(d);
+                      setError(null);
+                      setPinState("idle");
+                    }}
+                    className="absolute inset-0 z-10 h-16 w-full cursor-pointer bg-transparent text-[16px] text-transparent caret-transparent opacity-[0.01] outline-none"
+                    aria-label={pinStage === "new" ? t("login.setPinTitle") : t("login.confirmPinTitle")}
+                  />
+                  <CodeBoxes count={4} code={pinStage === "new" ? newPin : confirmPin} state={pinState} />
+                </div>
+                <button
+                  type="submit"
+                  disabled={busy || (pinStage === "new" ? newPin : confirmPin).length !== 4}
+                  className="mt-5 flex w-full items-center justify-center rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+                >
+                  {t("login.continue")}
+                </button>
+              </form>
+              {error && (
+                <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive" role="alert">
+                  {error}
+                </p>
+              )}
             </div>
           )}
 
