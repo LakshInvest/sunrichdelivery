@@ -388,7 +388,7 @@ export function StopDetailPanel({
   const [otp, setOtp] = useState("");
   const [localErr, setLocalErr] = useState<string | null>(null);
   // Cash/UPI orders: the driver must say what was paid. Part/None needs the office's OK.
-  const needsPayCheck = (o?.payment_mode ?? "") === "cod" && Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0) > 0;
+  const needsPayCheck = stop.status === "pending" && (o?.payment_mode ?? "") === "cod" && Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0) > 0;
   const [officeOk, setOfficeOk] = useState(false);
   const [officeRejected, setOfficeRejected] = useState(false);
 
