@@ -98,7 +98,7 @@ function LoadTrip() {
     if (res) setError(res);
     else {
       void haptic("success");
-      setMsg(t("ld.loadingDone"));
+      setMsg(mismatch ? t("ld.flaggedOffice") : t("ld.loadingDone"));
     }
     await fetchAll();
   };
@@ -249,8 +249,8 @@ function LoadTrip() {
 
       {!done && (
         <ActionDock>
-          <DockButton onClick={() => void (canFinalize ? finalize() : markDone())} disabled={saving || (mismatch && diffReason.trim() === "") || (canFinalize && shortRow !== undefined && diffReason.trim() === "")}>
-            {saving ? t("c.loading") : canFinalize ? t("ld.finalize") : t("ld.loadingDone")}
+          <DockButton onClick={() => void (canFinalize && !mismatch ? finalize() : markDone())} disabled={saving || (mismatch && diffReason.trim() === "") || (canFinalize && shortRow !== undefined && diffReason.trim() === "")}>
+            {saving ? t("c.loading") : canFinalize && !mismatch ? t("ld.finalize") : t("ld.loadingDone")}
           </DockButton>
         </ActionDock>
       )}
