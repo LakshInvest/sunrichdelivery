@@ -47,6 +47,7 @@ type Trip = {
   start_odometer: number | null;
   gate_out_at: string | null;
   driver_started_at: string | null;
+  unit_id: string | null;
   vehicles: { reg_no: string } | null;
 };
 
@@ -96,6 +97,7 @@ function TripScreen() {
   const [gatePass, setGatePass] = useState<string | null>(null);
   const [itemCount, setItemCount] = useState(0);
   const [showPass, setShowPass] = useState(false);
+  const [plant, setPlant] = useState<{ lat: number; lng: number } | null>(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -103,7 +105,7 @@ function TripScreen() {
     const [tripRes, stopsRes, settingsRes] = await Promise.all([
       supabase
         .from("trips")
-        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, start_odometer, gate_out_at, driver_started_at, vehicles(reg_no)")
+        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, start_odometer, gate_out_at, driver_started_at, unit_id, vehicles(reg_no)")
         .eq("id", tripId)
         .single(),
       supabase
@@ -124,6 +126,12 @@ function TripScreen() {
       supabase.from("gate_passes").select("qr_token").eq("trip_id", tripId).order("issued_at", { ascending: false }).limit(1).maybeSingle(),
       supabase.from("trip_loading").select("loaded_qty").eq("trip_id", tripId),
     ]);
+    const unitId = (tripRes.data as unknown as Trip).unit_id;
+    if (unitId) {
+      const u = await supabase.from("units").select("latitude, longitude").eq("id", unitId).maybeSingle();
+      const ud = u.data as { latitude: number | null; longitude: number | null } | null;
+      setPlant(ud?.latitude != null && ud.longitude != null ? { lat: Number(ud.latitude), lng: Number(ud.longitude) } : null);
+    }
     setGatePass((gpRes.data as { qr_token: string } | null)?.qr_token ?? null);
     setItemCount(((ldRes.data ?? []) as { loaded_qty: number | null }[]).reduce((a, r) => a + Number(r.loaded_qty ?? 0), 0));
     const stopRows = (stopsRes.data ?? []) as unknown as StopRow[];
@@ -595,7 +603,7 @@ function TripScreen() {
       {onRoad && !endedAwaitingGateIn && (
         <>
           <div className="mb-3">
-            <StopMap stops={mapStops} />
+            <StopMap stops={mapStops} origin={plant} />
           </div>
           <div className="mb-3 flex flex-wrap gap-2">
             {settings.expenses_enabled && toolBtn("expense", t("dr.expenses"))}
