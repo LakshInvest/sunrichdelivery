@@ -211,6 +211,9 @@ export function StartTripPanel({
   const [checkPhoto, setCheckPhoto] = useState<string | null>(null);
   const [checks, setChecks] = useState<string[]>([]);
   const [localErr, setLocalErr] = useState<string | null>(null);
+  // Cash/UPI orders: the driver must say what was paid. Part/None needs the office's OK.
+  const needsPayCheck = (o?.payment_mode ?? "") === "cod" && Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0) > 0;
+  const [officeOk, setOfficeOk] = useState(false);
 
   const submit = async () => {
     setLocalErr(null);
@@ -345,6 +348,7 @@ export function StopCard({
 }
 
 export function StopDetailPanel({
+  tripId,
   stop,
   lines,
   settings,
@@ -358,6 +362,7 @@ export function StopDetailPanel({
   message,
   upi,
 }: {
+  tripId: string;
   stop: StopRow;
   lines: LineRow[];
   settings: Settings;
@@ -568,9 +573,20 @@ export function StopDetailPanel({
               <input value={failNote} onChange={(e) => setFailNote(e.target.value)} placeholder={t("dr.failNote")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
             </div>
           )}
+          {needsPayCheck && !failMode && (
+            <AskOfficePanel
+              tripId={tripId}
+              stopId={stop.id}
+              due={Math.max(0, Number(o?.grand_total ?? 0) - Number(o?.amount_paid ?? 0))}
+              onDecision={(ok) => {
+                setOfficeOk(ok);
+                if (!ok) setFailMode(true);
+              }}
+            />
+          )}
           <button
             onClick={() => void submitDelivery()}
-            disabled={busy}
+            disabled={busy || (needsPayCheck && !failMode && !officeOk)}
             className={`mt-4 w-full rounded-lg py-3 text-sm font-semibold text-primary-foreground active:opacity-80 disabled:opacity-60 ${failMode ? "bg-destructive" : "bg-primary"}`}
           >
             {busy ? t("c.loading") : failMode ? t("dr.markFailed") : t("dr.deliver")}
@@ -621,4 +637,108 @@ export async function signatureToPath(dataUrl: string | null, staffId: string, s
   } catch {
     return dataUrl; // keep the raw data URL if upload fails (e.g. offline)
   }
+}
+
+const PAY_REASONS = ["dr.rsnLater", "dr.rsnCheque", "dr.rsnRefused", "dr.rsnOwnerAway"] as const;
+
+/** Full / Part / None. Part or None → "Ask office" and wait for Approve / Reject (or the no-reply rule). */
+function AskOfficePanel({ tripId, stopId, due, onDecision }: { tripId: string; stopId: string; due: number; onDecision: (ok: boolean) => void }) {
+  const { t } = useLang();
+  const [pay, setPay] = useState<"full" | "part" | "none" | null>(null);
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState<string>(PAY_REASONS[0]);
+  const [alertId, setAlertId] = useState<string | null>(null);
+  const [result, setResult] = useState<string | null>(null);
+  const [left, setLeft] = useState<number | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (!alertId || result) return;
+    let stop = false;
+    const tick = async () => {
+      const { data, error } = await supabase.rpc("ask_office_status" as never, { p_alert_id: alertId } as never);
+      if (stop) return;
+      if (error) return setErr(error.message);
+      const d = data as unknown as { resolution: string | null; deadline: string; now: string } | null;
+      if (!d) return;
+      setLeft(Math.max(0, Math.round((new Date(d.deadline).getTime() - new Date(d.now).getTime()) / 1000)));
+      if (d.resolution) {
+        setResult(d.resolution);
+        const ok = d.resolution === "approved" || d.resolution === "no_reply:deliver_and_flag";
+        onDecision(ok);
+      }
+    };
+    void tick();
+    const id = window.setInterval(() => void tick(), 10000);
+    return () => { stop = true; window.clearInterval(id); };
+  }, [alertId, result, onDecision]);
+
+  const choose = (v: "full" | "part" | "none") => {
+    setPay(v);
+    setErr(null);
+    onDecision(v === "full");
+  };
+
+  const ask = async () => {
+    if (pay === "part" && !(Number(amount) > 0 && Number(amount) < due)) return setErr(t("dr.partAmountBad"));
+    setSending(true);
+    setErr(null);
+    const { data, error } = await supabase.rpc("ask_office" as never, {
+      p_trip_id: tripId, p_stop_id: stopId, p_mode: pay, p_amount: pay === "part" ? Number(amount) : 0, p_reason: t(reason as never),
+    } as never);
+    setSending(false);
+    if (error) return setErr(error.message);
+    setAlertId(data as unknown as string);
+  };
+
+  const opt = (v: "full" | "part" | "none", label: string) => (
+    <button
+      key={v}
+      onClick={() => choose(v)}
+      disabled={alertId !== null}
+      className={`rounded-lg border py-3 text-sm font-bold ${pay === v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground"} disabled:opacity-60`}
+    >
+      {label}
+    </button>
+  );
+
+  const resultText = result === "approved" ? t("dr.officeApproved")
+    : result === "rejected" ? t("dr.officeRejected")
+    : result === "no_reply:deliver_and_flag" ? t("dr.officeNoReplyDeliver")
+    : result ? t("dr.officeNoReplyStop") : null;
+  const resultOk = result === "approved" || result === "no_reply:deliver_and_flag";
+
+  return (
+    <div className="mt-4 grid gap-2 rounded-lg border border-border bg-muted/40 p-3">
+      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("dr.payReceived", { n: due })}</p>
+      <div className="grid grid-cols-3 gap-2">
+        {opt("full", t("dr.payFull"))}
+        {opt("part", t("dr.payPart"))}
+        {opt("none", t("dr.payNone"))}
+      </div>
+      {(pay === "part" || pay === "none") && !alertId && (
+        <>
+          {pay === "part" && (
+            <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ""))} placeholder={t("dr.partAmount")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+          )}
+          <select value={reason} onChange={(e) => setReason(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
+            {PAY_REASONS.map((r) => <option key={r} value={r}>{t(r)}</option>)}
+          </select>
+          <button onClick={() => void ask()} disabled={sending} className="rounded-lg bg-primary py-3 text-sm font-bold text-primary-foreground active:opacity-80 disabled:opacity-60">
+            {sending ? t("c.loading") : t("dr.askOffice")}
+          </button>
+        </>
+      )}
+      {alertId && !result && (
+        <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-700 dark:text-amber-400">
+          {t("dr.waitingOffice")}{left != null ? ` · ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}` : ""}
+        </p>
+      )}
+      {resultText && (
+        <p className={`rounded-lg px-3 py-2 text-sm font-medium ${resultOk ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-destructive/10 text-destructive"}`}>{resultText}</p>
+      )}
+      {err && <p className="text-sm font-medium text-destructive">{err}</p>}
+    </div>
+  );
 }

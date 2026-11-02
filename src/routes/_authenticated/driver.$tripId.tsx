@@ -793,6 +793,7 @@ function TripScreen() {
           {selected && stop && (
             <div className="mt-4">
               <StopDetailPanel
+                tripId={tripId}
                 stop={stop}
                 lines={lines[stop.orders?.id ?? ""] ?? []}
                 settings={settings}
