@@ -7,6 +7,7 @@ import { useTeamAuth } from "@/lib/team-auth";
 import { ErrorCard, PhotoInput, Screen, Spinner, StatusBadge } from "@/components/team/ui";
 import { StopMap } from "@/components/team/stop-map";
 import { GatePassScreen } from "@/components/team/gate-pass";
+import { CashHandoverPanel } from "@/components/team/cash-handover";
 import { QrCode } from "lucide-react";
 import { friendlyError } from "@/lib/friendly-error";
 import {
@@ -46,6 +47,8 @@ type Trip = {
   cash_received: number | null;
   start_odometer: number | null;
   gate_out_at: string | null;
+  gate_in_at: string | null;
+  driver_user_id: string | null;
   driver_started_at: string | null;
   unit_id: string | null;
   vehicles: { reg_no: string } | null;
@@ -121,7 +124,7 @@ function TripScreen() {
     const [tripRes, stopsRes, settingsRes] = await Promise.all([
       supabase
         .from("trips")
-        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, start_odometer, gate_out_at, driver_started_at, unit_id, vehicles(reg_no)")
+        .select("id, trip_no, status, trip_date, ended_at, cash_expected, cash_received, start_odometer, gate_out_at, gate_in_at, driver_user_id, driver_started_at, unit_id, vehicles(reg_no)")
         .eq("id", tripId)
         .single(),
       supabase
@@ -226,6 +229,14 @@ function TripScreen() {
     loadedOnce.current = true;
     setLoading(false);
   }, [tripId]);
+
+  // Watch for security's gate-in while the vehicle is out or waiting for cash confirmation.
+  const live = trip?.status === "in_progress" || trip?.status === "returned";
+  useEffect(() => {
+    if (!live) return;
+    const id = window.setInterval(() => void fetchAll(), 15000);
+    return () => window.clearInterval(id);
+  }, [live, fetchAll]);
 
   useEffect(() => {
     void fetchAll();
@@ -565,11 +576,17 @@ function TripScreen() {
   const settled = trip.status === "settled";
   // The driver records the closing odometer, but the vehicle is only "returned"
   // once security records gate-in at the plant.
-  const endedAwaitingGateIn = onRoad && Boolean(trip.ended_at);
+  const endedAwaitingGateIn = onRoad && Boolean(trip.ended_at) && !trip.gate_in_at;
+  // Security marked the vehicle in before the driver ended the trip: force End trip.
+  const mustEnd = onRoad && Boolean(trip.gate_in_at) && !trip.ended_at;
+  // Keep the gate pass at hand once the vehicle is back (all stops done) until gate in.
+  const showBackPass = onRoad && !trip.gate_in_at && Boolean(gatePass) && (Boolean(trip.ended_at) || (stops.length > 0 && stops.every((x) => x.status !== "pending")));
   // Cash settlement is an office action (dispatch:approve / finance:create);
   // drivers see the handover summary only.
+  // The trip's own driver hands cash to a cashier; office staff opening someone else's trip can settle directly.
   const canSettle =
     !!staff &&
+    trip.driver_user_id !== staff.id &&
     (staff.permissions.includes("dispatch:approve") || staff.permissions.includes("finance:create"));
 
   const toolBtn = (id: string, label: string, danger = false) => (
@@ -653,6 +670,32 @@ function TripScreen() {
         />
       )}
 
+      {showBackPass && (
+        <button
+          type="button"
+          data-testid="show-gate-pass"
+          onClick={() => setShowPass(true)}
+          className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl bg-primary px-6 py-6 text-primary-foreground shadow-soft active:scale-[0.99]"
+        >
+          <QrCode className="h-8 w-8" />
+          <span className="font-display text-xl font-bold">{t("dr.showGatePass")}</span>
+        </button>
+      )}
+
+      {mustEnd && (
+        <div className="mb-4 rounded-xl border-2 border-primary bg-card p-4 shadow-card" data-testid="must-end">
+          <p className="font-display text-lg font-bold text-foreground">{t("dr.mustEnd")}</p>
+          <p className="mb-3 text-sm text-muted-foreground">{t("dr.mustEndHint")}</p>
+          <div className="grid gap-2">
+            <input inputMode="numeric" value={endOdo} onChange={(e) => setEndOdo(e.target.value.replace(/\D/g, ""))} placeholder={t("dr.odometer")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+            <PhotoInput userId={staff?.id ?? "anon"} kind="odo-end" label={t("dr.odometerPhoto")} required={settings.require_end_odometer_photo} value={endOdoPhoto} onChange={setEndOdoPhoto} />
+            <button onClick={() => void endTrip()} disabled={busy} className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-50">
+              {t("dr.endTrip")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {endedAwaitingGateIn && (
         <div className="mb-4 rounded-xl border border-border bg-card p-4 text-center">
           <p className="text-sm font-semibold text-foreground">{t("dr.tripEnded")}</p>
@@ -660,7 +703,7 @@ function TripScreen() {
         </div>
       )}
 
-      {onRoad && !endedAwaitingGateIn && (
+      {onRoad && !endedAwaitingGateIn && !mustEnd && (
         <>
           <div className="mb-3">
             <StopMap stops={mapStops} origin={plant} />
@@ -841,7 +884,7 @@ function TripScreen() {
               </button>
             </div>
           ) : (
-            <p className="mt-3 text-xs text-muted-foreground">{t("dr.settleOffice")}</p>
+            <CashHandoverPanel tripId={tripId} amount={Math.max(0, Number(trip.cash_expected ?? 0) - cashSpent)} />
           )}
         </div>
       )}
