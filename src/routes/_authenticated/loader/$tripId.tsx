@@ -176,7 +176,7 @@ function LoadTrip() {
                       {t("ld.planned")}: <span className="font-bold text-foreground">{r.planned_qty}</span> {r.products?.sell_unit ?? ""}
                     </p>
                   </div>
-                  {r.loaded_qty != null && <StatusBadge status="delivered" />}
+                  {r.loaded_qty != null && <StatusBadge status="loaded" />}
                 </div>
                 {!done && (
                   <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">

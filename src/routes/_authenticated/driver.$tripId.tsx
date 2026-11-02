@@ -53,6 +53,17 @@ type Trip = {
 
 type ExtraProduct = { id: string; name: string };
 
+/** One product on the vehicle's load plan. */
+type LoadRow = {
+  product_id: string;
+  planned_qty: number | null;
+  loaded_qty: number | null;
+  products: { name: string } | null;
+};
+
+/** What the driver may still sell from the vehicle. */
+type VehicleStock = { product_id: string; name: string; left: number };
+
 type Alert = { id: string; type: string; note: string | null; created_at: string };
 
 function TripScreen() {
@@ -72,13 +83,12 @@ function TripScreen() {
 
   // trip tools state
   const [products, setProducts] = useState<ExtraProduct[]>([]);
+  const [vehicleStock, setVehicleStock] = useState<VehicleStock[]>([]);
   const [showTools, setShowTools] = useState<string | null>(null); // extras | expense | pickup | sos | end
   const [expType, setExpType] = useState("");
   const [expAmount, setExpAmount] = useState("");
   const [expNote, setExpNote] = useState("");
   const [expPhoto, setExpPhoto] = useState<string | null>(null);
-  const [extraProduct, setExtraProduct] = useState("");
-  const [extraQty, setExtraQty] = useState("");
   const [pickupCustomer, setPickupCustomer] = useState("");
   const [pickupProduct, setPickupProduct] = useState("");
   const [pickupQty, setPickupQty] = useState("");
@@ -124,7 +134,10 @@ function TripScreen() {
     // Gate pass token + loaded item count for the driver's QR screen.
     const [gpRes, ldRes] = await Promise.all([
       supabase.from("gate_passes").select("qr_token").eq("trip_id", tripId).order("issued_at", { ascending: false }).limit(1).maybeSingle(),
-      supabase.from("trip_loading").select("loaded_qty").eq("trip_id", tripId),
+      supabase
+        .from("trip_loading")
+        .select("product_id, planned_qty, loaded_qty, products(name)")
+        .eq("trip_id", tripId),
     ]);
     const unitId = (tripRes.data as unknown as Trip).unit_id;
     if (unitId) {
@@ -139,15 +152,40 @@ function TripScreen() {
     if (!stopsRes.error && stopRows.length > 0) {
       const lineRes = await supabase
         .from("order_lines")
-        .select("id, order_id, product_name, pack_label, qty")
+        .select("id, order_id, product_id, product_name, pack_label, qty")
         .in("order_id", stopRows.map((s) => s.orders?.id).filter((x): x is string => Boolean(x)));
       const map: Record<string, LineRow[]> = {};
       for (const l of (lineRes.data ?? []) as unknown as (LineRow & { order_id: string })[]) {
         (map[l.order_id] ??= []).push({ id: l.id, product_name: l.product_name, pack_label: l.pack_label, qty: l.qty });
       }
       setLines(map);
+      // Stock left on the vehicle: what was loaded minus what has been handed over.
+      const dlRes = await supabase
+        .from("delivery_lines")
+        .select("order_line_id, delivered_qty")
+        .in("stop_id", stopRows.map((s) => s.id));
+      const lineProduct: Record<string, string> = {};
+      for (const l of (lineRes.data ?? []) as unknown as { id: string; product_id: string }[]) {
+        lineProduct[l.id] = l.product_id;
+      }
+      const handedOver: Record<string, number> = {};
+      for (const d of (dlRes.data ?? []) as unknown as { order_line_id: string; delivered_qty: number }[]) {
+        const pid = lineProduct[d.order_line_id];
+        if (!pid) continue;
+        handedOver[pid] = (handedOver[pid] ?? 0) + Number(d.delivered_qty ?? 0);
+      }
+      setVehicleStock(
+        ((ldRes.data ?? []) as unknown as LoadRow[])
+          .map((r) => ({
+            product_id: r.product_id,
+            name: r.products?.name ?? "",
+            left: Math.max(0, Number(r.loaded_qty ?? r.planned_qty ?? 0) - (handedOver[r.product_id] ?? 0)),
+          }))
+          .filter((r) => r.left > 0),
+      );
     } else {
       setLines({});
+      setVehicleStock([]);
     }
     // Firm UPI details for the QR shown at collection time.
     const firmId = stopRows.find((s) => s.orders?.firm_id)?.orders?.firm_id;
@@ -171,11 +209,13 @@ function TripScreen() {
     void fetchAll();
   }, [fetchAll]);
 
+  // Empties and jars the driver may take back — the plant refuses other items.
   useEffect(() => {
     void supabase
       .from("products")
       .select("id, name")
       .eq("is_active", true)
+      .eq("is_returnable", true)
       .order("name")
       .then(({ data }: { data: { id: string; name: string }[] | null }) => setProducts((data ?? []) as ExtraProduct[]));
   }, []);
@@ -309,7 +349,8 @@ function TripScreen() {
         return;
       }
       setMessage(res.queued ? t("c.tryAgainOffline") : t("dr.stopDone"));
-      setSelected(null);
+      // Money still owed? Keep the stop open so the driver can collect it on the spot.
+      if (Number(stop.orders?.grand_total ?? 0) - Number(stop.orders?.amount_paid ?? 0) <= 0) setSelected(null);
       await fetchAll();
     });
   };
@@ -371,23 +412,6 @@ function TripScreen() {
       setExpAmount("");
       setExpNote("");
       setExpPhoto(null);
-    });
-  };
-
-  const addExtra = async () => {
-    await run(async () => {
-      const res = await queueRpc("set_extra_load", {
-        p_trip_id: tripId,
-        p_product_id: extraProduct,
-        p_qty: Number(extraQty),
-      });
-      if (res.error && !res.queued) {
-        setError(friendlyError(res.error, t));
-        return;
-      }
-      setShowTools(null);
-      setMessage(res.queued ? t("c.tryAgainOffline") : t("c.saved"));
-      setExtraQty("");
     });
   };
 
@@ -607,7 +631,6 @@ function TripScreen() {
           </div>
           <div className="mb-3 flex flex-wrap gap-2">
             {settings.expenses_enabled && toolBtn("expense", t("dr.expenses"))}
-            {settings.allow_extra_load && toolBtn("extras", t("dr.extras"))}
             {toolBtn("pickup", t("dr.pickup"))}
             {settings.allow_spot_sale && toolBtn("spot", t("dr.spotSale"))}
             {settings.sos_enabled && toolBtn("sos", t("dr.sos"), true)}
@@ -633,24 +656,6 @@ function TripScreen() {
             </div>
           )}
 
-          {showTools === "extras" && (
-            <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-card">
-              <p className="mb-2 text-sm font-bold text-foreground">{t("dr.extras")}</p>
-              <div className="grid gap-2">
-                <select value={extraProduct} onChange={(e) => setExtraProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
-                  <option value="">{t("dr.pickupProduct")}</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-                <input inputMode="numeric" value={extraQty} onChange={(e) => setExtraQty(e.target.value.replace(/\D/g, ""))} placeholder={t("c.qty")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
-                <button onClick={() => void addExtra()} disabled={busy || !extraProduct || extraQty === ""} className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-50">
-                  {t("c.submit")}
-                </button>
-              </div>
-            </div>
-          )}
-
           {showTools === "pickup" && (
             <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-card">
               <p className="mb-2 text-sm font-bold text-foreground">{t("dr.pickup")}</p>
@@ -667,6 +672,7 @@ function TripScreen() {
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
+                {products.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
                 <input inputMode="numeric" value={pickupQty} onChange={(e) => setPickupQty(e.target.value.replace(/\D/g, ""))} placeholder={t("dr.pickupQty")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
                 <button onClick={() => void addPickup()} disabled={busy || !pickupCustomer || !pickupProduct || pickupQty === ""} className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-50">
                   {t("c.submit")}
@@ -687,10 +693,13 @@ function TripScreen() {
                 </select>
                 <select value={spotProduct} onChange={(e) => setSpotProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
                   <option value="">{t("dr.pickupProduct")}</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                  {vehicleStock.map((p) => (
+                    <option key={p.product_id} value={p.product_id}>
+                      {p.name} · {t("dr.leftOnVehicle", { n: p.left })}
+                    </option>
                   ))}
                 </select>
+                {vehicleStock.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
                 <input inputMode="numeric" value={spotQty} onChange={(e) => setSpotQty(e.target.value.replace(/\D/g, ""))} placeholder={t("c.qty")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
                 <label className="flex items-center gap-2 text-sm text-foreground">
                   <input type="checkbox" checked={spotPaid} onChange={(e) => setSpotPaid(e.target.checked)} className="h-4 w-4 rounded border-input" />
