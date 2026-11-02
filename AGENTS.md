@@ -19,3 +19,5 @@
 - Push is enabled only when the APK user-agent contains `push=on` (set by capacitor.config.ts at sync when google-services.json exists) — registering without Firebase crashes Android.
 - Trusted-device id is synced to @capacitor/preferences via `initDeviceId()` (src/lib/device.ts) before any PIN/device check — WebView localStorage can be wiped on Android.
 - Sign-out goes only through `useTeamAuth().signOut` (record_logout → signOut → `location.replace("/login")`) so no cached profile/roles survive and Back cannot return.
+- Trip goods go back into stock only in `receive_returns` (loader unload count), and only undelivered good packs; `gate_in` moves no stock — so damaged/refused never re-enter sellable stock and nothing is counted twice.
+- An order's chosen `payment_method` (passed in `p_delivery.payment_method` to `_create_orders`) decides cod vs credit; credit checks run only for credit — customers with a limit can still pay cash/UPI/bank/cheque.
