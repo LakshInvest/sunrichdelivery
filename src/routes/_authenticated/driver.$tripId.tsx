@@ -234,6 +234,21 @@ function TripScreen() {
 
   const stop = stops.find((s) => s.id === selected) ?? null;
 
+  // "Do later" is the driver's own choice: the stop moves to the end of the list on this phone.
+  const laterKey = `sunrich:later:${tripId}`;
+  const [deferred, setDeferred] = useState<string[]>([]);
+  useEffect(() => {
+    try { setDeferred(JSON.parse(localStorage.getItem(laterKey) ?? "[]")); } catch { setDeferred([]); }
+  }, [laterKey]);
+  const toggleLater = (id: string) => {
+    setDeferred((d) => {
+      const next = d.includes(id) ? d.filter((x) => x !== id) : [...d.filter((x) => x !== id), id];
+      try { localStorage.setItem(laterKey, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+  const orderedStops = [...stops.filter((s) => !deferred.includes(s.id)), ...deferred.map((id) => stops.find((s) => s.id === id)).filter((s): s is StopRow => Boolean(s))];
+
   const refreshOutstanding = useCallback(
     async (stopId: string, customerId: string | undefined) => {
       if (!customerId) return;
@@ -749,9 +764,23 @@ function TripScreen() {
           )}
 
           <div className="grid gap-2">
-            {stops.map((s) => (
-              <StopCard key={s.id} stop={s} done={0} onOpen={() => setSelected(s.id === selected ? null : s.id)} />
-            ))}
+            {orderedStops.map((s) => {
+              const open = s.status !== "delivered" && s.status !== "failed" && s.status !== "cancelled";
+              const isLater = deferred.includes(s.id);
+              return (
+                <div key={s.id} className="grid gap-1">
+                  <StopCard stop={s} done={0} onOpen={() => setSelected(s.id === selected ? null : s.id)} />
+                  {open && (
+                    <button
+                      onClick={() => toggleLater(s.id)}
+                      className="self-end rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground active:bg-accent"
+                    >
+                      {isLater ? `↩ ${t("dr.later")}` : t("dr.doLater")}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
             {stops.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
           </div>
 
