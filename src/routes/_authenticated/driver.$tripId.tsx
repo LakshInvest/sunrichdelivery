@@ -123,7 +123,7 @@ function TripScreen() {
         .single(),
       supabase
         .from("trip_stops")
-        .select("id, seq, status, fail_reason, arrived_at, orders(id, customer_id, order_no, business_name, customer_name, delivery_address_text, grand_total, amount_paid, payment_mode, delivery_latitude, delivery_longitude, firm_id)")
+        .select("id, seq, status, fail_reason, arrived_at, do_later_at, orders(id, customer_id, order_no, business_name, customer_name, delivery_address_text, grand_total, amount_paid, payment_mode, delivery_latitude, delivery_longitude, firm_id)")
         .eq("trip_id", tripId)
         .order("seq"),
       supabase.rpc("my_delivery_settings"),
@@ -234,17 +234,16 @@ function TripScreen() {
 
   const stop = stops.find((s) => s.id === selected) ?? null;
 
-  // "Do later" is the driver's own choice: the stop moves to the end of the list on this phone.
-  const laterKey = `sunrich:later:${tripId}`;
-  const [deferred, setDeferred] = useState<string[]>([]);
-  useEffect(() => {
-    try { setDeferred(JSON.parse(localStorage.getItem(laterKey) ?? "[]")); } catch { setDeferred([]); }
-  }, [laterKey]);
+  // "Do later" is the driver's own choice, saved on the stop (do_later_at) so it survives reinstalls.
+  const deferred = stops
+    .filter((s) => s.do_later_at)
+    .sort((a, b) => String(a.do_later_at).localeCompare(String(b.do_later_at)))
+    .map((s) => s.id);
   const toggleLater = (id: string) => {
-    setDeferred((d) => {
-      const next = d.includes(id) ? d.filter((x) => x !== id) : [...d.filter((x) => x !== id), id];
-      try { localStorage.setItem(laterKey, JSON.stringify(next)); } catch { /* ignore */ }
-      return next;
+    const later = !deferred.includes(id);
+    setStops((list) => list.map((x) => (x.id === id ? { ...x, do_later_at: later ? new Date().toISOString() : null } : x)));
+    void queueRpc("set_stop_later", { p_stop_id: id, p_later: later }).then((r) => {
+      if (r.error && !r.queued) setError(r.error);
     });
   };
   const orderedStops = [...stops.filter((s) => !deferred.includes(s.id)), ...deferred.map((id) => stops.find((s) => s.id === id)).filter((s): s is StopRow => Boolean(s))];
