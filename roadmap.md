@@ -51,3 +51,12 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 - [x] 2. Trip chain: Do later, Full/Part/None + Ask office (wait + no-reply rule), loader count-difference reason flagged, unload/returns with stock back + difference flag. Tested end to end on QA trip TRP/261102/0019. Office answers via pending_ask_office + answer_ask_office (permission ask_office:answer); Command Center screen still to build.
 - [ ] 3. Security extras (entry/exit/parcels/problem/register/change guard/material pass)
 - [ ] 4. Offline queue + final full test
+
+## QA clean-up list (all labelled QA-TEST)
+- Orders MFO/26-27/00001, 00002 (approved, cannot be cancelled), 00003–00009
+- Trips TRP/261102/0019, TRP/261102/0020; vehicle QA-MH24-0001
+- Credit note MFCN/26-27/00001 (pending, QA)
+
+## Open
+- [ ] App icon swap — waiting for the three icon files (not attached)
+- [ ] Part 3 Security extras — not started
