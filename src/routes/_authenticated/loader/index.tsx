@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { istToday } from "@/lib/ist";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge } from "@/components/team/ui";
@@ -37,7 +38,7 @@ function LoaderHome() {
 
   const load = useCallback(async () => {
     setError(null);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = istToday();
     const [open, done] = await Promise.all([
       supabase
         .from("trips")
