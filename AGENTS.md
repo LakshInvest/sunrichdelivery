@@ -23,3 +23,4 @@
 - An order's chosen `payment_method` (passed in `p_delivery.payment_method` to `_create_orders`) decides cod vs credit; credit checks run only for credit — customers with a limit can still pay cash/UPI/bank/cheque.
 - Stop outcomes are handled by the `trip_stops` status trigger: partial → pending credit note per GST rate (invoice never edited); failed → order back to `approved` with `redeliver_reason` (invoice reused on re-delivery, no note).
 - The driver screen shows its spinner only on first load — unmounting the live Google map on refresh throws IntersectionObserver errors.
+- Security gate is one home (header counts, SCAN, Entry/Exit/Problem, Register): every pass type goes through SCAN and `gate_scan_lookup` decides trip out/in or material; pickup QRs are detected by their `order=` text. Gate RPCs check `has_perm('gate','create')` ("Gate entry"), because the role_permissions action list is fixed.
