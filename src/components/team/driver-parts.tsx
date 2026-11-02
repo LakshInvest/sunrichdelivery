@@ -301,6 +301,7 @@ export type StopRow = {
   seq: number;
   status: string;
   fail_reason: string | null;
+  do_later_at?: string | null;
   arrived_at: string | null;
   orders: {
     id: string;
