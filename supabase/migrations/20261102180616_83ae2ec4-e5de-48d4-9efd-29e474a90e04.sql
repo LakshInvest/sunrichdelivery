@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.gate_in(uuid, numeric, numeric, numeric, boolean), public.gate_vehicles_out(), public.cashier_list(), public.my_cash_to_confirm() FROM PUBLIC, anon;
