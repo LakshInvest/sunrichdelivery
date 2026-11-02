@@ -258,7 +258,7 @@ function Login() {
       setOtpState("success");
       await recordLogin();
       setBusy(false);
-      setTimeout(finish, 450);
+      setTimeout(openSetPin, 350);
       return;
     }
 
@@ -299,15 +299,17 @@ function Login() {
     setBusy(false);
     // First OTP on this phone (or Forgot PIN / locked PIN): set a PIN, which
     // also trusts this device so next time it's mobile + PIN only.
-    setTimeout(() => {
-      setNewPin("");
-      setConfirmPin("");
-      setPinStage("new");
-      setPinState("idle");
-      setError(null);
-      setStep("setpin");
-    }, 350);
+    setTimeout(openSetPin, 350);
   };
+
+  function openSetPin() {
+    setNewPin("");
+    setConfirmPin("");
+    setPinStage("new");
+    setPinState("idle");
+    setError(null);
+    setStep("setpin");
+  }
 
   const savePin = async () => {
     if (busy) return;
