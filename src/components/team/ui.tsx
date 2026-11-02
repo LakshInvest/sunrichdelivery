@@ -1,6 +1,6 @@
 // Shared mobile UI pieces for the Team app screens — Sunrich water identity.
 // Big touch targets, soft shadows, 20px cards, round chips, no hard corners.
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { LANGS, useLang } from "@/lib/l10n";
 import { pendingCount, subscribe } from "@/lib/offline";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,32 +15,30 @@ export function BrandLogo({ tone = "navy", className = "h-8" }: { tone?: "navy" 
   return <img src={tone === "white" ? logoWhite.url : logoNavy.url} alt="Sunrich" className={`${className} w-auto`} />;
 }
 
-/** Tiny bottle that fills with water — the app's loader. */
+/** Tiny bottle that fills with water — the app's loader. Water is clipped to the bottle. */
+const BOTTLE =
+  "M10 2.5h4v2.2c0 .6.3 1 .8 1.5 1.6 1.4 2.7 3.4 2.7 5.8v6.5a3.5 3.5 0 0 1-3.5 3.5h-4a3.5 3.5 0 0 1-3.5-3.5V12c0-2.4 1.1-4.4 2.7-5.8.5-.4.8-.9.8-1.5V2.5z";
 export function WaterLoader({ className = "h-9 w-9", light = false }: { className?: string; light?: boolean }) {
   const stroke = light ? "rgba(255,255,255,0.75)" : "var(--color-muted-foreground)";
+  // A unique id per loader: a shared id breaks clipping when another copy is hidden.
+  const clipId = `bottle-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden>
       <defs>
-        <clipPath id="bottle-clip">
-          <path d="M10 2.5h4v2.2c0 .6.3 1 .8 1.5 1.6 1.4 2.7 3.4 2.7 5.8v6.5a3.5 3.5 0 0 1-3.5 3.5h-4a3.5 3.5 0 0 1-3.5-3.5V12c0-2.4 1.1-4.4 2.7-5.8.5-.4.8-.9.8-1.5V2.5z" />
+        <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+          <path d={BOTTLE} />
         </clipPath>
       </defs>
-      <g clipPath="url(#bottle-clip)">
-        <rect
-          x="4"
-          y="2"
-          width="16"
-          height="22"
-          fill="var(--color-aqua)"
-          style={{ transformOrigin: "center", animation: "bottle-fill 1.3s ease-in-out infinite" }}
-        />
+      <g clipPath={`url(#${clipId})`}>
+        <g className="water-rise">
+          <path
+            className="water-wave"
+            d="M-8 6 q3 -1.6 6 0 t6 0 t6 0 t6 0 t6 0 t6 0 V30 H-8 Z"
+            fill="var(--color-aqua)"
+          />
+        </g>
       </g>
-      <path
-        d="M10 2.5h4v2.2c0 .6.3 1 .8 1.5 1.6 1.4 2.7 3.4 2.7 5.8v6.5a3.5 3.5 0 0 1-3.5 3.5h-4a3.5 3.5 0 0 1-3.5-3.5V12c0-2.4 1.1-4.4 2.7-5.8.5-.4.8-.9.8-1.5V2.5z"
-        fill="none"
-        stroke={stroke}
-        strokeWidth="1.4"
-      />
+      <path d={BOTTLE} fill="none" stroke={stroke} strokeWidth="1.4" />
     </svg>
   );
 }
