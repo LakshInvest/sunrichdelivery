@@ -37,7 +37,7 @@ function LoaderHome() {
 
   const load = useCallback(async () => {
     setError(null);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = istToday();
     const [open, done] = await Promise.all([
       supabase
         .from("trips")
