@@ -672,6 +672,7 @@ function TripScreen() {
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
+                {products.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
                 <input inputMode="numeric" value={pickupQty} onChange={(e) => setPickupQty(e.target.value.replace(/\D/g, ""))} placeholder={t("dr.pickupQty")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
                 <button onClick={() => void addPickup()} disabled={busy || !pickupCustomer || !pickupProduct || pickupQty === ""} className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-50">
                   {t("c.submit")}
