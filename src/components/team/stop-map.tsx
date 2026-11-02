@@ -207,10 +207,14 @@ export function StopMap({ stops, origin = null }: { stops: MapStop[]; origin?: {
         setState("ready");
         // Google renders its own error overlay (bad/restricted key, billing):
         // detect it a beat after load and fall back to the friendly card.
-        setTimeout(() => {
+        const check = () => {
           if (!alive || !holder.current) return;
           if (holder.current.querySelector(".gm-err-container, .gm-err-content")) setState("error");
-        }, 3000);
+        };
+        for (const ms of [1500, 4000, 10000]) setTimeout(check, ms);
+        (window as unknown as { gm_authFailure?: () => void }).gm_authFailure = () => {
+          if (alive) setState("error");
+        };
       } catch {
         if (alive) setState("error");
       }
@@ -266,18 +270,17 @@ export function StopMap({ stops, origin = null }: { stops: MapStop[]; origin?: {
     );
   };
 
-  if (state === "error") {
-    return (
-      <div className="rounded-xl border border-border bg-card p-4 text-center shadow-card">
-        <p className="text-sm text-muted-foreground">{t("dr.mapUnavailable")}</p>
-      </div>
-    );
-  }
-
+  // The map holder stays mounted even on error: removing the element Google
+  // has attached to makes its internal IntersectionObserver throw.
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
       <div ref={holder} className="h-56 w-full bg-muted" style={{ display: state === "ready" ? "block" : "none" }} />
-      {state !== "ready" && (
+      {state === "error" && (
+        <div className="p-4 text-center">
+          <p className="text-sm text-muted-foreground">{t("dr.mapUnavailable")}</p>
+        </div>
+      )}
+      {state === "loading" && (
         <div className="grid h-56 place-items-center gap-2 bg-muted">
           <Loader className="h-6 w-6 animate-pulse text-muted-foreground" />
         </div>
