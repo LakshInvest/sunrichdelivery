@@ -53,6 +53,17 @@ type Trip = {
 
 type ExtraProduct = { id: string; name: string };
 
+/** One product on the vehicle's load plan. */
+type LoadRow = {
+  product_id: string;
+  planned_qty: number | null;
+  loaded_qty: number | null;
+  products: { name: string } | null;
+};
+
+/** What the driver may still sell from the vehicle. */
+type VehicleStock = { product_id: string; name: string; left: number };
+
 type Alert = { id: string; type: string; note: string | null; created_at: string };
 
 function TripScreen() {
@@ -72,6 +83,7 @@ function TripScreen() {
 
   // trip tools state
   const [products, setProducts] = useState<ExtraProduct[]>([]);
+  const [vehicleStock, setVehicleStock] = useState<VehicleStock[]>([]);
   const [showTools, setShowTools] = useState<string | null>(null); // extras | expense | pickup | sos | end
   const [expType, setExpType] = useState("");
   const [expAmount, setExpAmount] = useState("");
@@ -124,7 +136,10 @@ function TripScreen() {
     // Gate pass token + loaded item count for the driver's QR screen.
     const [gpRes, ldRes] = await Promise.all([
       supabase.from("gate_passes").select("qr_token").eq("trip_id", tripId).order("issued_at", { ascending: false }).limit(1).maybeSingle(),
-      supabase.from("trip_loading").select("loaded_qty").eq("trip_id", tripId),
+      supabase
+        .from("trip_loading")
+        .select("product_id, planned_qty, loaded_qty, products(name)")
+        .eq("trip_id", tripId),
     ]);
     const unitId = (tripRes.data as unknown as Trip).unit_id;
     if (unitId) {
@@ -139,7 +154,7 @@ function TripScreen() {
     if (!stopsRes.error && stopRows.length > 0) {
       const lineRes = await supabase
         .from("order_lines")
-        .select("id, order_id, product_name, pack_label, qty")
+        .select("id, order_id, product_id, product_name, pack_label, qty")
         .in("order_id", stopRows.map((s) => s.orders?.id).filter((x): x is string => Boolean(x)));
       const map: Record<string, LineRow[]> = {};
       for (const l of (lineRes.data ?? []) as unknown as (LineRow & { order_id: string })[]) {
@@ -171,11 +186,13 @@ function TripScreen() {
     void fetchAll();
   }, [fetchAll]);
 
+  // Empties and jars the driver may take back — the plant refuses other items.
   useEffect(() => {
     void supabase
       .from("products")
       .select("id, name")
       .eq("is_active", true)
+      .eq("is_returnable", true)
       .order("name")
       .then(({ data }: { data: { id: string; name: string }[] | null }) => setProducts((data ?? []) as ExtraProduct[]));
   }, []);
