@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.ask_office(uuid,uuid,text,numeric,text), public.ask_office_status(uuid), public.flag_load_mismatch(uuid,text), public.trip_return_expected(uuid), public.receive_returns(uuid,jsonb,text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.ask_office(uuid,uuid,text,numeric,text), public.ask_office_status(uuid), public.flag_load_mismatch(uuid,text), public.trip_return_expected(uuid), public.receive_returns(uuid,jsonb,text) TO authenticated;
