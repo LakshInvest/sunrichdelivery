@@ -863,6 +863,25 @@ function TripScreen() {
                       {isLater ? `↩ ${t("dr.later")}` : t("dr.doLater")}
                     </button>
                   )}
+                  {selected === s.id && stop && (
+                    <div className="mt-1" ref={panelRef}>
+                      <StopDetailPanel
+                        tripId={tripId}
+                        stop={stop}
+                        lines={lines[stop.orders?.id ?? ""] ?? []}
+                        settings={settings}
+                        staffId={staff?.id ?? "anon"}
+                        outstanding={outstanding[stop.id] ?? null}
+                        upi={firmUpi}
+                        onSubmitDelivery={deliverStop}
+                        onSubmitCollection={collectForStop}
+                        onSubmitDueCollection={collectDue}
+                        busy={busy}
+                        error={null}
+                        message={null}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -875,25 +894,6 @@ function TripScreen() {
             </p>
           )}
 
-          {selected && stop && (
-            <div className="mt-4">
-              <StopDetailPanel
-                tripId={tripId}
-                stop={stop}
-                lines={lines[stop.orders?.id ?? ""] ?? []}
-                settings={settings}
-                staffId={staff?.id ?? "anon"}
-                outstanding={outstanding[stop.id] ?? null}
-                upi={firmUpi}
-                onSubmitDelivery={deliverStop}
-                onSubmitCollection={collectForStop}
-                onSubmitDueCollection={collectDue}
-                busy={busy}
-                error={null}
-                message={null}
-              />
-            </div>
-          )}
         </>
       )}
 
