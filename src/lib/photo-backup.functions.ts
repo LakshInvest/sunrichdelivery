@@ -38,10 +38,10 @@ export const buildPhotoBackup = createServerFn({ method: "POST" })
     files["index.csv"] = strToU8(lines.join("\n"));
     const zip = zipSync(files, { level: 0 });
     const zipPath = `backups/${new Date().toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}.zip`;
-    const up = await supabaseAdmin.storage.from("operations").upload(zipPath, zip, { contentType: "application/zip" });
+    const up = await supabaseAdmin.storage.from("photo-backups").upload(zipPath, zip, { contentType: "application/zip" });
     if (up.error) throw new Error(up.error.message);
     const { data: backupId, error: mErr } = await context.supabase.rpc("mark_photos_downloaded" as never, { p_ids: got, p_zip_path: zipPath } as never);
     if (mErr) throw new Error(mErr.message);
-    const { data: signed } = await supabaseAdmin.storage.from("operations").createSignedUrl(zipPath, 60 * 60);
+    const { data: signed } = await supabaseAdmin.storage.from("photo-backups").createSignedUrl(zipPath, 60 * 60);
     return { backupId: backupId as unknown as string, zipPath, url: signed?.signedUrl ?? null, count: got.length, skipped: list.length - got.length };
   });
