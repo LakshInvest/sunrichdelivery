@@ -198,7 +198,7 @@ export function GateEntryPanel({ onDone }: { onDone: (queued?: boolean) => void 
               <Field label={t("sec.supplier")}>
                 <input aria-label={t("sec.supplier")} value={from} onChange={(e) => setFrom(e.target.value)} className={inputCls} />
               </Field>
-              <Field label={t("sec.vehicleNo")}>
+              <Field label={t("sec.vehicleNo").replace(/\s*\(.*\)\s*/, "")}>
                 <input aria-label={t("sec.vehicleNo")} value={vehicle} onChange={(e) => setVehicle(e.target.value)} className={`${inputCls} uppercase`} />
               </Field>
             </>
