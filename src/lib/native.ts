@@ -302,6 +302,19 @@ export async function saveOfflinePhoto(name: string, dataUrl: string): Promise<s
   }
 }
 
+/** APK: save a PDF to cache and open the share sheet (WhatsApp, print, files). Returns false on web. */
+export async function sharePdf(name: string, dataUri: string): Promise<boolean> {
+  if (!isNative()) return false;
+  try {
+    const [{ Filesystem, Directory }, { Share }] = await Promise.all([import("@capacitor/filesystem"), import("@capacitor/share")]);
+    const res = await Filesystem.writeFile({ path: `challans/${name}`, data: dataUri.split(",")[1] ?? dataUri, directory: Directory.Cache, recursive: true });
+    await Share.share({ title: name, url: res.uri });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function deleteOfflinePhoto(name: string) {
   if (!isNative()) return;
   try {
