@@ -7356,6 +7356,7 @@ export type Database = {
         Args: { p_product_id: string; p_unit_id: string }
         Returns: number
       }
+      stop_contact_phone: { Args: { p_stop_id: string }; Returns: string }
       stop_customer_summary: {
         Args: { p_customer_id: string; p_trip_id: string }
         Returns: Json

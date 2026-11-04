@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { UpiQrCode } from "@/components/team/upi-qr";
 import { PhotoInput, StatusBadge } from "@/components/team/ui";
 import { uploadDataUrl } from "@/lib/photo";
+import { makeChallan } from "@/lib/challan";
 
 /** Vehicle-check labels keyed by the English name; missing/empty → English. */
 type CheckNames = Record<string, { name_hi?: string | undefined; name_mr?: string | undefined }>;
@@ -424,6 +425,18 @@ export function StopDetailPanel({
     });
     return () => { live = false; };
   }, [stop.id]);
+  // Call: order phone → delivery address contact → customer mobile (looked up server-side).
+  const [phone, setPhone] = useState<string | null>(String(o?.customer_mobile ?? "").trim() || null);
+  const [challanBusy, setChallanBusy] = useState(false);
+  useEffect(() => {
+    if (o?.customer_mobile?.trim()) { setPhone(o.customer_mobile.trim()); return; }
+    let live = true;
+    void supabase.rpc("stop_contact_phone" as never, { p_stop_id: stop.id } as never).then(({ data }) => {
+      const p = String((data as unknown) ?? "").trim();
+      if (live) setPhone(p || null);
+    });
+    return () => { live = false; };
+  }, [stop.id, o?.customer_mobile]);
   const takeUdhaar = async (amt: number) => {
     setUdhaarMsg(null);
     const { data, error } = await supabase.rpc("stop_take_udhaar" as never, { p_stop_id: stop.id, p_amount: amt } as never);
@@ -504,12 +517,27 @@ export function StopDetailPanel({
           target="_blank" rel="noreferrer"
           className="rounded-lg border border-border bg-background py-3 text-center text-sm font-bold text-foreground active:bg-accent"
         >🧭 {t("dr.map")}</a>
-        {o?.customer_mobile ? (
-          <a href={`tel:${o.customer_mobile}`} className="rounded-lg border border-border bg-background py-3 text-center text-sm font-bold text-foreground active:bg-accent">📞 {t("dr.call")}</a>
+        {phone ? (
+          <a href={`tel:${phone}`} className="rounded-lg border border-border bg-background py-3 text-center text-sm font-bold text-foreground active:bg-accent">📞 {t("dr.call")}</a>
         ) : (
           <span className="rounded-lg border border-border bg-muted py-3 text-center text-sm font-bold text-muted-foreground opacity-60">📞 {t("dr.call")}</span>
         )}
       </div>
+      <button
+        type="button"
+        disabled={challanBusy}
+        onClick={async () => {
+          setChallanBusy(true);
+          try {
+            await makeChallan({ orderNo: o?.order_no ?? "", firmId: o?.firm_id, customer: o?.business_name || o?.customer_name || "", address: o?.delivery_address_text, phone, lines });
+          } catch (e) {
+            setLocalErr(e instanceof Error ? e.message : String(e));
+          } finally {
+            setChallanBusy(false);
+          }
+        }}
+        className="mt-2 w-full rounded-lg border border-border bg-background py-3 text-center text-sm font-bold text-foreground active:bg-accent disabled:opacity-60"
+      >📄 {t("dr.challan")}</button>
 
       {!delivered && (
         <>
