@@ -364,7 +364,6 @@ function TripScreen() {
       }
       setMessage(res.queued ? t("c.tryAgainOffline") : t("c.saved"));
       await fetchAll();
-      if (!v.keepOpen) setAdvanceFrom(stop.id);
     });
   };
 
@@ -428,6 +427,7 @@ function TripScreen() {
       }
       setMessage(res.queued ? t("c.tryAgainOffline") : t("c.saved"));
       await fetchAll();
+      if (!v.keepOpen) setAdvanceFrom(stop.id);
     });
   };
 
