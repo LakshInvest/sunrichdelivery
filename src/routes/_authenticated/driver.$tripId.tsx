@@ -78,6 +78,11 @@ function TripScreen() {
   const [lines, setLines] = useState<Record<string, LineRow[]>>({});
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [selected, setSelected] = useState<string | null>(null);
+  // Bring an opened stop to the top of the screen so the driver sees one job at a time.
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (selected) window.setTimeout(() => panelRef.current?.parentElement?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  }, [selected]);
   const [outstanding, setOutstanding] = useState<Record<string, number | null>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
