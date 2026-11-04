@@ -19,6 +19,7 @@ import { Route as AuthenticatedDriverIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedDriverTripIdRouteImport } from './routes/_authenticated/driver.$tripId'
 import { Route as AuthenticatedLoaderIndexRouteImport } from './routes/_authenticated/loader/index'
 import { Route as AuthenticatedLoaderTripIdRouteImport } from './routes/_authenticated/loader/$tripId'
+import { Route as ApiPublicPhotoCleanupRouteImport } from './routes/api/public/photo-cleanup'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -73,6 +74,11 @@ const AuthenticatedLoaderTripIdRoute =
     path: '/loader/$tripId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPhotoCleanupRoute = ApiPublicPhotoCleanupRouteImport.update({
+  id: '/api/public/photo-cleanup',
+  path: '/api/public/photo-cleanup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/security': typeof AuthenticatedSecurityRoute
   '/driver/$tripId': typeof AuthenticatedDriverTripIdRoute
   '/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
+  '/api/public/photo-cleanup': typeof ApiPublicPhotoCleanupRoute
   '/driver/': typeof AuthenticatedDriverIndexRoute
   '/loader/': typeof AuthenticatedLoaderIndexRoute
 }
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/driver/$tripId': typeof AuthenticatedDriverTripIdRoute
   '/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
+  '/api/public/photo-cleanup': typeof ApiPublicPhotoCleanupRoute
   '/driver': typeof AuthenticatedDriverIndexRoute
   '/loader': typeof AuthenticatedLoaderIndexRoute
 }
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/driver/$tripId': typeof AuthenticatedDriverTripIdRoute
   '/_authenticated/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
+  '/api/public/photo-cleanup': typeof ApiPublicPhotoCleanupRoute
   '/_authenticated/driver/': typeof AuthenticatedDriverIndexRoute
   '/_authenticated/loader/': typeof AuthenticatedLoaderIndexRoute
 }
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/driver/$tripId'
     | '/loader/$tripId'
+    | '/api/public/photo-cleanup'
     | '/driver/'
     | '/loader/'
   fileRoutesByTo: FileRoutesByTo
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/driver/$tripId'
     | '/loader/$tripId'
+    | '/api/public/photo-cleanup'
     | '/driver'
     | '/loader'
   id:
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/driver/$tripId'
     | '/_authenticated/loader/$tripId'
+    | '/api/public/photo-cleanup'
     | '/_authenticated/driver/'
     | '/_authenticated/loader/'
   fileRoutesById: FileRoutesById
@@ -147,6 +159,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiPublicPhotoCleanupRoute: typeof ApiPublicPhotoCleanupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLoaderTripIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/photo-cleanup': {
+      id: '/api/public/photo-cleanup'
+      path: '/api/public/photo-cleanup'
+      fullPath: '/api/public/photo-cleanup'
+      preLoaderRoute: typeof ApiPublicPhotoCleanupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -261,6 +281,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiPublicPhotoCleanupRoute: ApiPublicPhotoCleanupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
