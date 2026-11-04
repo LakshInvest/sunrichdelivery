@@ -330,7 +330,7 @@ export async function takeNativePhoto(): Promise<File | null> {
   if (!isNative()) return null;
   try {
     const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
-    const p = await Camera.getPhoto({ resultType: CameraResultType.DataUrl, source: CameraSource.Camera, quality: 70, width: 1600 });
+    const p = await Camera.getPhoto({ resultType: CameraResultType.DataUrl, source: CameraSource.Camera, quality: 70, width: 1280 });
     if (!p.dataUrl) return null;
     const blob = await (await fetch(p.dataUrl)).blob();
     return new File([blob], `photo-${Date.now()}.${p.format || "jpg"}`, { type: blob.type || "image/jpeg" });

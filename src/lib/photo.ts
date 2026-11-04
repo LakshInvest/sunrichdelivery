@@ -29,7 +29,8 @@ export async function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-async function compressToJpeg(file: File, maxDim = 1600, quality = 0.82): Promise<Blob> {
+/** Max 1280 px JPEG, quality stepped down until the file is about 200 KB or less. */
+export async function compressToJpeg(file: File, maxDim = 1280, targetBytes = 200 * 1024): Promise<Blob> {
   const dataUrl = await fileToDataUrl(file);
   const img = document.createElement("img");
   await new Promise<void>((resolve, reject) => {
@@ -44,9 +45,16 @@ async function compressToJpeg(file: File, maxDim = 1600, quality = 0.82): Promis
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas unavailable");
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  return await new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode failed"))), "image/jpeg", quality),
-  );
+  const encode = (q: number) =>
+    new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode failed"))), "image/jpeg", q),
+    );
+  let blob = await encode(0.8);
+  for (const q of [0.7, 0.6, 0.5, 0.42, 0.35]) {
+    if (blob.size <= targetBytes) break;
+    blob = await encode(q);
+  }
+  return blob;
 }
 
 /** Upload a captured photo; returns the bucket path like `team/<uid>/<ts>.jpg`. */
