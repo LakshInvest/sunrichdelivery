@@ -1745,6 +1745,15 @@ export type Database = {
           location_at_each_stop: boolean
           location_interval_minutes: number
           location_tracking_enabled: boolean
+          photo_days_challan: number
+          photo_days_cheque: number
+          photo_days_delivery: number
+          photo_days_odometer: number
+          photo_days_problem: number
+          photo_days_selfie: number
+          photo_days_upi: number
+          photo_days_visitor: number
+          photo_delete_after_download: boolean
           proof_otp_enabled: boolean
           proof_otp_required: boolean
           proof_photo_enabled: boolean
@@ -1793,6 +1802,15 @@ export type Database = {
           location_at_each_stop?: boolean
           location_interval_minutes?: number
           location_tracking_enabled?: boolean
+          photo_days_challan?: number
+          photo_days_cheque?: number
+          photo_days_delivery?: number
+          photo_days_odometer?: number
+          photo_days_problem?: number
+          photo_days_selfie?: number
+          photo_days_upi?: number
+          photo_days_visitor?: number
+          photo_delete_after_download?: boolean
           proof_otp_enabled?: boolean
           proof_otp_required?: boolean
           proof_photo_enabled?: boolean
@@ -1841,6 +1859,15 @@ export type Database = {
           location_at_each_stop?: boolean
           location_interval_minutes?: number
           location_tracking_enabled?: boolean
+          photo_days_challan?: number
+          photo_days_cheque?: number
+          photo_days_delivery?: number
+          photo_days_odometer?: number
+          photo_days_problem?: number
+          photo_days_selfie?: number
+          photo_days_upi?: number
+          photo_days_visitor?: number
+          photo_delete_after_download?: boolean
           proof_otp_enabled?: boolean
           proof_otp_required?: boolean
           proof_photo_enabled?: boolean
@@ -3838,6 +3865,152 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photo_backups: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          photo_count: number
+          zip_path: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          photo_count?: number
+          zip_path?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          photo_count?: number
+          zip_path?: string | null
+        }
+        Relationships: []
+      }
+      photo_cleanup_runs: {
+        Row: {
+          deleted: number
+          due: number
+          errors: Json
+          expired: number
+          id: string
+          kept_not_downloaded: number
+          kind: string
+          notices: number
+          ran_at: string
+        }
+        Insert: {
+          deleted?: number
+          due?: number
+          errors?: Json
+          expired?: number
+          id?: string
+          kept_not_downloaded?: number
+          kind?: string
+          notices?: number
+          ran_at?: string
+        }
+        Update: {
+          deleted?: number
+          due?: number
+          errors?: Json
+          expired?: number
+          id?: string
+          kept_not_downloaded?: number
+          kind?: string
+          notices?: number
+          ran_at?: string
+        }
+        Relationships: []
+      }
+      photo_files: {
+        Row: {
+          amount: number | null
+          backup_id: string | null
+          bucket: string
+          company_id: string
+          created_at: string
+          customer_id: string | null
+          delete_due_at: string | null
+          downloaded_at: string | null
+          downloaded_by: string | null
+          expires_on: string | null
+          file_deleted_at: string | null
+          id: string
+          notice_sent_at: string | null
+          order_id: string | null
+          path: string
+          photo_type: string
+          source_id: string | null
+          source_table: string
+          taken_at: string
+          taken_by: string | null
+          trip_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          backup_id?: string | null
+          bucket?: string
+          company_id: string
+          created_at?: string
+          customer_id?: string | null
+          delete_due_at?: string | null
+          downloaded_at?: string | null
+          downloaded_by?: string | null
+          expires_on?: string | null
+          file_deleted_at?: string | null
+          id?: string
+          notice_sent_at?: string | null
+          order_id?: string | null
+          path: string
+          photo_type: string
+          source_id?: string | null
+          source_table: string
+          taken_at?: string
+          taken_by?: string | null
+          trip_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          backup_id?: string | null
+          bucket?: string
+          company_id?: string
+          created_at?: string
+          customer_id?: string | null
+          delete_due_at?: string | null
+          downloaded_at?: string | null
+          downloaded_by?: string | null
+          expires_on?: string | null
+          file_deleted_at?: string | null
+          id?: string
+          notice_sent_at?: string | null
+          order_id?: string | null
+          path?: string
+          photo_type?: string
+          source_id?: string | null
+          source_table?: string
+          taken_at?: string
+          taken_by?: string | null
+          trip_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_files_backup_id_fkey"
+            columns: ["backup_id"]
+            isOneToOne: false
+            referencedRelation: "photo_backups"
             referencedColumns: ["id"]
           },
         ]
@@ -6211,6 +6384,26 @@ export type Database = {
           ref_id: string
         }[]
       }
+      _photo_days: {
+        Args: { p_company: string; p_type: string }
+        Returns: number
+      }
+      _photo_register: {
+        Args: {
+          p_amount: number
+          p_base: string
+          p_by: string
+          p_company: string
+          p_customer: string
+          p_order: string
+          p_path: string
+          p_src: string
+          p_src_id: string
+          p_trip: string
+          p_type: string
+        }
+        Returns: undefined
+      }
       _price_lines:
         | {
             Args: { p_customer_id: string; p_lines: Json; p_office: boolean }
@@ -6731,6 +6924,10 @@ export type Database = {
         Args: { p_latitude?: number; p_longitude?: number; p_stop_id: string }
         Returns: undefined
       }
+      mark_photos_downloaded: {
+        Args: { p_ids: string[]; p_zip_path: string }
+        Returns: string
+      }
       my_approval_limit: { Args: never; Returns: number }
       my_cash_to_confirm: {
         Args: never
@@ -6814,6 +7011,15 @@ export type Database = {
           location_at_each_stop: boolean
           location_interval_minutes: number
           location_tracking_enabled: boolean
+          photo_days_challan: number
+          photo_days_cheque: number
+          photo_days_delivery: number
+          photo_days_odometer: number
+          photo_days_problem: number
+          photo_days_selfie: number
+          photo_days_upi: number
+          photo_days_visitor: number
+          photo_delete_after_download: boolean
           proof_otp_enabled: boolean
           proof_otp_required: boolean
           proof_photo_enabled: boolean
@@ -6930,6 +7136,51 @@ export type Database = {
           request: Json
           stop_id: string
           trip_id: string
+          trip_no: string
+        }[]
+      }
+      photo_backup_index: {
+        Args: { p_ids: string[] }
+        Returns: {
+          amount: number
+          customer_name: string
+          file_name: string
+          folder: string
+          id: string
+          order_no: string
+          path: string
+          photo_type: string
+          taken_by_name: string
+          taken_on: string
+          trip_no: string
+        }[]
+      }
+      photo_cleanup_done: {
+        Args: { p_errors?: Json; p_ids: string[] }
+        Returns: number
+      }
+      photo_cleanup_due: {
+        Args: { p_limit?: number }
+        Returns: {
+          bucket: string
+          id: string
+          path: string
+        }[]
+      }
+      photo_cleanup_plan: { Args: never; Returns: string }
+      photos_expiring: {
+        Args: { p_days?: number }
+        Returns: {
+          amount: number
+          customer_name: string
+          downloaded_at: string
+          expires_on: string
+          id: string
+          order_no: string
+          path: string
+          photo_type: string
+          taken_at: string
+          taken_by_name: string
           trip_no: string
         }[]
       }
