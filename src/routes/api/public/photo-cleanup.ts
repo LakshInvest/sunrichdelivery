@@ -14,7 +14,7 @@ export const Route = createFileRoute("/api/public/photo-cleanup")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = process.env.LOVABLE_CRON_SECRET ?? "";
+        const secret = process.env["LOVABLE_CRON_SECRET"] ?? "";
         const given = request.headers.get("x-cron-secret") ?? "";
         if (!secret || !safeEqual(given, secret)) return new Response("Unauthorized", { status: 401 });
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
