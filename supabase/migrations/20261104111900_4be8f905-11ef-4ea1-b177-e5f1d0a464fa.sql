@@ -1,0 +1,1 @@
+update public.app_settings set login_tagline = 'Shudh Piyo, Khoob Jiyo', login_tagline_hi = 'शुद्ध पियो, खूब जियो', login_tagline_mr = 'शुद्ध पियो, खूब जियो';
