@@ -228,6 +228,18 @@ export function StartTripPanel({
     });
   };
 
+  const submitCollection = async () => {
+    setLocalErr(null);
+    if (mode !== "split") {
+      return onSubmitCollection({ mode, amount: amount === "" ? String(toCollect) : amount, reference, photo: payPhoto });
+    }
+    const cash = Number(splitCash || 0);
+    const upiPart = Math.round((toCollect - cash) * 100) / 100;
+    if (!(cash > 0) || !(upiPart > 0)) return setLocalErr(t("dr.splitBad"));
+    await onSubmitCollection({ mode: "cash", amount: String(cash), reference: "", photo: payPhoto, keepOpen: true });
+    await onSubmitCollection({ mode: "upi", amount: String(upiPart), reference, photo: payPhoto });
+  };
+
   const err = localErr ?? error;
   // Subtitle reflects the enabled steps instead of a fixed list.
   const startSteps = [
@@ -374,7 +386,7 @@ export function StopDetailPanel({
   outstanding: number | null;
   upi?: { id: string; payee: string | null } | null;
   onSubmitDelivery: (v: { lines: { order_line_id: string; delivered: number; short: number; damaged: number; refused: number; empties: number }[]; fail: boolean; failReason: string; failNote: string; photo: string | null; signature: string | null; otp: string }) => Promise<void>;
-  onSubmitCollection: (v: { mode: string; amount: string; reference: string; photo: string | null }) => Promise<void>;
+  onSubmitCollection: (v: { mode: string; amount: string; reference: string; photo: string | null; keepOpen?: boolean }) => Promise<void>;
   onSubmitDueCollection: (v: { amount: string; mode: string; reference: string; photo: string | null }) => Promise<void>;
   busy: boolean;
   error: string | null;
@@ -408,6 +420,7 @@ export function StopDetailPanel({
   const [amount, setAmount] = useState("");
   const [reference, setReference] = useState("");
   const [payPhoto, setPayPhoto] = useState<string | null>(null);
+  const [splitCash, setSplitCash] = useState("");
   const [dueAmount, setDueAmount] = useState("");
   const [dueMode, setDueMode] = useState("cash");
   const [dueReference, setDueReference] = useState("");
@@ -542,13 +555,7 @@ export function StopDetailPanel({
               <label className="mb-1 block text-sm font-medium text-foreground">
                 {t("dr.deliveryOtp")} {settings.proof_otp_required && <span className="text-destructive">*</span>}
               </label>
-              <input
-                inputMode="numeric"
-                maxLength={6}
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                className="w-28 rounded-lg border border-input bg-background px-3 py-2 text-center text-sm tracking-[0.3em] text-base font-semibold outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30"
-              />
+              <OtpBoxes value={otp} onChange={setOtp} />
             </div>
           )}
         </>
@@ -642,21 +649,35 @@ export function StopDetailPanel({
             </div>
           )}
           <p className="font-display text-3xl font-extrabold text-foreground">₹{toCollect}</p>
-          <div className="grid gap-2">
+          {mode !== "split" && (
             <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={String(toCollect)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
-          </div>
-          <ModeChips settings={settings} value={mode} onChange={setMode} />
-          <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t("dr.reference")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
-          {mode === "upi" && upi && upi.id && (
+          )}
+          <ModeChips settings={settings} value={mode} onChange={setMode} split />
+          {mode === "split" && (
+            <div className="grid grid-cols-2 gap-2">
+              <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+                {t("dr.modeCash")}
+                <input inputMode="decimal" value={splitCash} onChange={(e) => setSplitCash(e.target.value.replace(/[^\d.]/g, ""))} placeholder="0" className="rounded-lg border border-input bg-background px-3 py-3 text-base text-foreground outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+              </label>
+              <div className="grid gap-1 text-xs font-semibold text-muted-foreground">
+                {t("dr.modeUpi")}
+                <p className="rounded-lg bg-muted px-3 py-3 text-base font-bold text-foreground">₹{Math.max(0, Math.round((toCollect - Number(splitCash || 0)) * 100) / 100)}</p>
+              </div>
+            </div>
+          )}
+          {mode !== "cash" && (
+            <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t("dr.reference")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+          )}
+          {(mode === "upi" || mode === "split") && upi && upi.id && (
             <div className="rounded-lg border border-border bg-muted/40 p-3 text-center">
-              <UpiQrCode pa={upi.id} pn={upi.payee} amount={Number(amount || toCollect) || null} tn={o?.order_no ?? null} />
+              <UpiQrCode pa={upi.id} pn={upi.payee} amount={(mode === "split" ? Math.max(0, toCollect - Number(splitCash || 0)) : Number(amount || toCollect)) || null} tn={o?.order_no ?? null} />
               <p className="mt-1 text-xs text-muted-foreground">{upi.payee ?? ""}</p>
               <p className="font-mono text-sm font-semibold text-foreground">{upi.id || "—"}</p>
             </div>
           )}
           <PhotoInput userId={staffId} kind={`pay-${stop.id}`} label={t("c.camera")} value={payPhoto} onChange={setPayPhoto} />
           <button
-            onClick={() => void onSubmitCollection({ mode, amount: amount === "" ? String(toCollect) : amount, reference, photo: payPhoto })}
+            onClick={() => void submitCollection()}
             disabled={busy}
             className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground active:opacity-80 disabled:opacity-60"
           >
@@ -787,15 +808,16 @@ function AskOfficePanel({ tripId, stopId, due, onChoose, onDecision }: { tripId:
 }
 
 /** Big tap buttons for the payment channel (Cash · UPI QR · Cheque). */
-function ModeChips({ settings, value, onChange }: { settings: Settings; value: string; onChange: (v: string) => void }) {
+function ModeChips({ settings, value, onChange, split = false }: { settings: Settings; value: string; onChange: (v: string) => void; split?: boolean }) {
   const { t } = useLang();
   const modes = [
     settings.allow_cash && { v: "cash", label: t("dr.modeCash") },
     settings.allow_upi && { v: "upi", label: t("dr.modeUpi") },
     settings.allow_cheque && { v: "cheque", label: t("dr.modeCheque") },
+    split && settings.allow_cash && settings.allow_upi && { v: "split", label: t("dr.modeSplit") },
   ].filter(Boolean) as { v: string; label: string }[];
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className={`grid gap-2 ${modes.length > 3 ? "grid-cols-2" : "grid-cols-3"}`}>
       {modes.map((m) => (
         <button
           key={m.v}
@@ -805,6 +827,41 @@ function ModeChips({ settings, value, onChange }: { settings: Settings; value: s
         >
           {m.label}
         </button>
+      ))}
+    </div>
+  );
+}
+
+/** Four big boxes for the customer's delivery OTP. */
+function OtpBoxes({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const refs = useRef<(HTMLInputElement | null)[]>([]);
+  const digits = Array.from({ length: 4 }, (_, i) => value[i] ?? "");
+  const setAt = (i: number, raw: string) => {
+    const d = raw.replace(/\D/g, "");
+    if (d.length > 1) {
+      onChange(d.slice(0, 4));
+      refs.current[Math.min(3, d.length - 1)]?.focus();
+      return;
+    }
+    const next = [...digits];
+    next[i] = d;
+    onChange(next.join("").slice(0, 4));
+    if (d && i < 3) refs.current[i + 1]?.focus();
+  };
+  return (
+    <div className="flex gap-2">
+      {digits.map((d, i) => (
+        <input
+          key={i}
+          ref={(el) => { refs.current[i] = el; }}
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          aria-label={`OTP ${i + 1}`}
+          value={d}
+          onChange={(e) => setAt(i, e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Backspace" && !d && i > 0) refs.current[i - 1]?.focus(); }}
+          className="h-14 w-12 rounded-lg border border-input bg-background text-center font-display text-2xl font-bold text-foreground outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30"
+        />
       ))}
     </div>
   );
