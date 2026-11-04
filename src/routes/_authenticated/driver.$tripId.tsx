@@ -397,6 +397,7 @@ function TripScreen() {
     photo: string | null;
     signature: string | null;
     otp: string;
+    skipPay?: boolean;
   }) => {
     if (!staff || !stop) return;
     await run(async () => {
@@ -428,8 +429,10 @@ function TripScreen() {
       }
       setMessage(res.queued ? t("c.tryAgainOffline") : t("dr.stopDone"));
       // Money still owed? Keep the stop open so the driver can collect it on the spot.
-      if (Number(stop.orders?.grand_total ?? 0) - Number(stop.orders?.amount_paid ?? 0) <= 0) setSelected(null);
+      // Nothing to collect now (paid, failed, udhaar or office OK'd "not paid") → go to the next stop.
+      const nothingDue = Number(stop.orders?.grand_total ?? 0) - Number(stop.orders?.amount_paid ?? 0) <= 0;
       await fetchAll();
+      if (v.fail || v.skipPay || nothingDue) setAdvanceFrom(stop.id);
     });
   };
 
