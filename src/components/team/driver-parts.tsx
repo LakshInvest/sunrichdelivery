@@ -122,6 +122,7 @@ export async function getCoords(): Promise<{ latitude: number; longitude: number
 }
 
 export function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) => void }) {
+  const { t } = useLang();
   const ref = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const [dirty, setDirty] = useState(false);
@@ -175,7 +176,7 @@ export function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) 
         className="h-28 w-full touch-none rounded-lg border border-input bg-white"
       />
       <button type="button" onClick={clear} className="mt-1 text-xs text-muted-foreground underline">
-        Clear
+        {t("dr.clearSign")}
       </button>
     </div>
   );
