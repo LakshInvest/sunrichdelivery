@@ -303,7 +303,7 @@ export function GateExitPanel({ onChange }: { onChange: () => void }) {
         <input aria-label={t("sec.search")} placeholder={t("sec.search")} value={q} onChange={(e) => setQ(e.target.value)} className={inputCls} />
       )}
       {inside
-        ?.filter((e) => !q.trim() || `${e.name} ${e.mobile} ${e.vehicle_no ?? ""} ${e.from_place ?? ""}`.toLowerCase().includes(q.trim().toLowerCase()))
+        ?.filter((e) => !q.trim() || `${e.name} ${e.mobile} ${e.vehicle_no ?? ""} ${e.from_place ?? ""} ${e.courier_name ?? ""}`.toLowerCase().includes(q.trim().toLowerCase()))
         .map((e) => (
         <div key={e.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-card" data-testid="inside-row">
           <div className="min-w-0 flex-1">
