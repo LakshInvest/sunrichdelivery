@@ -57,7 +57,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
     const permissions = ((permRes.data ?? []) as { module: string; action: string }[]).map(
       (x) => `${x.module}:${x.action}`,
     );
-    const lang = LANGS.has(String(p.preferred_language)) ? (p.preferred_language as Lang) : "en";
+    const lang = LANGS.has(String(p.preferred_language)) ? (p.preferred_language as Lang) : "hi";
     return {
       id: p.id,
       fullName: p.full_name ?? "",

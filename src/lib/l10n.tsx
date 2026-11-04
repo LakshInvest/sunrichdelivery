@@ -184,6 +184,8 @@ const en: Dict = {
   "dr.amountDue": "Amount to collect",
   "dr.paymentMode": "Payment",
   "dr.deliveredQty": "Delivered qty",
+  "dr.allAsOrdered": "All as ordered ✅",
+  "dr.somethingDifferent": "Something different",
   "dr.proof": "Proof of delivery",
   "dr.proofPhoto": "Delivery photo",
   "dr.signature": "Customer signature",
@@ -583,6 +585,8 @@ const hi: Dict = {
   "dr.amountDue": "वसूली राशि",
   "dr.paymentMode": "भुगतान",
   "dr.deliveredQty": "डिलीवर मात्रा",
+  "dr.allAsOrdered": "सब ऑर्डर जैसा ✅",
+  "dr.somethingDifferent": "कुछ अलग है",
   "dr.proof": "डिलीवरी प्रमाण",
   "dr.proofPhoto": "डिलीवरी फोटो",
   "dr.signature": "ग्राहक के हस्ताक्षर",
@@ -980,6 +984,8 @@ const mr: Dict = {
   "dr.amountDue": "वसुली रक्कम",
   "dr.paymentMode": "पेमेंट",
   "dr.deliveredQty": "डिलिव्हर संख्या",
+  "dr.allAsOrdered": "सर्व ऑर्डरप्रमाणे ✅",
+  "dr.somethingDifferent": "काहीतरी वेगळे आहे",
   "dr.proof": "डिलिव्हरी पुरावा",
   "dr.proofPhoto": "डिलिव्हरी फोटो",
   "dr.signature": "ग्राहकाची स्वाक्षरी",
@@ -1238,10 +1244,10 @@ export function LanguageProvider({
   children: ReactNode;
 }) {
   const [lang, setLangState] = useState<Lang>(() => {
-    if (typeof window === "undefined") return "en";
+    if (typeof window === "undefined") return "hi";
     const stored = window.localStorage.getItem(LANG_KEY) as Lang | null;
     if (stored === "en" || stored === "hi" || stored === "mr") return stored;
-    return initialLang ?? "en";
+    return initialLang ?? "hi";
   });
 
   // The language picked on this device (login screen chips) wins over the saved
