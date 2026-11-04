@@ -70,6 +70,6 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 ## Prompt-6 — v3 simple rework (driver, loader, guard, photos)
 - [ ] Part 1 Driver incl. Payment — done: Hindi default, one-tap goods, big amount + mode buttons, order mode pre-picked, old dues + Add, UPI ref optional, Split (cash+UPI), 4-box OTP, auto-open next stop after payment. Left: Udhaar, Map/Call card (needs customer phone), challan PDF, stop-removed alert
 - [x] Part 2 Loader (All loaded / All received, change count + reason, stop-removed alert) — chain tapped on TRP/261104/0027, settled ₹340
-- [ ] Part 3 Guard (SCAN, Entry, Exit, Vehicles out, menu Problem/Change guard; remove register screen)
+- [x] Part 3 Guard (SCAN, Entry, Exit, Vehicles out, menu Problem/Change guard; remove register screen) — tapped with QA Loader, 72-screen sweep clean
 - [ ] Part 4 Photos compression + expiry, 2 am IST clean-up job, backup list/ZIP, 7-day notice, offline chip
 - [ ] Full QA tap test at 360/390/412 × HI/MR/EN, one Pass/Fixed/Fail table
