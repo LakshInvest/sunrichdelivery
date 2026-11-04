@@ -314,6 +314,7 @@ export type StopRow = {
     amount_paid: number | null;
     payment_mode: string | null;
     payment_method?: string | null;
+    customer_mobile?: string | null;
     delivery_latitude: number | null;
     delivery_longitude: number | null;
     firm_id?: string | null;
@@ -412,6 +413,24 @@ export function StopDetailPanel({
   const [dueAmount, setDueAmount] = useState("");
   const [dueMode, setDueMode] = useState("cash");
   const [dueReference, setDueReference] = useState("");
+  // Udhaar: only for customers allowed credit in Command Center.
+  const [udhaarOk, setUdhaarOk] = useState(false);
+  const [udhaarMsg, setUdhaarMsg] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    void supabase.rpc("stop_udhaar_check" as never, { p_stop_id: stop.id } as never).then(({ data }) => {
+      const r = (Array.isArray(data) ? data[0] : data) as { allowed?: boolean } | null;
+      if (live) setUdhaarOk(Boolean(r?.allowed));
+    });
+    return () => { live = false; };
+  }, [stop.id]);
+  const takeUdhaar = async (amt: number) => {
+    setUdhaarMsg(null);
+    const { data, error } = await supabase.rpc("stop_take_udhaar" as never, { p_stop_id: stop.id, p_amount: amt } as never);
+    if (error) return setLocalErr(error.message);
+    if (data) { setOfficeOk(true); setUdhaarMsg(t("dr.udhaarSaved")); }
+    else setUdhaarMsg(t("dr.udhaarAsk"));
+  };
 
   useEffect(() => {
     setQty(Object.fromEntries(lines.map((l) => [l.id, { delivered: String(l.qty), damaged: "", refused: "", empties: "" }])));
@@ -479,6 +498,18 @@ export function StopDetailPanel({
       </div>
       <p className="mt-1 text-sm text-foreground">{o?.business_name || o?.customer_name}</p>
       {o?.delivery_address_text && <p className="mt-0.5 text-xs text-muted-foreground">{o.delivery_address_text}</p>}
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <a
+          href={o?.delivery_latitude != null && o?.delivery_longitude != null ? `https://www.google.com/maps/dir/?api=1&destination=${o.delivery_latitude},${o.delivery_longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o?.delivery_address_text ?? "")}`}
+          target="_blank" rel="noreferrer"
+          className="rounded-lg border border-border bg-background py-3 text-center text-sm font-bold text-foreground active:bg-accent"
+        >🧭 {t("dr.map")}</a>
+        {o?.customer_mobile ? (
+          <a href={`tel:${o.customer_mobile}`} className="rounded-lg border border-border bg-background py-3 text-center text-sm font-bold text-foreground active:bg-accent">📞 {t("dr.call")}</a>
+        ) : (
+          <span className="rounded-lg border border-border bg-muted py-3 text-center text-sm font-bold text-muted-foreground opacity-60">📞 {t("dr.call")}</span>
+        )}
+      </div>
 
       {!delivered && (
         <>
@@ -611,7 +642,13 @@ export function StopDetailPanel({
           {officeRejected && failMode && (
             <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">{t("dr.officeRejected")}</p>
           )}
-          {needsPayCheck && !failMode && (
+          {needsPayCheck && !failMode && udhaarOk && !officeOk && (
+            <button type="button" onClick={() => void takeUdhaar(due)} disabled={busy} className="mt-4 w-full rounded-lg border-2 border-amber-500/60 py-3 text-base font-bold text-foreground active:bg-accent disabled:opacity-60">
+              {t("dr.udhaar")} ₹{due}
+            </button>
+          )}
+          {udhaarMsg && <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-sm font-medium text-foreground">{udhaarMsg}</p>}
+          {needsPayCheck && !failMode && !officeOk && (
             <AskOfficePanel
               tripId={tripId}
               stopId={stop.id}
