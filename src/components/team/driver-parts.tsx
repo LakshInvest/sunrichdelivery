@@ -228,18 +228,6 @@ export function StartTripPanel({
     });
   };
 
-  const submitCollection = async () => {
-    setLocalErr(null);
-    if (mode !== "split") {
-      return onSubmitCollection({ mode, amount: amount === "" ? String(toCollect) : amount, reference, photo: payPhoto });
-    }
-    const cash = Number(splitCash || 0);
-    const upiPart = Math.round((toCollect - cash) * 100) / 100;
-    if (!(cash > 0) || !(upiPart > 0)) return setLocalErr(t("dr.splitBad"));
-    await onSubmitCollection({ mode: "cash", amount: String(cash), reference: "", photo: payPhoto, keepOpen: true });
-    await onSubmitCollection({ mode: "upi", amount: String(upiPart), reference, photo: payPhoto });
-  };
-
   const err = localErr ?? error;
   // Subtitle reflects the enabled steps instead of a fixed list.
   const startSteps = [
@@ -465,6 +453,18 @@ export function StopDetailPanel({
       if (settings.proof_otp_required && otp === "") return setLocalErr(`${t("dr.verifyOtp")} — ${t("c.required")}`);
     }
     await onSubmitDelivery({ lines: linesOut, fail: failMode, failReason, failNote, photo, signature, otp });
+  };
+
+  const submitCollection = async () => {
+    setLocalErr(null);
+    if (mode !== "split") {
+      return onSubmitCollection({ mode, amount: amount === "" ? String(toCollect) : amount, reference, photo: payPhoto });
+    }
+    const cash = Number(splitCash || 0);
+    const upiPart = Math.round((toCollect - cash) * 100) / 100;
+    if (!(cash > 0) || !(upiPart > 0)) return setLocalErr(t("dr.splitBad"));
+    await onSubmitCollection({ mode: "cash", amount: String(cash), reference: "", photo: payPhoto, keepOpen: true });
+    await onSubmitCollection({ mode: "upi", amount: String(upiPart), reference, photo: payPhoto });
   };
 
   const err = localErr ?? error;
