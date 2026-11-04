@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { ErrorCard, PhotoInput, Screen, Spinner, StatusBadge, ActionDock, DockButton, Stepper } from "@/components/team/ui";
@@ -82,6 +82,26 @@ function LoadTrip() {
   useEffect(() => {
     void fetchAll();
   }, [fetchAll]);
+
+  // Alert the loader when the office moves a stop off this trip.
+  const prevStops = useRef<Map<string, string> | null>(null);
+  const [removed, setRemoved] = useState<string[]>([]);
+  useEffect(() => {
+    const check = async () => {
+      const { data } = await supabase.from("trip_stops").select("id, orders(order_no)").eq("trip_id", tripId);
+      if (!data) return;
+      const now = new Map((data as unknown as { id: string; orders: { order_no: string } | null }[]).map((x) => [x.id, x.orders?.order_no ?? ""]));
+      const prev = prevStops.current;
+      if (prev) {
+        const gone = [...prev.entries()].filter(([id]) => !now.has(id)).map(([, no]) => no);
+        if (gone.length) { setRemoved((r) => [...r, ...gone]); void haptic("error"); void fetchAll(); }
+      }
+      prevStops.current = now;
+    };
+    void check();
+    const i = setInterval(() => void check(), 20000);
+    return () => clearInterval(i);
+  }, [tripId, fetchAll]);
 
   const productName = (p: Row["products"]) =>
     lang === "hi" ? p?.name_hi || p?.name : lang === "mr" ? p?.name_mr || p?.name : p?.name;
@@ -177,6 +197,12 @@ function LoadTrip() {
           {trip.vehicles?.reg_no ? ` · ${trip.vehicles.reg_no}` : ""}
         </p>
 
+        {removed.length > 0 && (
+          <div role="alert" className="mb-4 flex items-start gap-3 rounded-xl bg-destructive/10 p-3 text-sm font-semibold text-destructive">
+            <span className="flex-1">{t("ld.stopRemoved", { list: removed.join(", ") })}</span>
+            <button onClick={() => setRemoved([])} className="rounded-lg bg-destructive px-3 py-1 text-destructive-foreground">OK</button>
+          </div>
+        )}
         <div className="grid gap-3">
           {rows.map((r) => {
             const d = drafts[r.product_id] ?? { qty: 0, crates: 0, photo: null };
