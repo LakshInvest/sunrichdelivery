@@ -268,6 +268,15 @@ function TripScreen() {
     });
   };
   const orderedStops = [...stops.filter((s) => !deferred.includes(s.id)), ...deferred.map((id) => stops.find((s) => s.id === id)).filter((s): s is StopRow => Boolean(s))];
+  // After a payment is saved, open the next stop that still needs work.
+  const [advanceFrom, setAdvanceFrom] = useState<string | null>(null);
+  useEffect(() => {
+    if (!advanceFrom) return;
+    const next = orderedStops.find((s) => s.id !== advanceFrom && s.status !== "delivered" && s.status !== "failed" && s.status !== "cancelled" && s.status !== "partial");
+    setAdvanceFrom(null);
+    setSelected(next?.id ?? null);
+    if (next && typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [advanceFrom, orderedStops]);
 
   const refreshOutstanding = useCallback(
     async (stopId: string, customerId: string | undefined) => {
@@ -402,7 +411,7 @@ function TripScreen() {
     });
   };
 
-  const collectForStop = async (v: { mode: string; amount: string; reference: string; photo: string | null }) => {
+  const collectForStop = async (v: { mode: string; amount: string; reference: string; photo: string | null; keepOpen?: boolean }) => {
     if (!stop) return;
     await run(async () => {
       const res = await queueRpc("record_collection", {
@@ -418,6 +427,7 @@ function TripScreen() {
       }
       setMessage(res.queued ? t("c.tryAgainOffline") : t("c.saved"));
       await fetchAll();
+      if (!v.keepOpen) setAdvanceFrom(stop.id);
     });
   };
 
