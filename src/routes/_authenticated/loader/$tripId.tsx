@@ -45,6 +45,8 @@ function LoadTrip() {
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [diffReason, setDiffReason] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [loadPhoto, setLoadPhoto] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -68,7 +70,7 @@ function LoadTrip() {
         Object.fromEntries(
           r.map((x) => [
             x.product_id,
-            { qty: x.loaded_qty ?? 0, crates: x.crates_count ?? 0, photo: null },
+            { qty: x.loaded_qty ?? Number(x.planned_qty), crates: x.crates_count ?? 0, photo: null },
           ]),
         ),
       );
@@ -150,7 +152,7 @@ function LoadTrip() {
         p_product_id: r.product_id,
         p_loaded_qty: d.qty,
         p_crates: d.crates > 0 ? d.crates : null,
-        p_photo_url: d.photo,
+        p_photo_url: d.photo ?? loadPhoto,
       });
       if (res.error && !res.queued) return res.error;
     }
@@ -190,18 +192,18 @@ function LoadTrip() {
                   </div>
                   {r.loaded_qty != null && <StatusBadge status="loaded" />}
                 </div>
-                {!done && (
+                {!done && editing && (
                   <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
                     <Stepper label={t("ld.enterLoaded")} value={d.qty} onChange={(v) => setDrafts((s) => ({ ...s, [r.product_id]: { ...d, qty: v } }))} />
                     <Stepper label={t("ld.crates")} value={d.crates} onChange={(v) => setDrafts((s) => ({ ...s, [r.product_id]: { ...d, crates: v } }))} />
                   </div>
                 )}
-                {short && !done && (
+                {short && !done && editing && (
                   <p className="mt-2 rounded-lg bg-amber-500/10 px-2 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
                     {t("ld.shortNote")}
                   </p>
                 )}
-                {!done && (
+                {!done && editing && (
                   <div className="mt-3">
                     <PhotoInput
                       userId={staff?.id ?? "anon"}
@@ -217,6 +219,12 @@ function LoadTrip() {
           })}
           {rows.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
         </div>
+        {!done && !editing && rows.length > 0 && (
+          <div className="mt-4 grid gap-3">
+            <PhotoInput userId={staff?.id ?? "anon"} kind="load-all" label={t("c.camera")} value={loadPhoto} onChange={setLoadPhoto} />
+            <button onClick={() => setEditing(true)} className="text-sm font-semibold text-aqua underline" data-testid="change-count">{t("ld.changeCount")}</button>
+          </div>
+        )}
 
         {!done && mismatch && (
           <div className="mt-4 grid gap-1">
@@ -250,7 +258,7 @@ function LoadTrip() {
       {!done && (
         <ActionDock>
           <DockButton onClick={() => void (canFinalize && !mismatch ? finalize() : markDone())} disabled={saving || (mismatch && diffReason.trim() === "") || (canFinalize && shortRow !== undefined && diffReason.trim() === "")}>
-            {saving ? t("c.loading") : canFinalize && !mismatch ? t("ld.finalize") : t("ld.loadingDone")}
+            {saving ? t("c.loading") : !mismatch ? t("ld.allLoaded") : t("ld.loadingDone")}
           </DockButton>
         </ActionDock>
       )}
@@ -269,6 +277,7 @@ function ReturnsPanel({ tripId, received, productName, onDone }: { tripId: strin
   const [rows, setRows] = useState<Ret[]>([]);
   const [actual, setActual] = useState<Record<string, number>>({});
   const [note, setNote] = useState("");
+  const [edit, setEdit] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const key = (r: Ret) => `${r.kind}:${r.product_id ?? ""}`;
@@ -283,7 +292,9 @@ function ReturnsPanel({ tripId, received, productName, onDone }: { tripId: strin
     });
   }, [tripId, received]);
 
+  const anyDiff = rows.some((r) => (actual[key(r)] ?? 0) !== Number(r.expected_qty));
   const receive = async () => {
+    if (anyDiff && note.trim() === "") return setErr(t("ld.diffNeedReason"));
     setBusy(true);
     setErr(null);
     const lines = rows.map((r) => ({ product_id: r.product_id, kind: r.kind, expected: Number(r.expected_qty), actual: actual[key(r)] ?? 0, name: r.product_id ? productName(r.product_id) : "" }));
@@ -312,16 +323,17 @@ function ReturnsPanel({ tripId, received, productName, onDone }: { tripId: strin
                   </p>
                   <div className="mt-1 flex items-center justify-between gap-3">
                     <span className="text-xs text-muted-foreground">{t("ld.expected")}: <span className="font-bold text-foreground">{Number(r.expected_qty)}</span></span>
-                    <Stepper label={t("ld.actual")} value={a} onChange={(v) => setActual((s) => ({ ...s, [key(r)]: v }))} />
+                    {edit ? <Stepper label={t("ld.actual")} value={a} onChange={(v) => setActual((s) => ({ ...s, [key(r)]: v }))} /> : <span className="font-display text-lg font-bold text-foreground">{a}</span>}
                   </div>
                 </div>
               );
             })}
           </div>
-          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("ld.returnsNote")} className="mt-3 w-full rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+          {!edit && rows.length > 0 && <button onClick={() => setEdit(true)} className="mt-3 text-sm font-semibold text-aqua underline">{t("ld.changeCount")}</button>}
+          {(edit || anyDiff) && <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={anyDiff ? t("ld.diffReason") : t("ld.returnsNote")} className="mt-3 w-full rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />}
           {err && <p className="mt-2 text-sm font-medium text-destructive">{err}</p>}
           <button onClick={() => void receive()} disabled={busy || rows.length === 0} className="mt-3 w-full rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground active:opacity-80 disabled:opacity-60">
-            {busy ? t("c.loading") : t("ld.receive")}
+            {busy ? t("c.loading") : anyDiff ? t("ld.receive") : t("ld.allReceived")}
           </button>
         </>
       )}
