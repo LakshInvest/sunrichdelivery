@@ -311,8 +311,11 @@ function TripScreen() {
   const refreshOutstanding = useCallback(
     async (stopId: string, customerId: string | undefined) => {
       if (!customerId) return;
-      const res = await queueRpc("stop_customer_summary", { p_customer_id: customerId, p_trip_id: tripId });
-      const data = res.data as { outstanding?: number } | undefined;
+      // Read-only lookup: call directly (never queued as a pending write).
+      if (typeof navigator !== "undefined" && !navigator.onLine) return;
+      const res = await supabase.rpc("stop_customer_summary", { p_customer_id: customerId, p_trip_id: tripId });
+      if (res.error) return;
+      const data = res.data as { outstanding?: number } | null;
       if (data && typeof data.outstanding === "number") {
         setOutstanding((s) => ({ ...s, [stopId]: data.outstanding as number }));
       }
