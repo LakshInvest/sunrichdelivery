@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { startTripMode } from "@/lib/native";
+import { haptic, localNotify, startTripMode } from "@/lib/native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
@@ -118,6 +118,8 @@ function TripScreen() {
   // Spinner only on the first load: swapping the screen for a spinner on every
   // refresh unmounted the live Google map and made it throw IntersectionObserver errors.
   const loadedOnce = useRef(false);
+  const prevOpenStops = useRef<Map<string, string> | null>(null);
+  const [removedStops, setRemovedStops] = useState<string[]>([]);
   const fetchAll = useCallback(async () => {
     if (!loadedOnce.current) setLoading(true);
     setError(null);
@@ -167,6 +169,21 @@ function TripScreen() {
     setItemCount(((ldRes.data ?? []) as { loaded_qty: number | null }[]).reduce((a, r) => a + Number(r.loaded_qty ?? 0), 0));
     const stopRows = (stopsRes.data ?? []) as unknown as StopRow[];
     setStops(stopRows);
+    // "Stop removed" alert: an open stop that vanished or was cancelled since the last refresh.
+    if (!stopsRes.error) {
+      const label = (s: StopRow) => s.orders?.business_name || s.orders?.customer_name || s.orders?.order_no || `#${s.seq}`;
+      const nowOpen = new Map(stopRows.filter((s) => s.status !== "cancelled").map((s) => [s.id, label(s)]));
+      const prev = prevOpenStops.current;
+      if (prev) {
+        const gone = [...prev].filter(([id]) => !nowOpen.has(id)).map(([, n]) => n);
+        if (gone.length) {
+          setRemovedStops((r) => [...r, ...gone]);
+          void haptic("error");
+          void localNotify("Stop removed", gone.join(", "), { channel: "trips", route: `/driver/${tripId}` });
+        }
+      }
+      prevOpenStops.current = nowOpen;
+    }
     if (!stopsRes.error && stopRows.length > 0) {
       const lineRes = await supabase
         .from("order_lines")
@@ -624,6 +641,12 @@ function TripScreen() {
       right={<StatusBadge status={trip.status} />}
     >
       <Link to="/driver" className="mb-3 inline-block text-xs text-muted-foreground underline">← {t("dr.title")}</Link>
+      {removedStops.length > 0 && (
+        <div role="alert" className="mb-3 flex items-start justify-between gap-2 rounded-xl border-2 border-destructive bg-destructive/10 p-3">
+          <p className="text-sm font-bold text-destructive">⚠️ {t("dr.stopRemoved", { list: removedStops.join(", ") })}</p>
+          <button type="button" onClick={() => setRemovedStops([])} className="rounded-md border border-destructive px-3 py-1 text-sm font-bold text-destructive">OK</button>
+        </div>
+      )}
       <p className="mb-4 text-sm text-muted-foreground">
         {trip.vehicles?.reg_no ? `${trip.vehicles.reg_no} · ` : ""}
         {t("dr.deliveredStops", { done: doneCount, total: stops.length })}
