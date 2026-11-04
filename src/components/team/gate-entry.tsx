@@ -40,7 +40,7 @@ type Entry = {
 export const inputCls =
   "w-full rounded-md border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30";
 
-const TYPES: EntryType[] = ["visitor", "parcel", "supplier", "other"];
+const TYPES: EntryType[] = ["visitor", "parcel", "supplier"];
 
 function errKey(msg: string): string {
   for (const k of ["already_inside", "name_required", "photo_required", "not_allowed", "bad_mobile"]) if (msg.includes(k)) return `sec.err.${k}`;
@@ -64,7 +64,7 @@ export function GateEntryPanel({ onDone }: { onDone: (queued?: boolean) => void 
   const [parcels, setParcels] = useState(1);
   const [photo, setPhoto] = useState<string | null>(null);
   const [challan, setChallan] = useState<string | null>(null);
-  const [photoRule, setPhotoRule] = useState<"off" | "optional" | "required">("optional");
+  const [photoRule, setPhotoRule] = useState<"off" | "optional" | "required">("off");
   const [staffList, setStaffList] = useState<{ id: string; full_name: string }[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -193,9 +193,16 @@ export function GateEntryPanel({ onDone }: { onDone: (queued?: boolean) => void 
           <Field label={t("sec.name")}>
             <input aria-label={t("sec.name")} value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
           </Field>
-          <Field label={type === "supplier" ? t("sec.supplier") : t("sec.from")}>
-            <input aria-label={t("sec.from")} value={from} onChange={(e) => setFrom(e.target.value)} className={inputCls} />
-          </Field>
+          {type === "supplier" && (
+            <>
+              <Field label={t("sec.supplier")}>
+                <input aria-label={t("sec.supplier")} value={from} onChange={(e) => setFrom(e.target.value)} className={inputCls} />
+              </Field>
+              <Field label={t("sec.vehicleNo")}>
+                <input aria-label={t("sec.vehicleNo")} value={vehicle} onChange={(e) => setVehicle(e.target.value)} className={`${inputCls} uppercase`} />
+              </Field>
+            </>
+          )}
           {type === "parcel" && (
             <div className="grid gap-3">
               <Field label={t("sec.courier")}>
@@ -215,15 +222,6 @@ export function GateEntryPanel({ onDone }: { onDone: (queued?: boolean) => void 
                 </option>
               ))}
             </select>
-          </Field>
-          <Field label={t("sec.purpose")}>
-            <input aria-label={t("sec.purpose")} value={purpose} onChange={(e) => setPurpose(e.target.value)} className={inputCls} />
-          </Field>
-          <Field label={t("sec.vehicleNo")}>
-            <input aria-label={t("sec.vehicleNo")} value={vehicle} onChange={(e) => setVehicle(e.target.value)} className={`${inputCls} uppercase`} />
-          </Field>
-          <Field label={t("sec.people")}>
-            <Stepper value={people} onChange={setPeople} min={1} max={50} label={t("sec.people")} />
           </Field>
           {type === "supplier" && staff && (
             <PhotoInput userId={staff.id} kind="gate-challan" label={t("sec.challanPhoto")} value={challan} onChange={setChallan} />
@@ -257,6 +255,7 @@ export function GateExitPanel({ onChange }: { onChange: () => void }) {
   const [inside, setInside] = useState<Entry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [q, setQ] = useState("");
 
   const load = useCallback(async () => {
     const r = await supabase
@@ -300,7 +299,12 @@ export function GateExitPanel({ onChange }: { onChange: () => void }) {
       {error && <ErrorCard message={error} />}
       {inside === null && <Spinner label={t("c.loading")} />}
       {inside && inside.length === 0 && <p className="py-2 text-sm text-muted-foreground">{t("c.none")}</p>}
-      {inside?.map((e) => (
+      {inside && inside.length > 0 && (
+        <input aria-label={t("sec.search")} placeholder={t("sec.search")} value={q} onChange={(e) => setQ(e.target.value)} className={inputCls} />
+      )}
+      {inside
+        ?.filter((e) => !q.trim() || `${e.name} ${e.mobile} ${e.vehicle_no ?? ""} ${e.from_place ?? ""}`.toLowerCase().includes(q.trim().toLowerCase()))
+        .map((e) => (
         <div key={e.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-card" data-testid="inside-row">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
