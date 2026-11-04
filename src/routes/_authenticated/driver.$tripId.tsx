@@ -634,7 +634,7 @@ function TripScreen() {
     </button>
   );
 
-  const mapStops = stops.map((s) => ({
+  const mapStops = orderedStops.map((s) => ({
     id: s.id,
     seq: s.seq,
     status: s.status,
