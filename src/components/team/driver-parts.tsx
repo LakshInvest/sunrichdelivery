@@ -663,7 +663,7 @@ export function StopDetailPanel({
               {settings.failed_reasons.length > 0 && (
                 <select value={failReason} onChange={(e) => setFailReason(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
                   {settings.failed_reasons.map((r) => (
-                    <option key={r} value={r}>{r}</option>
+                    <option key={r} value={r}>{reasonLabel(t, r)}</option>
                   ))}
                 </select>
               )}
@@ -767,6 +767,20 @@ export async function signatureToPath(dataUrl: string | null, staffId: string, s
   } catch {
     return dataUrl; // keep the raw data URL if upload fails (e.g. offline)
   }
+}
+
+/** Failure reasons are stored in English (office reads them); show them in the driver's language. */
+const FAIL_REASON_KEYS: Record<string, string> = {
+  "shop closed": "dr.fr.shopClosed",
+  "customer not available": "dr.fr.notAvailable",
+  "customer refused": "dr.fr.refused",
+  "wrong address": "dr.fr.wrongAddress",
+  "no payment": "dr.fr.noPayment",
+  "vehicle problem": "dr.fr.vehicle",
+};
+function reasonLabel(t: (k: string) => string, r: string) {
+  const k = FAIL_REASON_KEYS[r.trim().toLowerCase()];
+  return k ? t(k) : r;
 }
 
 const PAY_REASONS = ["dr.rsnLater", "dr.rsnCheque", "dr.rsnRefused", "dr.rsnOwnerAway"] as const;
