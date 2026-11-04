@@ -4,11 +4,11 @@ import { useLang } from "@/lib/l10n";
 import { queueRpc } from "@/lib/offline";
 import { friendlyError } from "@/lib/friendly-error";
 import { Truck } from "lucide-react";
+import { istDisplay } from "@/lib/ist";
 
 type Row = { trip_id: string; trip_no: string; reg_no: string | null; driver: string | null; gate_out_at: string };
 
-const time = (s: string) =>
-  new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(s));
+const time = (s: string) => istDisplay(s);
 
 /** Security backup when the driver's phone is off: mark a vehicle in without a scan (saved as manual). */
 export function VehiclesOutList({ refreshKey, onArrived }: { refreshKey: number; onArrived: () => void }) {

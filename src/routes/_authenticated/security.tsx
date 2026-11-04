@@ -202,6 +202,8 @@ function SecurityGate() {
 
   return (
     <Screen title={titles[view]} right={<div className="flex items-center gap-2"><SyncBadge />{view === "home" && <button type="button" aria-label={t("sec.menu")} aria-expanded={menu} onClick={() => setMenu((m) => !m)} className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-foreground"><Menu className="h-5 w-5" /></button>}<AvatarLink /></div>}>
+      {msg && <p className="mb-3 rounded-lg bg-emerald-500/10 px-3 py-3 text-base font-bold text-emerald-700 dark:text-emerald-300" role="status">{msg}</p>}
+      {error && <div className="mb-3"><ErrorCard message={error} /></div>}
       {view === "home" && (
         <div className="grid gap-3">
           <div className="rounded-xl bg-navy p-4 text-primary-foreground shadow-soft" data-testid="sec-header">
@@ -326,8 +328,6 @@ function SecurityGate() {
       {view === "problem" && <ProblemPanel onDone={(q) => finish(q ? t("sec.savedOffline") : t("sec.problemDone"))} />}
       {view === "guard" && <ChangeGuardPanel />}
 
-      {msg && <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300" role="status">{msg}</p>}
-      {error && <div className="mt-4"><ErrorCard message={error} /></div>}
     </Screen>
   );
 }

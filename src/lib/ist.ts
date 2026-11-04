@@ -25,8 +25,9 @@ export function istDayEnd(d: string): string {
 /** Human display of an ISO instant in Asia/Kolkata. */
 export function istDisplay(
   dt: string | null | undefined,
-  opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" },
+  opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" },
 ): string {
   if (!dt) return "—";
-  return new Date(dt).toLocaleString(undefined, { ...opts, timeZone: IST_TZ });
+  // Always "02 Nov 2026, 02:30 pm" (IST), whatever the phone's locale.
+  return new Date(dt).toLocaleString("en-GB", { hour12: true, ...opts, timeZone: IST_TZ }).replace(/\b(AM|PM)\b/g, (m) => m.toLowerCase());
 }

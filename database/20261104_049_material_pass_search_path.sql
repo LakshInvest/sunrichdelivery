@@ -1,0 +1,1 @@
+ALTER FUNCTION public.cc_create_material_pass(text, text, text, date, text, text, text) SET search_path TO 'public', 'extensions';

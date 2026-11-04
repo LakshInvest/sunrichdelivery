@@ -41,3 +41,10 @@ describe("istDisplay", () => {
     expect(istDisplay(null)).toBe("—");
   });
 });
+
+describe("istDisplay format", () => {
+  it("shows dates as 02 Nov 2026, 02:00 am in IST", () => {
+    expect(istDisplay("2026-11-01T20:30:00Z")).toBe("02 Nov 2026, 02:00 am");
+    expect(istDisplay("2026-11-02T09:00:00Z")).toBe("02 Nov 2026, 02:30 pm");
+  });
+});
