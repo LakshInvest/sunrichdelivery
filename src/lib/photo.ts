@@ -50,9 +50,17 @@ export async function compressToJpeg(file: File, maxDim = 1280, targetBytes = 20
       canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode failed"))), "image/jpeg", q),
     );
   let blob = await encode(0.8);
-  for (const q of [0.7, 0.6, 0.5, 0.42, 0.35]) {
+  for (const q of [0.7, 0.6, 0.5, 0.42]) {
     if (blob.size <= targetBytes) break;
     blob = await encode(q);
+  }
+  // Very busy pictures: shrink the size a little until it fits.
+  for (let i = 0; i < 4 && blob.size > targetBytes; i++) {
+    const w = Math.round(canvas.width * 0.8), h = Math.round(canvas.height * 0.8);
+    const tmp = document.createElement("canvas"); tmp.width = w; tmp.height = h;
+    tmp.getContext("2d")!.drawImage(canvas, 0, 0, w, h);
+    canvas.width = w; canvas.height = h; ctx.drawImage(tmp, 0, 0);
+    blob = await encode(0.6);
   }
   return blob;
 }
