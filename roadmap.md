@@ -68,7 +68,7 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 - [x] 4. Material pass scan (needs one QA test pass)
 
 ## Prompt-6 — v3 simple rework (driver, loader, guard, photos)
-- [ ] Part 1 Driver incl. Payment — started: Hindi default, one-tap goods with "Something different" done; remaining (one-job screens, pre-filled, Hindi default, split/UPI/cheque/udhaar, challan PDF, hand over)
+- [ ] Part 1 Driver incl. Payment — done: Hindi default, one-tap goods, big amount + mode buttons, order mode pre-picked, old dues + Add, UPI ref optional, Split (cash+UPI), 4-box OTP, auto-open next stop after payment. Left: Udhaar, Map/Call card (needs customer phone), challan PDF, stop-removed alert
 - [ ] Part 2 Loader (All loaded / All received, change count + reason, stop-removed alert)
 - [ ] Part 3 Guard (SCAN, Entry, Exit, Vehicles out, menu Problem/Change guard; remove register screen)
 - [ ] Part 4 Photos compression + expiry, 2 am IST clean-up job, backup list/ZIP, 7-day notice, offline chip
