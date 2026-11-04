@@ -648,7 +648,7 @@ export function StopDetailPanel({
             </button>
           )}
           {udhaarMsg && <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-sm font-medium text-foreground">{udhaarMsg}</p>}
-          {needsPayCheck && !failMode && !officeOk && (
+          {needsPayCheck && !failMode && (
             <AskOfficePanel
               tripId={tripId}
               stopId={stop.id}
