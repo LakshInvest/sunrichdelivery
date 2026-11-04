@@ -1238,10 +1238,10 @@ export function LanguageProvider({
   children: ReactNode;
 }) {
   const [lang, setLangState] = useState<Lang>(() => {
-    if (typeof window === "undefined") return "en";
+    if (typeof window === "undefined") return "hi";
     const stored = window.localStorage.getItem(LANG_KEY) as Lang | null;
     if (stored === "en" || stored === "hi" || stored === "mr") return stored;
-    return initialLang ?? "en";
+    return initialLang ?? "hi";
   });
 
   // The language picked on this device (login screen chips) wins over the saved
