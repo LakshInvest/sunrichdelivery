@@ -122,6 +122,7 @@ export async function getCoords(): Promise<{ latitude: number; longitude: number
 }
 
 export function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) => void }) {
+  const { t } = useLang();
   const ref = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const [dirty, setDirty] = useState(false);
@@ -175,7 +176,7 @@ export function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) 
         className="h-28 w-full touch-none rounded-lg border border-input bg-white"
       />
       <button type="button" onClick={clear} className="mt-1 text-xs text-muted-foreground underline">
-        Clear
+        {t("dr.clearSign")}
       </button>
     </div>
   );
@@ -375,7 +376,7 @@ export function StopDetailPanel({
   staffId: string;
   outstanding: number | null;
   upi?: { id: string; payee: string | null } | null;
-  onSubmitDelivery: (v: { lines: { order_line_id: string; delivered: number; short: number; damaged: number; refused: number; empties: number }[]; fail: boolean; failReason: string; failNote: string; photo: string | null; signature: string | null; otp: string }) => Promise<void>;
+  onSubmitDelivery: (v: { lines: { order_line_id: string; delivered: number; short: number; damaged: number; refused: number; empties: number }[]; fail: boolean; failReason: string; failNote: string; photo: string | null; signature: string | null; otp: string; skipPay?: boolean }) => Promise<void>;
   onSubmitCollection: (v: { mode: string; amount: string; reference: string; photo: string | null; keepOpen?: boolean }) => Promise<void>;
   onSubmitDueCollection: (v: { amount: string; mode: string; reference: string; photo: string | null }) => Promise<void>;
   busy: boolean;
@@ -417,6 +418,8 @@ export function StopDetailPanel({
   // Udhaar: only for customers allowed credit in Command Center.
   const [udhaarOk, setUdhaarOk] = useState(false);
   const [udhaarMsg, setUdhaarMsg] = useState<string | null>(null);
+  const [udhaarTaken, setUdhaarTaken] = useState(false);
+  const [payChoice, setPayChoice] = useState<"full" | "part" | "none" | null>(null);
   useEffect(() => {
     let live = true;
     void supabase.rpc("stop_udhaar_check" as never, { p_stop_id: stop.id } as never).then(({ data }) => {
@@ -441,7 +444,7 @@ export function StopDetailPanel({
     setUdhaarMsg(null);
     const { data, error } = await supabase.rpc("stop_take_udhaar" as never, { p_stop_id: stop.id, p_amount: amt } as never);
     if (error) return setLocalErr(error.message);
-    if (data) { setOfficeOk(true); setUdhaarMsg(t("dr.udhaarSaved")); }
+    if (data) { setOfficeOk(true); setUdhaarTaken(true); setUdhaarMsg(t("dr.udhaarSaved")); }
     else setUdhaarMsg(t("dr.udhaarAsk"));
   };
 
@@ -484,7 +487,7 @@ export function StopDetailPanel({
       if (settings.proof_photo_required && !photo) return setLocalErr(t("dr.needPhoto"));
       if (settings.proof_otp_required && otp === "") return setLocalErr(`${t("dr.verifyOtp")} — ${t("c.required")}`);
     }
-    await onSubmitDelivery({ lines: linesOut, fail: failMode, failReason, failNote, photo, signature, otp });
+    await onSubmitDelivery({ lines: linesOut, fail: failMode, failReason, failNote, photo, signature, otp, skipPay: officeOk && (payChoice === "none" || udhaarTaken) });
   };
 
   const submitCollection = async () => {
@@ -660,7 +663,7 @@ export function StopDetailPanel({
               {settings.failed_reasons.length > 0 && (
                 <select value={failReason} onChange={(e) => setFailReason(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
                   {settings.failed_reasons.map((r) => (
-                    <option key={r} value={r}>{r}</option>
+                    <option key={r} value={r}>{reasonLabel(t, r)}</option>
                   ))}
                 </select>
               )}
@@ -681,7 +684,7 @@ export function StopDetailPanel({
               tripId={tripId}
               stopId={stop.id}
               due={due}
-              onChoose={(full) => setOfficeOk(full)}
+              onChoose={(full, v) => { setOfficeOk(full); setPayChoice(v); }}
               onDecision={(ok) => {
                 setOfficeOk(ok);
                 if (!ok) {
@@ -766,10 +769,24 @@ export async function signatureToPath(dataUrl: string | null, staffId: string, s
   }
 }
 
+/** Failure reasons are stored in English (office reads them); show them in the driver's language. */
+const FAIL_REASON_KEYS: Record<string, string> = {
+  "shop closed": "dr.fr.shopClosed",
+  "customer not available": "dr.fr.notAvailable",
+  "customer refused": "dr.fr.refused",
+  "wrong address": "dr.fr.wrongAddress",
+  "no payment": "dr.fr.noPayment",
+  "vehicle problem": "dr.fr.vehicle",
+};
+function reasonLabel(t: (k: string) => string, r: string) {
+  const k = FAIL_REASON_KEYS[r.trim().toLowerCase()];
+  return k ? t(k) : r;
+}
+
 const PAY_REASONS = ["dr.rsnLater", "dr.rsnCheque", "dr.rsnRefused", "dr.rsnOwnerAway"] as const;
 
 /** Full / Part / None. Part or None → "Ask office" and wait for Approve / Reject (or the no-reply rule). */
-function AskOfficePanel({ tripId, stopId, due, onChoose, onDecision }: { tripId: string; stopId: string; due: number; onChoose: (full: boolean) => void; onDecision: (ok: boolean) => void }) {
+function AskOfficePanel({ tripId, stopId, due, onChoose, onDecision }: { tripId: string; stopId: string; due: number; onChoose: (full: boolean, v: "full" | "part" | "none") => void; onDecision: (ok: boolean) => void }) {
   const { t } = useLang();
   const [pay, setPay] = useState<"full" | "part" | "none" | null>(null);
   const [amount, setAmount] = useState("");
@@ -806,7 +823,7 @@ function AskOfficePanel({ tripId, stopId, due, onChoose, onDecision }: { tripId:
   const choose = (v: "full" | "part" | "none") => {
     setPay(v);
     setErr(null);
-    onChoose(v === "full");
+    onChoose(v === "full", v);
   };
 
   const ask = async () => {

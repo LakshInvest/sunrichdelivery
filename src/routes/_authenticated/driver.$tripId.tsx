@@ -78,6 +78,11 @@ function TripScreen() {
   const [lines, setLines] = useState<Record<string, LineRow[]>>({});
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [selected, setSelected] = useState<string | null>(null);
+  // Bring an opened stop to the top of the screen so the driver sees one job at a time.
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (selected) window.setTimeout(() => panelRef.current?.parentElement?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  }, [selected]);
   const [outstanding, setOutstanding] = useState<Record<string, number | null>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -392,6 +397,7 @@ function TripScreen() {
     photo: string | null;
     signature: string | null;
     otp: string;
+    skipPay?: boolean;
   }) => {
     if (!staff || !stop) return;
     await run(async () => {
@@ -423,8 +429,10 @@ function TripScreen() {
       }
       setMessage(res.queued ? t("c.tryAgainOffline") : t("dr.stopDone"));
       // Money still owed? Keep the stop open so the driver can collect it on the spot.
-      if (Number(stop.orders?.grand_total ?? 0) - Number(stop.orders?.amount_paid ?? 0) <= 0) setSelected(null);
+      // Nothing to collect now (paid, failed, udhaar or office OK'd "not paid") → go to the next stop.
+      const nothingDue = Number(stop.orders?.grand_total ?? 0) - Number(stop.orders?.amount_paid ?? 0) <= 0;
       await fetchAll();
+      if (v.fail || v.skipPay || nothingDue) setAdvanceFrom(stop.id);
     });
   };
 
@@ -626,7 +634,7 @@ function TripScreen() {
     </button>
   );
 
-  const mapStops = stops.map((s) => ({
+  const mapStops = orderedStops.map((s) => ({
     id: s.id,
     seq: s.seq,
     status: s.status,
@@ -863,6 +871,25 @@ function TripScreen() {
                       {isLater ? `↩ ${t("dr.later")}` : t("dr.doLater")}
                     </button>
                   )}
+                  {selected === s.id && stop && (
+                    <div className="mt-1" ref={panelRef}>
+                      <StopDetailPanel
+                        tripId={tripId}
+                        stop={stop}
+                        lines={lines[stop.orders?.id ?? ""] ?? []}
+                        settings={settings}
+                        staffId={staff?.id ?? "anon"}
+                        outstanding={outstanding[stop.id] ?? null}
+                        upi={firmUpi}
+                        onSubmitDelivery={deliverStop}
+                        onSubmitCollection={collectForStop}
+                        onSubmitDueCollection={collectDue}
+                        busy={busy}
+                        error={null}
+                        message={null}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -875,25 +902,6 @@ function TripScreen() {
             </p>
           )}
 
-          {selected && stop && (
-            <div className="mt-4">
-              <StopDetailPanel
-                tripId={tripId}
-                stop={stop}
-                lines={lines[stop.orders?.id ?? ""] ?? []}
-                settings={settings}
-                staffId={staff?.id ?? "anon"}
-                outstanding={outstanding[stop.id] ?? null}
-                upi={firmUpi}
-                onSubmitDelivery={deliverStop}
-                onSubmitCollection={collectForStop}
-                onSubmitDueCollection={collectDue}
-                busy={busy}
-                error={null}
-                message={null}
-              />
-            </div>
-          )}
         </>
       )}
 

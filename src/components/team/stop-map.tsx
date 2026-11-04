@@ -92,7 +92,7 @@ export function StopMap({ stops, origin = null }: { stops: MapStop[]; origin?: {
   const [me, setMe] = useState<{ lat: number; lng: number } | null>(null);
   const watch = useRef<number | null>(null);
 
-  const nextStop = stops.find((s) => s.status !== "delivered" && s.status !== "failed" && s.lat && s.lng) ?? null;
+  const nextStop = stops.find((s) => s.status !== "delivered" && s.status !== "failed" && s.status !== "cancelled" && s.status !== "partial" && s.lat && s.lng) ?? null;
 
   const draw = useCallback(
     (mapObj: GoogleMap) => {
