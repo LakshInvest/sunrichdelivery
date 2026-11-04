@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
-import { ErrorCard, PhotoInput, Screen, Spinner, StatusBadge, ActionDock, DockButton, Stepper } from "@/components/team/ui";
+import { ErrorCard, PhotoInput, Screen, Spinner, StatusBadge, SyncBadge, ActionDock, DockButton, Stepper } from "@/components/team/ui";
 import { useTeamAuth } from "@/lib/team-auth";
 import { queueRpc } from "@/lib/offline";
 import { haptic } from "@/lib/native";
@@ -191,7 +191,7 @@ function LoadTrip() {
 
   return (
     <>
-      <Screen title={t("ld.loadScreen")} right={<StatusBadge status={trip.status} />}>
+      <Screen title={t("ld.loadScreen")} right={<div className="flex items-center gap-2"><SyncBadge /><StatusBadge status={trip.status} /></div>}>
         <p className="mb-5 text-sm text-muted-foreground">
           {t("ld.trip", { no: trip.trip_no })}
           {trip.vehicles?.reg_no ? ` · ${trip.vehicles.reg_no}` : ""}

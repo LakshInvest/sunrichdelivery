@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { useTeamAuth } from "@/lib/team-auth";
-import { ErrorCard, PhotoInput, Screen, Spinner, StatusBadge } from "@/components/team/ui";
+import { ErrorCard, PhotoInput, Screen, Spinner, StatusBadge, SyncBadge } from "@/components/team/ui";
 import { StopMap } from "@/components/team/stop-map";
 import { GatePassScreen } from "@/components/team/gate-pass";
 import { CashHandoverPanel } from "@/components/team/cash-handover";
@@ -654,7 +654,7 @@ function TripScreen() {
   return (
     <Screen
       title={t("dr.trip", { no: trip.trip_no })}
-      right={<StatusBadge status={trip.status} />}
+      right={<div className="flex items-center gap-2"><SyncBadge /><StatusBadge status={trip.status} /></div>}
     >
       <Link to="/driver" className="mb-3 inline-block text-xs text-muted-foreground underline">← {t("dr.title")}</Link>
       {removedStops.length > 0 && (

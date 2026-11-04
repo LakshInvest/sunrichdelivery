@@ -74,6 +74,7 @@ export function SyncBadge() {
   useEffect(() => subscribe(() => setN(pendingCount())), []);
   const [online, setOnline] = useState(true);
   useEffect(() => {
+    setOnline(navigator.onLine !== false);
     const on = () => setOnline(true);
     const off = () => setOnline(false);
     window.addEventListener("online", on);
@@ -91,7 +92,7 @@ export function SyncBadge() {
       }`}
     >
       <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
-      {!online ? t("c.offline") : t("c.pendingSync", { n })}
+      {!online && n === 0 ? t("c.offline") : t("c.pendingSync", { n })}
     </span>
   );
 }
