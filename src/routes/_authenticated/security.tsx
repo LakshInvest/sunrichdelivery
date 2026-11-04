@@ -6,11 +6,11 @@ import { useTeamAuth } from "@/lib/team-auth";
 import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge, AvatarLink, DockButton } from "@/components/team/ui";
 import { isOffline, queueRpc } from "@/lib/offline";
 import { haptic, isNative, scanQr } from "@/lib/native";
-import { ScanLine, LogIn, LogOut, TriangleAlert, ArrowLeft, ClipboardList, UserRoundCog } from "lucide-react";
+import { ScanLine, LogIn, LogOut, TriangleAlert, ArrowLeft, Menu, UserRoundCog } from "lucide-react";
 import { friendlyError } from "@/lib/friendly-error";
 import { GateEntryPanel, GateExitPanel, inputCls } from "@/components/team/gate-entry";
 import { VehiclesOutList } from "@/components/team/vehicles-out";
-import { ChangeGuardPanel, ProblemPanel, RegisterPanel } from "@/components/team/gate-extras";
+import { ChangeGuardPanel, ProblemPanel } from "@/components/team/gate-extras";
 
 export const Route = createFileRoute("/_authenticated/security")({
   head: () => ({
@@ -26,16 +26,16 @@ export const Route = createFileRoute("/_authenticated/security")({
   component: SecurityGate,
 });
 
-type View = "home" | "entry" | "exit" | "problem" | "register" | "guard";
+type View = "home" | "entry" | "exit" | "problem" | "guard";
 type ScanHit =
-  | { kind: "trip_out" | "trip_in" | "trip_done"; trip_id: string; trip_no: string; reg_no: string | null; status: string }
-  | { kind: "material" | "material_done"; id: string; pass_no: string; direction: string; party: string | null; vehicle_no: string | null; items: string }
+  | { kind: "trip_out" | "trip_in" | "trip_done"; trip_id: string; trip_no: string; reg_no: string | null; status: string; driver?: string | null; packs?: number }
+  | { kind: "material" | "material_done" | "material_expired"; id: string; pass_no: string; direction: string; party: string | null; vehicle_no: string | null; items: string }
   | { kind: "pickup"; order: string; otp: string }
   | { kind: "unknown" }
   | { kind: "offline" };
 
 function istLongDate(): string {
-  return new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(new Date());
+  return new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "short", year: "numeric" }).format(new Date());
 }
 
 function SecurityGate() {
@@ -50,7 +50,7 @@ function SecurityGate() {
   const [typed, setTyped] = useState("");
   const [hit, setHit] = useState<ScanHit | null>(null);
   const [busy, setBusy] = useState(false);
-  const [odo, setOdo] = useState("");
+  const [menu, setMenu] = useState(false);
   const typedRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -84,6 +84,7 @@ function SecurityGate() {
     setMsg(null);
     setError(null);
     setHit(null);
+    setMenu(false);
     setView(v);
   };
 
@@ -92,7 +93,6 @@ function SecurityGate() {
     setError(null);
     setHit(null);
     setTyped("");
-    setOdo("");
     setView("home");
     void loadCounts();
   };
@@ -120,6 +120,7 @@ function SecurityGate() {
     const h = r.data as unknown as ScanHit;
     if (h.kind === "unknown") return setError(t("sec.scanUnknown"));
     if (h.kind === "trip_done" || h.kind === "material_done") return setError(t("sec.scanUsed"));
+    if (h.kind === "material_expired") return setError(t("sec.scanExpired"));
     void haptic("success");
     setHit(h);
   };
@@ -137,7 +138,7 @@ function SecurityGate() {
     try {
       if (hit.kind === "trip_out") {
         const tok = typed.trim();
-        const res = await queueRpc("gate_out", { p_qr_token: tok, p_odometer: odo === "" ? null : Number(odo) });
+        const res = await queueRpc("gate_out", { p_qr_token: tok, p_odometer: null });
         if (res.queued) return finish(t("c.tryAgainOffline"));
         if (res.error) return setError(friendlyError(res.error, t));
         void haptic("success");
@@ -190,7 +191,6 @@ function SecurityGate() {
     entry: t("sec.entry"),
     exit: t("sec.exit"),
     problem: t("sec.problem"),
-    register: t("sec.register"),
     guard: t("sec.changeGuard"),
   };
 
@@ -201,7 +201,7 @@ function SecurityGate() {
   );
 
   return (
-    <Screen title={titles[view]} right={<div className="flex items-center gap-2"><SyncBadge /><AvatarLink /></div>}>
+    <Screen title={titles[view]} right={<div className="flex items-center gap-2"><SyncBadge />{view === "home" && <button type="button" aria-label={t("sec.menu")} aria-expanded={menu} onClick={() => setMenu((m) => !m)} className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-foreground"><Menu className="h-5 w-5" /></button>}<AvatarLink /></div>}>
       {view === "home" && (
         <div className="grid gap-3">
           <div className="rounded-xl bg-navy p-4 text-primary-foreground shadow-soft" data-testid="sec-header">
@@ -242,21 +242,23 @@ function SecurityGate() {
                   {t("sec.check")}
                 </button>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <BigBtn icon={<LogIn className="h-6 w-6" />} label={t("sec.entry")} onClick={() => go("entry")} />
                 <BigBtn icon={<LogOut className="h-6 w-6" />} label={t("sec.exit")} onClick={() => go("exit")} />
-                <BigBtn icon={<TriangleAlert className="h-6 w-6" />} label={t("sec.problem")} onClick={() => go("problem")} danger />
-              </div>
-              <div className="flex items-center justify-between px-1">
-                <button type="button" onClick={() => go("register")} className="flex items-center gap-1 text-sm font-bold text-primary underline-offset-2 hover:underline">
-                  <ClipboardList className="h-4 w-4" /> {t("sec.register")}
-                </button>
-                <button type="button" onClick={() => go("guard")} className="flex items-center gap-1 text-sm font-bold text-muted-foreground">
-                  <UserRoundCog className="h-4 w-4" /> {t("sec.changeGuard")}
-                </button>
               </div>
               <VehiclesOutList refreshKey={counts?.vehicles ?? 0} onArrived={() => finish(t("sec.arrived"))} />
             </>
+          )}
+
+          {menu && (
+            <div className="grid gap-2 rounded-xl border border-border bg-card p-2 shadow-card" role="menu" data-testid="sec-menu">
+              <button type="button" role="menuitem" onClick={() => go("problem")} className="flex items-center gap-3 rounded-lg px-3 py-3 text-left text-base font-bold text-destructive active:bg-accent">
+                <TriangleAlert className="h-5 w-5" /> {t("sec.problem")}
+              </button>
+              <button type="button" role="menuitem" onClick={() => go("guard")} className="flex items-center gap-3 rounded-lg px-3 py-3 text-left text-base font-bold text-foreground active:bg-accent">
+                <UserRoundCog className="h-5 w-5" /> {t("sec.changeGuard")}
+              </button>
+            </div>
           )}
 
           {hit && hit.kind === "trip_in" && (
@@ -284,9 +286,11 @@ function SecurityGate() {
               {hit.kind === "trip_out" && (
                 <>
                   <p className="font-display text-xl font-bold text-foreground">{hit.trip_no}</p>
-                  <p className="text-sm text-muted-foreground">{hit.reg_no}</p>
-                  <label className="text-sm font-medium text-foreground">{t("sec.odometerOptional")}</label>
-                  <input inputMode="numeric" aria-label={t("sec.odometerOptional")} value={odo} onChange={(e) => setOdo(e.target.value.replace(/\D/g, ""))} className={inputCls} />
+                  <p className="text-lg font-semibold text-foreground">{hit.reg_no}</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <p className="rounded-lg bg-secondary px-3 py-2"><span className="block text-xs text-muted-foreground">{t("dr.driver")}</span><span className="font-bold text-foreground">{hit.driver ?? "—"}</span></p>
+                    <p className="rounded-lg bg-secondary px-3 py-2"><span className="block text-xs text-muted-foreground">{t("sec.packs")}</span><span className="font-display text-xl font-bold text-foreground">{hit.packs ?? 0}</span></p>
+                  </div>
                 </>
               )}
               {hit.kind === "material" && (
@@ -305,8 +309,11 @@ function SecurityGate() {
                 </>
               )}
               <DockButton onClick={() => void act()} disabled={busy}>
-                {busy ? t("c.loading") : hit.kind === "trip_out" ? t("sec.gateOut") : hit.kind === "material" ? t("sec.materialOk") : t("sec.pickupHand")}
+                {busy ? t("c.loading") : hit.kind === "pickup" ? t("sec.goodsGiven") : t("sec.allowOut")}
               </DockButton>
+              {hit.kind === "trip_out" && (
+                <button type="button" onClick={() => go("problem")} className="text-sm font-bold text-destructive">{t("sec.problem")}</button>
+              )}
               <button type="button" onClick={() => setHit(null)} className="text-sm font-bold text-muted-foreground">{t("c.cancel")}</button>
             </div>
           )}
@@ -317,7 +324,6 @@ function SecurityGate() {
       {view === "entry" && <GateEntryPanel onDone={(q) => finish(q ? t("sec.savedOffline") : t("sec.entryDone"))} />}
       {view === "exit" && <GateExitPanel onChange={() => void loadCounts()} />}
       {view === "problem" && <ProblemPanel onDone={(q) => finish(q ? t("sec.savedOffline") : t("sec.problemDone"))} />}
-      {view === "register" && <RegisterPanel />}
       {view === "guard" && <ChangeGuardPanel />}
 
       {msg && <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300" role="status">{msg}</p>}
@@ -351,6 +357,7 @@ function GateInCard({
   const [fuelL, setFuelL] = useState("");
   const [fuelA, setFuelA] = useState("");
   const [busy, setBusy] = useState(false);
+  const [more, setMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const confirm = async () => {
@@ -374,6 +381,10 @@ function GateInCard({
         </div>
         <StatusBadge status={trip.status} />
       </div>
+      {!more && (
+        <button type="button" onClick={() => setMore(true)} className="w-fit text-sm font-bold text-primary underline">{t("sec.moreDetails")}</button>
+      )}
+      {more && (<>
       <div>
         <label className="mb-1 block text-xs font-medium text-foreground">{t("sec.odometer")}</label>
         <input inputMode="numeric" aria-label={t("sec.odometer")} value={odo} onChange={(e) => setOdo(e.target.value.replace(/\D/g, ""))} className={inputCls} />
@@ -388,9 +399,10 @@ function GateInCard({
           <input inputMode="decimal" value={fuelA} onChange={(e) => setFuelA(e.target.value)} className={inputCls} />
         </div>
       </div>
+      </>)}
       {error && <p className="text-xs font-medium text-destructive">{error}</p>}
       <DockButton onClick={() => void confirm()} disabled={busy}>
-        {busy ? t("c.loading") : t("sec.gateIn")}
+        {busy ? t("c.loading") : t("sec.markArrived")}
       </DockButton>
     </div>
   );
