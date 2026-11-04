@@ -557,14 +557,10 @@ export function StopDetailPanel({
       {outstanding != null && outstanding > 0 && settings.collect_old_dues && !delivered && (
         <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
           <p className="text-sm font-semibold text-foreground">{t("dr.oldDue")}: ₹{outstanding}</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="mt-2 grid gap-2">
             <input inputMode="decimal" value={dueAmount} onChange={(e) => setDueAmount(e.target.value)} placeholder={t("dr.dueAmount")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
-            <select value={dueMode} onChange={(e) => setDueMode(e.target.value)} className="rounded-lg border border-input bg-background px-2 py-2 text-sm outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
-              {settings.allow_cash && <option value="cash">Cash</option>}
-              {settings.allow_upi && <option value="upi">UPI</option>}
-              {settings.allow_cheque && <option value="cheque">Cheque</option>}
-            </select>
           </div>
+          <div className="mt-2"><ModeChips settings={settings} value={dueMode} onChange={setDueMode} /></div>
           {dueMode === "upi" && upi && upi.id && (
             <div className="mt-2 rounded-lg border border-border bg-muted/40 p-3 text-center">
               <UpiQrCode pa={upi.id} pn={upi.payee} amount={Number(dueAmount || outstanding) || null} tn={o?.order_no ?? null} />
@@ -629,15 +625,12 @@ export function StopDetailPanel({
 
       {canCollect && due > 0 && (
         <div className="mt-4 grid gap-2">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("dr.recordCollection")}</p>
-          <div className="grid grid-cols-2 gap-2">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("dr.toCollect")}</p>
+          <p className="font-display text-3xl font-extrabold text-foreground">₹{due}</p>
+          <div className="grid gap-2">
             <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={String(due)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
-            <select value={mode} onChange={(e) => setMode(e.target.value)} className="rounded-lg border border-input bg-background px-2 py-2 text-sm outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
-              {settings.allow_cash && <option value="cash">Cash</option>}
-              {settings.allow_upi && <option value="upi">UPI</option>}
-              {settings.allow_cheque && <option value="cheque">Cheque</option>}
-            </select>
           </div>
+          <ModeChips settings={settings} value={mode} onChange={setMode} />
           <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t("dr.reference")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
           {mode === "upi" && upi && upi.id && (
             <div className="rounded-lg border border-border bg-muted/40 p-3 text-center">
@@ -774,6 +767,30 @@ function AskOfficePanel({ tripId, stopId, due, onChoose, onDecision }: { tripId:
         <p className={`rounded-lg px-3 py-2 text-sm font-medium ${resultOk ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-destructive/10 text-destructive"}`}>{resultText}</p>
       )}
       {err && <p className="text-sm font-medium text-destructive">{err}</p>}
+    </div>
+  );
+}
+
+/** Big tap buttons for the payment channel (Cash · UPI QR · Cheque). */
+function ModeChips({ settings, value, onChange }: { settings: Settings; value: string; onChange: (v: string) => void }) {
+  const { t } = useLang();
+  const modes = [
+    settings.allow_cash && { v: "cash", label: t("dr.modeCash") },
+    settings.allow_upi && { v: "upi", label: t("dr.modeUpi") },
+    settings.allow_cheque && { v: "cheque", label: t("dr.modeCheque") },
+  ].filter(Boolean) as { v: string; label: string }[];
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {modes.map((m) => (
+        <button
+          key={m.v}
+          type="button"
+          onClick={() => onChange(m.v)}
+          className={`rounded-lg border py-3 text-sm font-bold ${value === m.v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground"}`}
+        >
+          {m.label}
+        </button>
+      ))}
     </div>
   );
 }
