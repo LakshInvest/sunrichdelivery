@@ -19,6 +19,7 @@ export type Database = {
           company_id: string
           created_at: string
           customer_type_ids: string[] | null
+          display_seconds: number
           end_at: string | null
           id: string
           image_url: string | null
@@ -42,6 +43,7 @@ export type Database = {
           company_id: string
           created_at?: string
           customer_type_ids?: string[] | null
+          display_seconds?: number
           end_at?: string | null
           id?: string
           image_url?: string | null
@@ -65,6 +67,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           customer_type_ids?: string[] | null
+          display_seconds?: number
           end_at?: string | null
           id?: string
           image_url?: string | null
@@ -179,6 +182,8 @@ export type Database = {
           allow_order_notes: boolean
           closed_weekdays: number[]
           company_id: string
+          default_gst_rate: number
+          delivery_charge_per_pack: number
           delivery_days_ahead: number
           delivery_slots: Json
           feedback_enabled: boolean
@@ -191,6 +196,12 @@ export type Database = {
           min_app_version: string
           min_order_value: number
           multiple_addresses: boolean
+          pickup_hours: string | null
+          pickup_hours_hi: string | null
+          pickup_hours_mr: string | null
+          plant_address: string | null
+          plant_address_hi: string | null
+          plant_address_mr: string | null
           play_store_url: string | null
           prices_include_gst: boolean
           privacy_md: string | null
@@ -203,6 +214,8 @@ export type Database = {
           support_whatsapp: string | null
           terms_md: string | null
           terms_url: string | null
+          trip_overdue_hours: number
+          trip_overdue_time: string
           updated_at: string
           updated_by: string | null
           verify_new_customer_payment: boolean
@@ -216,6 +229,8 @@ export type Database = {
           allow_order_notes?: boolean
           closed_weekdays?: number[]
           company_id: string
+          default_gst_rate?: number
+          delivery_charge_per_pack?: number
           delivery_days_ahead?: number
           delivery_slots?: Json
           feedback_enabled?: boolean
@@ -228,6 +243,12 @@ export type Database = {
           min_app_version?: string
           min_order_value?: number
           multiple_addresses?: boolean
+          pickup_hours?: string | null
+          pickup_hours_hi?: string | null
+          pickup_hours_mr?: string | null
+          plant_address?: string | null
+          plant_address_hi?: string | null
+          plant_address_mr?: string | null
           play_store_url?: string | null
           prices_include_gst?: boolean
           privacy_md?: string | null
@@ -240,6 +261,8 @@ export type Database = {
           support_whatsapp?: string | null
           terms_md?: string | null
           terms_url?: string | null
+          trip_overdue_hours?: number
+          trip_overdue_time?: string
           updated_at?: string
           updated_by?: string | null
           verify_new_customer_payment?: boolean
@@ -253,6 +276,8 @@ export type Database = {
           allow_order_notes?: boolean
           closed_weekdays?: number[]
           company_id?: string
+          default_gst_rate?: number
+          delivery_charge_per_pack?: number
           delivery_days_ahead?: number
           delivery_slots?: Json
           feedback_enabled?: boolean
@@ -265,6 +290,12 @@ export type Database = {
           min_app_version?: string
           min_order_value?: number
           multiple_addresses?: boolean
+          pickup_hours?: string | null
+          pickup_hours_hi?: string | null
+          pickup_hours_mr?: string | null
+          plant_address?: string | null
+          plant_address_hi?: string | null
+          plant_address_mr?: string | null
           play_store_url?: string | null
           prices_include_gst?: boolean
           privacy_md?: string | null
@@ -277,6 +308,8 @@ export type Database = {
           support_whatsapp?: string | null
           terms_md?: string | null
           terms_url?: string | null
+          trip_overdue_hours?: number
+          trip_overdue_time?: string
           updated_at?: string
           updated_by?: string | null
           verify_new_customer_payment?: boolean
@@ -414,6 +447,99 @@ export type Database = {
           },
         ]
       }
+      cash_book_openings: {
+        Row: {
+          amount: number
+          as_of: string
+          company_id: string
+          created_at: string
+          set_by: string | null
+        }
+        Insert: {
+          amount: number
+          as_of: string
+          company_id: string
+          created_at?: string
+          set_by?: string | null
+        }
+        Update: {
+          amount?: number
+          as_of?: string
+          company_id?: string
+          created_at?: string
+          set_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_book_openings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_deposits: {
+        Row: {
+          amount: number
+          bank_account_id: string | null
+          company_id: string
+          created_at: string
+          deposit_date: string
+          deposited_by: string | null
+          firm_id: string | null
+          id: string
+          note: string | null
+          slip_path: string | null
+        }
+        Insert: {
+          amount: number
+          bank_account_id?: string | null
+          company_id: string
+          created_at?: string
+          deposit_date?: string
+          deposited_by?: string | null
+          firm_id?: string | null
+          id?: string
+          note?: string | null
+          slip_path?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string | null
+          company_id?: string
+          created_at?: string
+          deposit_date?: string
+          deposited_by?: string | null
+          firm_id?: string | null
+          id?: string
+          note?: string | null
+          slip_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_deposits_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "firm_bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_deposits_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_deposits_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cash_handovers: {
         Row: {
           amount: number
@@ -424,7 +550,10 @@ export type Database = {
           from_user_id: string
           handover_date: string
           id: string
+          mismatch_at: string | null
+          mismatch_reason: string | null
           note: string | null
+          received_amount: number | null
           to_user_id: string
           trip_id: string | null
         }
@@ -437,7 +566,10 @@ export type Database = {
           from_user_id: string
           handover_date?: string
           id?: string
+          mismatch_at?: string | null
+          mismatch_reason?: string | null
           note?: string | null
+          received_amount?: number | null
           to_user_id: string
           trip_id?: string | null
         }
@@ -450,7 +582,10 @@ export type Database = {
           from_user_id?: string
           handover_date?: string
           id?: string
+          mismatch_at?: string | null
+          mismatch_reason?: string | null
           note?: string | null
+          received_amount?: number | null
           to_user_id?: string
           trip_id?: string | null
         }
@@ -691,6 +826,7 @@ export type Database = {
           note_type: string
           order_id: string | null
           reason: string
+          reject_reason: string | null
           status: string
           stop_id: string | null
           tax_amount: number
@@ -714,6 +850,7 @@ export type Database = {
           note_type: string
           order_id?: string | null
           reason: string
+          reject_reason?: string | null
           status?: string
           stop_id?: string | null
           tax_amount?: number
@@ -737,6 +874,7 @@ export type Database = {
           note_type?: string
           order_id?: string | null
           reason?: string
+          reject_reason?: string | null
           status?: string
           stop_id?: string | null
           tax_amount?: number
@@ -1260,6 +1398,7 @@ export type Database = {
           default_credit_limit: number
           default_delivery_mode: string
           default_price_plan_id: string | null
+          delivery_charge_per_pack: number | null
           description: string | null
           description_hi: string | null
           description_mr: string | null
@@ -1288,6 +1427,7 @@ export type Database = {
           default_credit_limit?: number
           default_delivery_mode?: string
           default_price_plan_id?: string | null
+          delivery_charge_per_pack?: number | null
           description?: string | null
           description_hi?: string | null
           description_mr?: string | null
@@ -1316,6 +1456,7 @@ export type Database = {
           default_credit_limit?: number
           default_delivery_mode?: string
           default_price_plan_id?: string | null
+          delivery_charge_per_pack?: number | null
           description?: string | null
           description_hi?: string | null
           description_mr?: string | null
@@ -1621,7 +1762,10 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           vehicle_check_enabled: boolean
+          vehicle_check_every_days: number
+          vehicle_check_frequency: string
           vehicle_check_items: string[]
+          visitor_alert_hours: number
           visitor_photo: string
         }
         Insert: {
@@ -1666,7 +1810,10 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           vehicle_check_enabled?: boolean
+          vehicle_check_every_days?: number
+          vehicle_check_frequency?: string
           vehicle_check_items?: string[]
+          visitor_alert_hours?: number
           visitor_photo?: string
         }
         Update: {
@@ -1711,7 +1858,10 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           vehicle_check_enabled?: boolean
+          vehicle_check_every_days?: number
+          vehicle_check_frequency?: string
           vehicle_check_items?: string[]
+          visitor_alert_hours?: number
           visitor_photo?: string
         }
         Relationships: [
@@ -1776,7 +1926,7 @@ export type Database = {
             foreignKeyName: "dispatch_schedules_zone_id_fkey"
             columns: ["zone_id"]
             isOneToOne: false
-            referencedRelation: "geo_areas"
+            referencedRelation: "geo_zones"
             referencedColumns: ["id"]
           },
         ]
@@ -2025,6 +2175,7 @@ export type Database = {
           fssai_number: string | null
           gstin: string | null
           id: string
+          invoice_design: Json
           invoice_terms: string | null
           is_active: boolean
           latitude: number | null
@@ -2066,6 +2217,7 @@ export type Database = {
           fssai_number?: string | null
           gstin?: string | null
           id?: string
+          invoice_design?: Json
           invoice_terms?: string | null
           is_active?: boolean
           latitude?: number | null
@@ -2107,6 +2259,7 @@ export type Database = {
           fssai_number?: string | null
           gstin?: string | null
           id?: string
+          invoice_design?: Json
           invoice_terms?: string | null
           is_active?: boolean
           latitude?: number | null
@@ -2274,6 +2427,7 @@ export type Database = {
           problem_type: string
           raised_at: string
           raised_by: string
+          resolve_note: string | null
           resolved_at: string | null
           resolved_by: string | null
           updated_at: string
@@ -2287,6 +2441,7 @@ export type Database = {
           problem_type: string
           raised_at?: string
           raised_by?: string
+          resolve_note?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
           updated_at?: string
@@ -2300,6 +2455,7 @@ export type Database = {
           problem_type?: string
           raised_at?: string
           raised_by?: string
+          resolve_note?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
           updated_at?: string
@@ -2509,6 +2665,8 @@ export type Database = {
           code: string
           company_id: string
           created_at: string
+          default_days: number[]
+          default_vehicle_id: string | null
           description: string | null
           id: string
           is_active: boolean
@@ -2520,6 +2678,8 @@ export type Database = {
           code: string
           company_id: string
           created_at?: string
+          default_days?: number[]
+          default_vehicle_id?: string | null
           description?: string | null
           id?: string
           is_active?: boolean
@@ -2531,6 +2691,8 @@ export type Database = {
           code?: string
           company_id?: string
           created_at?: string
+          default_days?: number[]
+          default_vehicle_id?: string | null
           description?: string | null
           id?: string
           is_active?: boolean
@@ -2544,6 +2706,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "geo_routes_default_vehicle_id_fkey"
+            columns: ["default_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
           {
@@ -3007,6 +3176,7 @@ export type Database = {
       }
       material_passes: {
         Row: {
+          approved_by_name: string | null
           company_id: string
           created_at: string
           direction: string
@@ -3018,12 +3188,16 @@ export type Database = {
           party: string | null
           pass_no: string
           qr_token: string
+          quantity: string | null
+          reason: string | null
           scanned_at: string | null
           scanned_by: string | null
           updated_at: string
+          valid_till: string | null
           vehicle_no: string | null
         }
         Insert: {
+          approved_by_name?: string | null
           company_id?: string
           created_at?: string
           direction?: string
@@ -3035,12 +3209,16 @@ export type Database = {
           party?: string | null
           pass_no: string
           qr_token?: string
+          quantity?: string | null
+          reason?: string | null
           scanned_at?: string | null
           scanned_by?: string | null
           updated_at?: string
+          valid_till?: string | null
           vehicle_no?: string | null
         }
         Update: {
+          approved_by_name?: string | null
           company_id?: string
           created_at?: string
           direction?: string
@@ -3052,9 +3230,12 @@ export type Database = {
           party?: string | null
           pass_no?: string
           qr_token?: string
+          quantity?: string | null
+          reason?: string | null
           scanned_at?: string | null
           scanned_by?: string | null
           updated_at?: string
+          valid_till?: string | null
           vehicle_no?: string | null
         }
         Relationships: []
@@ -3103,6 +3284,7 @@ export type Database = {
       }
       order_lines: {
         Row: {
+          delivery_charge_per_pack: number
           deposit_per_unit: number
           deposit_total: number
           gst_rate: number
@@ -3123,6 +3305,7 @@ export type Database = {
           unit_price: number
         }
         Insert: {
+          delivery_charge_per_pack?: number
           deposit_per_unit?: number
           deposit_total?: number
           gst_rate?: number
@@ -3143,6 +3326,7 @@ export type Database = {
           unit_price: number
         }
         Update: {
+          delivery_charge_per_pack?: number
           deposit_per_unit?: number
           deposit_total?: number
           gst_rate?: number
@@ -3569,6 +3753,7 @@ export type Database = {
           source: string
           status: string
           submitted_by: string | null
+          upi_response: Json | null
         }
         Insert: {
           amount: number
@@ -3596,6 +3781,7 @@ export type Database = {
           source?: string
           status?: string
           submitted_by?: string | null
+          upi_response?: Json | null
         }
         Update: {
           amount?: number
@@ -3623,6 +3809,7 @@ export type Database = {
           source?: string
           status?: string
           submitted_by?: string | null
+          upi_response?: Json | null
         }
         Relationships: [
           {
@@ -3905,6 +4092,7 @@ export type Database = {
           pack_label: string | null
           pack_label_hi: string | null
           pack_label_mr: string | null
+          reorder_level: number | null
           sell_unit: Database["public"]["Enums"]["sell_unit"]
           sell_unit_id: string | null
           shelf_life_days: number | null
@@ -3948,6 +4136,7 @@ export type Database = {
           pack_label?: string | null
           pack_label_hi?: string | null
           pack_label_mr?: string | null
+          reorder_level?: number | null
           sell_unit?: Database["public"]["Enums"]["sell_unit"]
           sell_unit_id?: string | null
           shelf_life_days?: number | null
@@ -3991,6 +4180,7 @@ export type Database = {
           pack_label?: string | null
           pack_label_hi?: string | null
           pack_label_mr?: string | null
+          reorder_level?: number | null
           sell_unit?: Database["public"]["Enums"]["sell_unit"]
           sell_unit_id?: string | null
           shelf_life_days?: number | null
@@ -4220,17 +4410,25 @@ export type Database = {
         Row: {
           amount: number
           bank_account_id: string | null
+          bank_charges: number | null
+          bounce_charge_note_id: string | null
+          bounce_reason: string | null
+          bounced_on: string | null
           cancel_reason: string | null
           cheque_bank: string | null
           cheque_date: string | null
           cheque_no: string | null
           cheque_photo_url: string | null
           cheque_status: string | null
+          cleared_on: string | null
           collected_by: string | null
           company_id: string
           created_at: string
           created_by: string | null
           customer_id: string
+          deposit_bank_account_id: string | null
+          deposit_slip_path: string | null
+          deposited_on: string | null
           firm_id: string
           id: string
           mode: string
@@ -4247,17 +4445,25 @@ export type Database = {
         Insert: {
           amount: number
           bank_account_id?: string | null
+          bank_charges?: number | null
+          bounce_charge_note_id?: string | null
+          bounce_reason?: string | null
+          bounced_on?: string | null
           cancel_reason?: string | null
           cheque_bank?: string | null
           cheque_date?: string | null
           cheque_no?: string | null
           cheque_photo_url?: string | null
           cheque_status?: string | null
+          cleared_on?: string | null
           collected_by?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
           customer_id: string
+          deposit_bank_account_id?: string | null
+          deposit_slip_path?: string | null
+          deposited_on?: string | null
           firm_id: string
           id?: string
           mode: string
@@ -4274,17 +4480,25 @@ export type Database = {
         Update: {
           amount?: number
           bank_account_id?: string | null
+          bank_charges?: number | null
+          bounce_charge_note_id?: string | null
+          bounce_reason?: string | null
+          bounced_on?: string | null
           cancel_reason?: string | null
           cheque_bank?: string | null
           cheque_date?: string | null
           cheque_no?: string | null
           cheque_photo_url?: string | null
           cheque_status?: string | null
+          cleared_on?: string | null
           collected_by?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null
           customer_id?: string
+          deposit_bank_account_id?: string | null
+          deposit_slip_path?: string | null
+          deposited_on?: string | null
           firm_id?: string
           id?: string
           mode?: string
@@ -4307,6 +4521,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "receipts_bounce_charge_note_id_fkey"
+            columns: ["bounce_charge_note_id"]
+            isOneToOne: false
+            referencedRelation: "credit_debit_notes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "receipts_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
@@ -4318,6 +4539,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_deposit_bank_account_id_fkey"
+            columns: ["deposit_bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "firm_bank_accounts"
             referencedColumns: ["id"]
           },
           {
@@ -5160,6 +5388,8 @@ export type Database = {
           end_odometer: number | null
           end_odometer_photo_url: string | null
           ended_at: string | null
+          est_km: number | null
+          est_minutes: number | null
           fuel_amount: number | null
           fuel_litres: number | null
           gate_in_at: string | null
@@ -5176,6 +5406,8 @@ export type Database = {
           planned_by: string | null
           returns_received_at: string | null
           route_id: string | null
+          route_method: string | null
+          route_optimised_at: string | null
           settle_note: string | null
           settled_at: string | null
           settled_by: string | null
@@ -5202,6 +5434,8 @@ export type Database = {
           end_odometer?: number | null
           end_odometer_photo_url?: string | null
           ended_at?: string | null
+          est_km?: number | null
+          est_minutes?: number | null
           fuel_amount?: number | null
           fuel_litres?: number | null
           gate_in_at?: string | null
@@ -5218,6 +5452,8 @@ export type Database = {
           planned_by?: string | null
           returns_received_at?: string | null
           route_id?: string | null
+          route_method?: string | null
+          route_optimised_at?: string | null
           settle_note?: string | null
           settled_at?: string | null
           settled_by?: string | null
@@ -5244,6 +5480,8 @@ export type Database = {
           end_odometer?: number | null
           end_odometer_photo_url?: string | null
           ended_at?: string | null
+          est_km?: number | null
+          est_minutes?: number | null
           fuel_amount?: number | null
           fuel_litres?: number | null
           gate_in_at?: string | null
@@ -5260,6 +5498,8 @@ export type Database = {
           planned_by?: string | null
           returns_received_at?: string | null
           route_id?: string | null
+          route_method?: string | null
+          route_optimised_at?: string | null
           settle_note?: string | null
           settled_at?: string | null
           settled_by?: string | null
@@ -5323,6 +5563,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           daily_capacity: number | null
+          display_name: string | null
           firm_id: string
           id: string
           is_active: boolean
@@ -5347,6 +5588,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           daily_capacity?: number | null
+          display_name?: string | null
           firm_id: string
           id?: string
           is_active?: boolean
@@ -5371,6 +5613,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           daily_capacity?: number | null
+          display_name?: string | null
           firm_id?: string
           id?: string
           is_active?: boolean
@@ -5865,6 +6108,50 @@ export type Database = {
         Args: { p_allocations: Json; p_receipt_id: string }
         Returns: undefined
       }
+      _cheque_row: {
+        Args: { p_receipt_id: string }
+        Returns: {
+          amount: number
+          bank_account_id: string | null
+          bank_charges: number | null
+          bounce_charge_note_id: string | null
+          bounce_reason: string | null
+          bounced_on: string | null
+          cancel_reason: string | null
+          cheque_bank: string | null
+          cheque_date: string | null
+          cheque_no: string | null
+          cheque_photo_url: string | null
+          cheque_status: string | null
+          cleared_on: string | null
+          collected_by: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          deposit_bank_account_id: string | null
+          deposit_slip_path: string | null
+          deposited_on: string | null
+          firm_id: string
+          id: string
+          mode: string
+          notes: string | null
+          proof_name: string | null
+          proof_path: string | null
+          receipt_date: string
+          receipt_no: string
+          reference: string | null
+          source: string
+          status: string
+          trip_collection_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "receipts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       _create_orders: {
         Args: {
           p_customer_id: string
@@ -5924,10 +6211,20 @@ export type Database = {
           ref_id: string
         }[]
       }
-      _price_lines: {
-        Args: { p_customer_id: string; p_lines: Json; p_office: boolean }
-        Returns: Json
-      }
+      _price_lines:
+        | {
+            Args: { p_customer_id: string; p_lines: Json; p_office: boolean }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_customer_id: string
+              p_lines: Json
+              p_mode: string
+              p_office: boolean
+            }
+            Returns: Json
+          }
       _receipt_alloc_snapshot: { Args: { p_receipt_id: string }; Returns: Json }
       _refresh_invoice_paid: {
         Args: { p_invoice_id: string }
@@ -6033,6 +6330,10 @@ export type Database = {
         Args: { p_alert_id: string; p_approve: boolean; p_note?: string }
         Returns: undefined
       }
+      apply_customer_advances: {
+        Args: { p_customer_id: string; p_firm_id: string }
+        Returns: number
+      }
       approve_customer: { Args: { p_customer_id: string }; Returns: undefined }
       approve_order: {
         Args: { p_note?: string; p_order_id: string }
@@ -6049,6 +6350,10 @@ export type Database = {
         Returns: string
       }
       ask_office_status: { Args: { p_alert_id: string }; Returns: Json }
+      attach_upi_response: {
+        Args: { p_proof_id: string; p_response: Json }
+        Returns: undefined
+      }
       auto_block_overdue_customers: { Args: never; Returns: number }
       bulk_approve_orders: { Args: { p_order_ids: string[] }; Returns: Json }
       bulk_update_plan_prices: {
@@ -6072,12 +6377,60 @@ export type Database = {
         Args: { p_reason: string; p_trip_id: string }
         Returns: undefined
       }
+      cash_deposit: {
+        Args: {
+          p_amount: number
+          p_bank_account_id: string
+          p_date?: string
+          p_note?: string
+          p_slip_path?: string
+        }
+        Returns: string
+      }
       cashier_list: {
         Args: never
         Returns: {
           full_name: string
           id: string
         }[]
+      }
+      cc_cash_mismatch: {
+        Args: { p_id: string; p_reason: string; p_received: number }
+        Returns: undefined
+      }
+      cc_create_material_pass: {
+        Args: {
+          p_approved_by: string
+          p_items: string
+          p_party: string
+          p_quantity: string
+          p_reason: string
+          p_valid_till: string
+          p_vehicle_no: string
+        }
+        Returns: Json
+      }
+      cc_move_stops: {
+        Args: { p_stop_ids: string[]; p_to_trip_id: string }
+        Returns: number
+      }
+      cc_reject_credit_note: {
+        Args: { p_note_id: string; p_reason: string }
+        Returns: undefined
+      }
+      cc_resolve_gate_problem: {
+        Args: { p_id: string; p_note: string }
+        Returns: undefined
+      }
+      cc_set_stop_order: {
+        Args: {
+          p_est_km: number
+          p_est_minutes: number
+          p_method: string
+          p_stop_ids: string[]
+          p_trip_id: string
+        }
+        Returns: undefined
       }
       check_pin: {
         Args: {
@@ -6103,6 +6456,28 @@ export type Database = {
           out_result: string
           out_user_id: string
         }[]
+      }
+      cheque_bounce: {
+        Args: {
+          p_charges?: number
+          p_date?: string
+          p_reason: string
+          p_receipt_id: string
+        }
+        Returns: string
+      }
+      cheque_cleared: {
+        Args: { p_date?: string; p_receipt_id: string }
+        Returns: undefined
+      }
+      cheque_deposit: {
+        Args: {
+          p_bank_account_id: string
+          p_date?: string
+          p_receipt_id: string
+          p_slip_path?: string
+        }
+        Returns: undefined
       }
       close_query: { Args: { p_query_id: string }; Returns: undefined }
       confirm_cash_handover: { Args: { p_id: string }; Returns: undefined }
@@ -6183,6 +6558,10 @@ export type Database = {
         Args: { p_approve: boolean; p_note_id: string }
         Returns: string
       }
+      default_delivery_mode: {
+        Args: { p_customer_id: string }
+        Returns: string
+      }
       delete_my_address: { Args: { p_id: string }; Returns: undefined }
       deliver_stop: {
         Args: {
@@ -6192,6 +6571,10 @@ export type Database = {
           p_stop_id: string
         }
         Returns: string
+      }
+      delivery_charge_per_pack: {
+        Args: { p_customer_id: string }
+        Returns: number
       }
       distributor_mark_delivered: {
         Args: { p_delivered: boolean; p_order_id: string; p_reason?: string }
@@ -6369,6 +6752,9 @@ export type Database = {
           category_code: string
           category_id: string
           code: string
+          default_delivery_mode: string
+          delivered_price: number
+          delivery_charge_per_pack: number
           deposit_amount: number
           description: string
           description_hi: string
@@ -6389,6 +6775,7 @@ export type Database = {
           pack_label: string
           pack_label_hi: string
           pack_label_mr: string
+          pickup_price: number
           price: number
           sell_unit: string
           sort_order: number
@@ -6444,7 +6831,10 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           vehicle_check_enabled: boolean
+          vehicle_check_every_days: number
+          vehicle_check_frequency: string
           vehicle_check_items: string[]
+          visitor_alert_hours: number
           visitor_photo: string
         }
         SetofOptions: {
@@ -6478,6 +6868,14 @@ export type Database = {
         }[]
       }
       my_khata_summary: { Args: never; Returns: Json }
+      my_order_truck: {
+        Args: { p_order_id: string }
+        Returns: {
+          latitude: number
+          longitude: number
+          recorded_at: string
+        }[]
+      }
       my_permissions: {
         Args: never
         Returns: {
@@ -6507,6 +6905,17 @@ export type Database = {
           needed: number
           product_id: string
           product_name: string
+        }[]
+      }
+      payment_reference_used: {
+        Args: { p_exclude_proof?: string; p_reference: string }
+        Returns: {
+          amount: number
+          customer_name: string
+          kind: string
+          on_date: string
+          ref_no: string
+          status: string
         }[]
       }
       pending_ask_office: {
@@ -6573,6 +6982,8 @@ export type Database = {
         Args: { p_customer_id: string; p_on?: string }
         Returns: {
           code: string
+          delivered_price: number
+          delivery_charge_per_pack: number
           mrp: number
           name: string
           plan_name: string
@@ -6582,7 +6993,10 @@ export type Database = {
         }[]
       }
       public_app_info: { Args: never; Returns: Json }
-      quote_my_order: { Args: { p_lines: Json }; Returns: Json }
+      quote_my_order: {
+        Args: { p_lines: Json; p_mode?: string }
+        Returns: Json
+      }
       raise_trip_alert: {
         Args: {
           p_latitude?: number
@@ -6805,6 +7219,10 @@ export type Database = {
         Returns: undefined
       }
       scope_ok: { Args: { p_id: string; p_type: string }; Returns: boolean }
+      set_cash_opening: {
+        Args: { p_amount: number; p_as_of: string }
+        Returns: undefined
+      }
       set_cheque_status: {
         Args: { p_note?: string; p_receipt_id: string; p_status: string }
         Returns: undefined
@@ -6917,6 +7335,27 @@ export type Database = {
         Args: { p_product_id: string; p_unit_id: string }
         Returns: number
       }
+      stock_book: {
+        Args: { p_from: string; p_to: string; p_unit_id: string }
+        Returns: {
+          adjust: number
+          available: number
+          closing: number
+          dispatched: number
+          opening: number
+          product_id: string
+          product_name: string
+          production: number
+          reorder_level: number
+          reserved: number
+          returns: number
+          status: string
+        }[]
+      }
+      stock_reserved: {
+        Args: { p_product_id: string; p_unit_id: string }
+        Returns: number
+      }
       stop_customer_summary: {
         Args: { p_customer_id: string; p_trip_id: string }
         Returns: Json
@@ -6953,6 +7392,16 @@ export type Database = {
         Returns: Json
       }
       toggle_favourite: { Args: { p_product_id: string }; Returns: boolean }
+      transfer_stock: {
+        Args: {
+          p_from_unit: string
+          p_note?: string
+          p_product_id: string
+          p_qty: number
+          p_to_unit: string
+        }
+        Returns: undefined
+      }
       trip_return_expected: {
         Args: { p_trip_id: string }
         Returns: {
