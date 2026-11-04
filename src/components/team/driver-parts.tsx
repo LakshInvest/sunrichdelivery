@@ -388,6 +388,7 @@ export function StopDetailPanel({
   const [failMode, setFailMode] = useState(false);
   const [failReason, setFailReason] = useState(settings.failed_reasons[0] ?? "");
   const [failNote, setFailNote] = useState("");
+  const [different, setDifferent] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const [signature, setSignature] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
@@ -463,8 +464,21 @@ export function StopDetailPanel({
       {!delivered && (
         <>
           <div className="mt-4 grid gap-2">
-            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("dr.deliveredQty")}</p>
-            {lines.map((l) => {
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{different ? t("dr.deliveredQty") : t("dr.allAsOrdered")}</p>
+              {settings.allow_partial_delivery && !different && (
+                <button type="button" onClick={() => setDifferent(true)} className="text-xs font-semibold text-navy underline">
+                  {t("dr.somethingDifferent")}
+                </button>
+              )}
+            </div>
+            {!different && lines.map((l) => (
+              <div key={l.id} className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 px-3 py-2">
+                <p className="min-w-0 truncate text-sm text-foreground">{l.product_name}{l.pack_label ? ` · ${l.pack_label}` : ""}</p>
+                <span className="font-display text-lg font-bold text-foreground">{l.qty}</span>
+              </div>
+            ))}
+            {different && lines.map((l) => {
               const d = qty[l.id] ?? { delivered: String(l.qty), damaged: "", refused: "", empties: "" };
               const set = (k: "delivered" | "damaged" | "refused" | "empties", raw: string) =>
                 setQty((s) => ({ ...s, [l.id]: { ...d, [k]: raw.replace(/\D/g, "") } }));
