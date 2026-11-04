@@ -32,6 +32,7 @@ export function CashHandoverPanel({ tripId, amount }: { tripId: string; amount: 
   useEffect(() => {
     void load();
   }, [load]);
+  useEffect(() => setAmt(String(amount)), [amount]);
 
   const send = async () => {
     if (!to) return setErr(t("dr.pickCashier"));

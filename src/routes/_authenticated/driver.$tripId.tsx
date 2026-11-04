@@ -123,6 +123,8 @@ function TripScreen() {
   // Spinner only on the first load: swapping the screen for a spinner on every
   // refresh unmounted the live Google map and made it throw IntersectionObserver errors.
   const loadedOnce = useRef(false);
+  // Cash actually collected on this trip (settle_trip checks against this, not the plan-time estimate).
+  const [cashCollected, setCashCollected] = useState(0);
   const prevOpenStops = useRef<Map<string, string> | null>(null);
   const [removedStops, setRemovedStops] = useState<string[]>([]);
   const fetchAll = useCallback(async () => {
@@ -157,6 +159,12 @@ function TripScreen() {
         setCashSpent(rows.filter((r) => r.approved !== false).reduce((a, r) => a + Number(r.amount ?? 0), 0));
       });
     // Gate pass token + loaded item count for the driver's QR screen.
+    void supabase
+      .from("trip_collections")
+      .select("amount")
+      .eq("trip_id", tripId)
+      .eq("mode", "cash")
+      .then(({ data }) => setCashCollected(((data ?? []) as { amount: number | null }[]).reduce((a, r) => a + Number(r.amount ?? 0), 0)));
     const [gpRes, ldRes] = await Promise.all([
       supabase.from("gate_passes").select("qr_token").eq("trip_id", tripId).order("issued_at", { ascending: false }).limit(1).maybeSingle(),
       supabase
@@ -909,11 +917,11 @@ function TripScreen() {
         <div className="rounded-xl border border-border bg-card p-4 shadow-card">
           <p className="text-sm font-bold text-foreground">{t("dr.settle")}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t("dr.cashExpected")}: <span className="font-bold text-foreground">₹{Math.max(0, Number(trip.cash_expected ?? 0) - cashSpent)}</span>
+            {t("dr.cashExpected")}: <span className="font-bold text-foreground">₹{Math.max(0, cashCollected - cashSpent)}</span>
           </p>
           {cashSpent > 0 && (
             <p className="text-xs text-muted-foreground">
-              ₹{Number(trip.cash_expected ?? 0)} − {t("dr.expenses")} ₹{cashSpent}
+              ₹{cashCollected} − {t("dr.expenses")} ₹{cashSpent}
             </p>
           )}
           {canSettle ? (
@@ -925,7 +933,7 @@ function TripScreen() {
               </button>
             </div>
           ) : (
-            <CashHandoverPanel tripId={tripId} amount={Math.max(0, Number(trip.cash_expected ?? 0) - cashSpent)} />
+            <CashHandoverPanel tripId={tripId} amount={Math.max(0, cashCollected - cashSpent)} />
           )}
         </div>
       )}
@@ -934,7 +942,7 @@ function TripScreen() {
         <div className="rounded-xl border border-border bg-card p-4 text-center">
           <p className="text-sm font-semibold text-foreground">{t("dr.settled")}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t("dr.cashExpected")}: ₹{Math.max(0, Number(trip.cash_expected ?? 0) - cashSpent)} · {t("dr.cashReceived")}: ₹{trip.cash_received ?? 0}
+            {t("dr.cashExpected")}: ₹{Math.max(0, cashCollected - cashSpent)} · {t("dr.cashReceived")}: ₹{trip.cash_received ?? 0}
           </p>
         </div>
       )}
