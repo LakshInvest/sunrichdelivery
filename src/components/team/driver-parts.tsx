@@ -78,7 +78,7 @@ export type Settings = {
 };
 
 export const DEFAULT_SETTINGS: Settings = {
-  require_start_selfie: true,
+  require_start_selfie: false,
   require_start_odometer: true,
   require_start_odometer_photo: true,
   vehicle_check_enabled: false,
