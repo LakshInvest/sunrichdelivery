@@ -432,7 +432,8 @@ export function StopDetailPanel({
     if (o?.customer_mobile?.trim()) { setPhone(o.customer_mobile.trim()); return; }
     let live = true;
     void supabase.rpc("stop_contact_phone" as never, { p_stop_id: stop.id } as never).then(({ data }) => {
-      if (live) setPhone(typeof data === "string" && data.trim() ? data.trim() : null);
+      const p = String((data as unknown) ?? "").trim();
+      if (live) setPhone(p || null);
     });
     return () => { live = false; };
   }, [stop.id, o?.customer_mobile]);
