@@ -313,6 +313,7 @@ export type StopRow = {
     grand_total: number | null;
     amount_paid: number | null;
     payment_mode: string | null;
+    payment_method?: string | null;
     delivery_latitude: number | null;
     delivery_longitude: number | null;
     firm_id?: string | null;
@@ -400,7 +401,10 @@ export function StopDetailPanel({
 
   // Collection mode must be a payment channel (cash/upi/cheque), not the
   // order's payment_mode (cod/credit/prepaid) — trip_collections validates it.
-  const [mode, setMode] = useState("cash");
+  // Pre-select the payment channel chosen on the order (cash / upi / cheque).
+  const orderMethod = String(o?.payment_method ?? "").toLowerCase();
+  const [mode, setMode] = useState(["cash", "upi", "cheque"].includes(orderMethod) ? orderMethod : "cash");
+  const [addOldDues, setAddOldDues] = useState(false);
   const [amount, setAmount] = useState("");
   const [reference, setReference] = useState("");
   const [payPhoto, setPayPhoto] = useState<string | null>(null);
@@ -418,6 +422,8 @@ export function StopDetailPanel({
     : Number(o?.grand_total ?? 0);
   const due = Math.max(0, kept - Number(o?.amount_paid ?? 0));
   const needsPayCheck = needsPayCheckBase && due > 0;
+  const oldDues = outstanding != null && outstanding > 0 && settings.collect_old_dues ? outstanding : 0;
+  const toCollect = due + (addOldDues ? oldDues : 0);
 
   const submitDelivery = async () => {
     setLocalErr(null);
@@ -626,22 +632,31 @@ export function StopDetailPanel({
       {canCollect && due > 0 && (
         <div className="mt-4 grid gap-2">
           <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("dr.toCollect")}</p>
-          <p className="font-display text-3xl font-extrabold text-foreground">₹{due}</p>
+          <p className="text-sm text-muted-foreground">{t("dr.todayGoods")} ₹{due}</p>
+          {oldDues > 0 && (
+            <div className="flex items-center justify-between rounded-lg bg-muted/60 px-3 py-2">
+              <span className="text-sm text-foreground">{t("dr.oldDue")} ₹{oldDues}</span>
+              <button type="button" onClick={() => setAddOldDues((v) => !v)} className={`rounded-md border px-3 py-1.5 text-sm font-bold ${addOldDues ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground"}`}>
+                {addOldDues ? "✓" : `+ ${t("dr.add")}`}
+              </button>
+            </div>
+          )}
+          <p className="font-display text-3xl font-extrabold text-foreground">₹{toCollect}</p>
           <div className="grid gap-2">
-            <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={String(due)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
+            <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={String(toCollect)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
           </div>
           <ModeChips settings={settings} value={mode} onChange={setMode} />
           <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t("dr.reference")} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30" />
           {mode === "upi" && upi && upi.id && (
             <div className="rounded-lg border border-border bg-muted/40 p-3 text-center">
-              <UpiQrCode pa={upi.id} pn={upi.payee} amount={Number(amount || due) || null} tn={o?.order_no ?? null} />
+              <UpiQrCode pa={upi.id} pn={upi.payee} amount={Number(amount || toCollect) || null} tn={o?.order_no ?? null} />
               <p className="mt-1 text-xs text-muted-foreground">{upi.payee ?? ""}</p>
               <p className="font-mono text-sm font-semibold text-foreground">{upi.id || "—"}</p>
             </div>
           )}
           <PhotoInput userId={staffId} kind={`pay-${stop.id}`} label={t("c.camera")} value={payPhoto} onChange={setPayPhoto} />
           <button
-            onClick={() => void onSubmitCollection({ mode, amount: amount === "" ? String(due) : amount, reference, photo: payPhoto })}
+            onClick={() => void onSubmitCollection({ mode, amount: amount === "" ? String(toCollect) : amount, reference, photo: payPhoto })}
             disabled={busy}
             className="rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground active:opacity-80 disabled:opacity-60"
           >
