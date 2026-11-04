@@ -426,7 +426,7 @@ export function StopDetailPanel({
     return () => { live = false; };
   }, [stop.id]);
   // Call: order phone → delivery address contact → customer mobile (looked up server-side).
-  const [phone, setPhone] = useState<string | null>(o?.customer_mobile?.trim() || null);
+  const [phone, setPhone] = useState<string | null>(String(o?.customer_mobile ?? "").trim() || null);
   const [challanBusy, setChallanBusy] = useState(false);
   useEffect(() => {
     if (o?.customer_mobile?.trim()) { setPhone(o.customer_mobile.trim()); return; }

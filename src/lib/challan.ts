@@ -5,10 +5,10 @@ import { sharePdf } from "@/lib/native";
 export type ChallanLine = { product_name: string | null; pack_label?: string | null; qty: number; kept?: number; value?: number | null };
 export type ChallanInput = {
   orderNo: string;
-  firmId?: string | null;
+  firmId?: string | null | undefined;
   customer: string;
-  address?: string | null;
-  phone?: string | null;
+  address?: string | null | undefined;
+  phone?: string | null | undefined;
   tripNo?: string | null;
   lines: ChallanLine[];
 };
