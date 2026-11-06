@@ -25,7 +25,7 @@ export function HandoverStop({ tripId, stopId, onDone }: { tripId: string; stopI
   useEffect(() => {
     if (!open || trips) return;
     void rpc("driver_other_trips", { p_trip_id: tripId }).then(({ data, error }) => {
-      if (error) setErr(friendlyError(error, t));
+      if (error) setErr(friendlyError(error.message, t));
       setTrips((data ?? []) as OtherTrip[]);
     });
   }, [open, trips, tripId, t]);
@@ -42,7 +42,7 @@ export function HandoverStop({ tripId, stopId, onDone }: { tripId: string; stopI
     setErr(null);
     const { error } = await rpc("driver_handover_stop", { p_stop_id: stopId, p_to_trip_id: pick, p_note: note.trim() || null });
     setBusy(false);
-    if (error) return setErr(friendlyError(error, t));
+    if (error) return setErr(friendlyError(error.message, t));
     const tr = trips?.find((x) => x.trip_id === pick);
     onDone(t("dx.moved", { v: tr?.vehicle_no || tr?.trip_no || "" }));
   };
@@ -112,7 +112,7 @@ export function SpotCustomerPicker({
     const h = window.setTimeout(() => {
       void rpc("driver_find_customers", { p_trip_id: tripId, p_q: q.trim() }).then(({ data, error }) => {
         setSearching(false);
-        if (error) setErr(friendlyError(error, t));
+        if (error) setErr(friendlyError(error.message, t));
         else setErr(null);
         setFound((data ?? []) as Found[]);
       });
@@ -134,7 +134,7 @@ export function SpotCustomerPicker({
       p_longitude: c?.longitude ?? null,
     });
     setBusy(false);
-    if (error) return setErr(friendlyError(error, t));
+    if (error) return setErr(friendlyError(error.message, t));
     const r = (Array.isArray(data) ? data[0] : data) as { customer_id: string; existing: boolean };
     if (r?.existing) setInfo(t("dx.existing"));
     onChange({ id: r.customer_id, name: nShop.trim() || nName.trim() });
