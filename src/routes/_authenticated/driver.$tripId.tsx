@@ -22,6 +22,7 @@ import {
   type StopRow,
 } from "@/components/team/driver-parts";
 import { queueRpc } from "@/lib/offline";
+import { HandoverStop, SpotCustomerPicker, TripAlertsList, type PickedCustomer } from "@/components/team/driver-extras";
 
 export const Route = createFileRoute("/_authenticated/driver/$tripId")({
   head: () => ({
@@ -100,7 +101,10 @@ function TripScreen() {
   const [pickupCustomer, setPickupCustomer] = useState("");
   const [pickupProduct, setPickupProduct] = useState("");
   const [pickupQty, setPickupQty] = useState("");
-  const [spotCustomer, setSpotCustomer] = useState("");
+  const [spotCust, setSpotCust] = useState<PickedCustomer | null>(null);
+  const spotCustomer = spotCust?.id ?? "";
+  const [alertKey, setAlertKey] = useState(0);
+  const [addedStops, setAddedStops] = useState<string[]>([]);
   const [spotProduct, setSpotProduct] = useState("");
   const [spotQty, setSpotQty] = useState("");
   const [spotPaid, setSpotPaid] = useState(true);
@@ -129,6 +133,7 @@ function TripScreen() {
   const [removedStops, setRemovedStops] = useState<string[]>([]);
   const fetchAll = useCallback(async () => {
     if (!loadedOnce.current) setLoading(true);
+    setAlertKey((k) => k + 1);
     setError(null);
     const [tripRes, stopsRes, settingsRes] = await Promise.all([
       supabase
@@ -189,6 +194,12 @@ function TripScreen() {
       const prev = prevOpenStops.current;
       if (prev) {
         const gone = [...prev].filter(([id]) => !nowOpen.has(id)).map(([, n]) => n);
+        const added = [...nowOpen].filter(([id]) => !prev.has(id)).map(([, n]) => n);
+        if (added.length) {
+          setAddedStops((r) => [...r, ...added]);
+          void haptic("success");
+          void localNotify("Stop added", added.join(", "), { channel: "trips", route: `/driver/${tripId}` });
+        }
         if (gone.length) {
           setRemovedStops((r) => [...r, ...gone]);
           void haptic("error");
@@ -549,6 +560,7 @@ function TripScreen() {
       setShowTools(null);
       setMessage(res.queued ? t("c.tryAgainOffline") : t("dr.spotSold"));
       setSpotQty("");
+      setSpotCust(null);
     });
   };
 
@@ -669,6 +681,13 @@ function TripScreen() {
           <button type="button" onClick={() => setRemovedStops([])} className="rounded-md border border-destructive px-3 py-1 text-sm font-bold text-destructive">OK</button>
         </div>
       )}
+      {addedStops.length > 0 && (
+        <div role="alert" className="mb-3 flex items-start justify-between gap-2 rounded-xl border-2 border-aqua bg-aqua/10 p-3">
+          <p className="text-sm font-bold text-foreground">🆕 {t("dr.stopAdded", { list: addedStops.join(", ") })}</p>
+          <button type="button" onClick={() => setAddedStops([])} className="rounded-md border border-aqua px-3 py-1 text-sm font-bold text-foreground">OK</button>
+        </div>
+      )}
+      <TripAlertsList tripId={tripId} refreshKey={alertKey} />
       <p className="mb-4 text-sm text-muted-foreground">
         {trip.vehicles?.reg_no ? `${trip.vehicles.reg_no} · ` : ""}
         {t("dr.deliveredStops", { done: doneCount, total: stops.length })}
@@ -857,12 +876,12 @@ function TripScreen() {
             <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-card">
               <p className="mb-2 text-sm font-bold text-foreground">{t("dr.spotSale")}</p>
               <div className="grid gap-2">
-                <select value={spotCustomer} onChange={(e) => setSpotCustomer(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
-                  <option value="">{t("dr.customer")}</option>
-                  {stops.filter((s) => s.orders).map((s) => (
-                    <option key={s.id} value={s.orders!.customer_id}>{s.orders!.business_name || s.orders!.customer_name}</option>
-                  ))}
-                </select>
+                <SpotCustomerPicker
+                  tripId={tripId}
+                  value={spotCust}
+                  onChange={setSpotCust}
+                  tripCustomers={[...new Map(stops.filter((s) => s.orders).map((s) => [s.orders!.customer_id, { id: s.orders!.customer_id, name: s.orders!.business_name || s.orders!.customer_name || "" }])).values()]}
+                />
                 <select value={spotProduct} onChange={(e) => setSpotProduct(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30">
                   <option value="">{t("dr.pickupProduct")}</option>
                   {vehicleStock.map((p) => (
@@ -922,6 +941,20 @@ function TripScreen() {
                     >
                       {isLater ? `↩ ${t("dr.later")}` : t("dr.doLater")}
                     </button>
+                  )}
+                  {open && (s.status === "pending" || s.status === "arrived") && (
+                    <HandoverStop
+                      tripId={tripId}
+                      stopId={s.id}
+                      onDone={(msg) => {
+                        setMessage(msg);
+                        setSelected(null);
+                        void haptic("success");
+                        prevOpenStops.current?.delete(s.id);
+                        setStops((all) => all.filter((x) => x.id !== s.id));
+                        void fetchAll();
+                      }}
+                    />
                   )}
                   {selected === s.id && stop && (
                     <div className="mt-1" ref={panelRef}>
