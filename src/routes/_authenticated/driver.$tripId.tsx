@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { haptic, localNotify, startTripMode } from "@/lib/native";
+import { haptic, localNotify, openExternal, startTripMode } from "@/lib/native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
