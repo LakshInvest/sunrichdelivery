@@ -128,7 +128,7 @@ export function SpotCustomerPicker({
     const { data, error } = await rpc("driver_create_walkin_customer", {
       p_trip_id: tripId,
       p_name: nName.trim(),
-      p_mobile: nMobile.replace(/\D/g, ""),
+      p_mobile: `+91${nMobile.replace(/\D/g, "")}`,
       p_business_name: nShop.trim() || null,
       p_latitude: c?.latitude ?? null,
       p_longitude: c?.longitude ?? null,
@@ -215,11 +215,11 @@ export function TripAlertsList({ tripId, refreshKey }: { tripId: string; refresh
   useEffect(() => {
     void supabase
       .from("trip_alerts")
-      .select("id, type, note, created_at")
+      .select("id, alert_type, note, raised_at")
       .eq("trip_id", tripId)
-      .order("created_at", { ascending: false })
+      .order("raised_at", { ascending: false })
       .limit(20)
-      .then(({ data }) => setRows(((data ?? []) as unknown as AlertRow[]).filter((r) => SHOWN.includes(r.type))));
+      .then(({ data }) => setRows(((data ?? []) as unknown as { id: string; alert_type: string; note: string | null; raised_at: string }[]).map((r) => ({ id: r.id, type: r.alert_type, note: r.note, created_at: r.raised_at })).filter((r) => SHOWN.includes(r.type))));
   }, [tripId, refreshKey]);
   if (rows.length === 0) return null;
   return (
