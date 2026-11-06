@@ -215,11 +215,11 @@ export function TripAlertsList({ tripId, refreshKey }: { tripId: string; refresh
   useEffect(() => {
     void supabase
       .from("trip_alerts")
-      .select("id, type, note, created_at")
+      .select("id, alert_type, note, created_at")
       .eq("trip_id", tripId)
       .order("created_at", { ascending: false })
       .limit(20)
-      .then(({ data }) => setRows(((data ?? []) as unknown as AlertRow[]).filter((r) => SHOWN.includes(r.type))));
+      .then(({ data }) => setRows(((data ?? []) as unknown as { id: string; alert_type: string; note: string | null; created_at: string }[]).map((r) => ({ id: r.id, type: r.alert_type, note: r.note, created_at: r.created_at })).filter((r) => SHOWN.includes(r.type))));
   }, [tripId, refreshKey]);
   if (rows.length === 0) return null;
   return (
