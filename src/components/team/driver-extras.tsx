@@ -128,7 +128,7 @@ export function SpotCustomerPicker({
     const { data, error } = await rpc("driver_create_walkin_customer", {
       p_trip_id: tripId,
       p_name: nName.trim(),
-      p_mobile: nMobile.replace(/\D/g, ""),
+      p_mobile: `+91${nMobile.replace(/\D/g, "")}`,
       p_business_name: nShop.trim() || null,
       p_latitude: c?.latitude ?? null,
       p_longitude: c?.longitude ?? null,
