@@ -197,7 +197,7 @@ function TripScreen() {
         const added = [...nowOpen].filter(([id]) => !prev.has(id)).map(([, n]) => n);
         if (added.length) {
           setAddedStops((r) => [...r, ...added]);
-          void haptic("warning");
+          void haptic("success");
           void localNotify("Stop added", added.join(", "), { channel: "trips", route: `/driver/${tripId}` });
         }
         if (gone.length) {
@@ -942,7 +942,7 @@ function TripScreen() {
                       {isLater ? `↩ ${t("dr.later")}` : t("dr.doLater")}
                     </button>
                   )}
-                  {open && s.status === "pending" && (
+                  {open && (s.status === "pending" || s.status === "arrived") && (
                     <HandoverStop
                       tripId={tripId}
                       stopId={s.id}
