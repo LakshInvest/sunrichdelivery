@@ -1807,6 +1807,7 @@ export type Database = {
           vehicle_check_items: string[]
           visitor_alert_hours: number
           visitor_photo: string
+          walkin_customer_type_id: string | null
         }
         Insert: {
           allow_cash?: boolean
@@ -1864,6 +1865,7 @@ export type Database = {
           vehicle_check_items?: string[]
           visitor_alert_hours?: number
           visitor_photo?: string
+          walkin_customer_type_id?: string | null
         }
         Update: {
           allow_cash?: boolean
@@ -1921,6 +1923,7 @@ export type Database = {
           vehicle_check_items?: string[]
           visitor_alert_hours?: number
           visitor_photo?: string
+          walkin_customer_type_id?: string | null
         }
         Relationships: [
           {
@@ -1928,6 +1931,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: true
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_settings_walkin_customer_type_id_fkey"
+            columns: ["walkin_customer_type_id"]
+            isOneToOne: false
+            referencedRelation: "customer_types"
             referencedColumns: ["id"]
           },
         ]
@@ -6946,6 +6956,42 @@ export type Database = {
         Args: { p_accept: boolean; p_order_id: string; p_reason?: string }
         Returns: undefined
       }
+      driver_create_walkin_customer: {
+        Args: {
+          p_business_name?: string
+          p_latitude?: number
+          p_longitude?: number
+          p_mobile: string
+          p_name: string
+          p_trip_id: string
+        }
+        Returns: Json
+      }
+      driver_find_customers: {
+        Args: { p_q: string; p_trip_id: string }
+        Returns: {
+          address: string
+          business_name: string
+          contact_name: string
+          customer_code: string
+          id: string
+          mobile: string
+        }[]
+      }
+      driver_handover_stop: {
+        Args: { p_note?: string; p_stop_id: string; p_to_trip_id: string }
+        Returns: Json
+      }
+      driver_other_trips: {
+        Args: { p_trip_id: string }
+        Returns: {
+          driver_name: string
+          status: string
+          trip_id: string
+          trip_no: string
+          vehicle_no: string
+        }[]
+      }
       edit_order: {
         Args: {
           p_changes?: Json
@@ -7214,6 +7260,7 @@ export type Database = {
           vehicle_check_items: string[]
           visitor_alert_hours: number
           visitor_photo: string
+          walkin_customer_type_id: string | null
         }
         SetofOptions: {
           from: "*"
