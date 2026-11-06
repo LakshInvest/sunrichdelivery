@@ -77,7 +77,7 @@ export function HandoverStop({ tripId, stopId, onDone }: { tripId: string; stopI
 }
 
 export type PickedCustomer = { id: string; name: string };
-type Found = { customer_id?: string; id?: string; business_name?: string | null; name?: string | null; customer_name?: string | null; mobile?: string | null; customer_code?: string | null };
+type Found = { customer_id?: string; id?: string; business_name?: string | null; name?: string | null; customer_name?: string | null; contact_name?: string | null; mobile?: string | null; customer_code?: string | null };
 
 /** Spot sale customer picker: this trip / search / new walk-in. */
 export function SpotCustomerPicker({
@@ -177,11 +177,11 @@ export function SpotCustomerPicker({
               {!searching && q.trim().length >= 3 && found.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
               {found.map((f) => {
                 const id = f.customer_id ?? f.id ?? "";
-                const name = f.business_name || f.name || f.customer_name || "";
+                const name = f.business_name || f.contact_name || f.name || f.customer_name || "";
                 return (
                   <button key={id} type="button" onClick={() => onChange({ id, name })} className="rounded-lg border border-input bg-background px-3 py-3 text-left text-sm">
                     <span className="block font-semibold text-foreground">{name}</span>
-                    <span className="block text-xs text-muted-foreground">{[f.name && f.name !== name ? f.name : null, f.mobile, f.customer_code].filter(Boolean).join(" · ")}</span>
+                    <span className="block text-xs text-muted-foreground">{[f.contact_name && f.contact_name !== name ? f.contact_name : null, f.mobile, f.customer_code].filter(Boolean).join(" · ")}</span>
                   </button>
                 );
               })}
