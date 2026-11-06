@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { haptic, localNotify, startTripMode } from "@/lib/native";
+import { haptic, localNotify, openExternal, startTripMode } from "@/lib/native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
@@ -342,7 +342,8 @@ function TripScreen() {
   // Location tracking while on the road.
   useEffect(() => {
     if (!trip || trip.status !== "in_progress" || !settings.location_tracking_enabled) return;
-    const intervalMs = Math.max(60, settings.location_interval_minutes * 60) * 1000;
+    // Ping every 30 s while on the road (native watcher also filters by 25 m distance).
+    const intervalMs = 30_000;
     const tick = async () => {
       const c = await getCoords();
       if (!c) return;
@@ -613,6 +614,8 @@ function TripScreen() {
   };
 
   const doneCount = stops.filter((s) => s.status === "delivered").length;
+  const pendingCount = stops.filter((s) => s.status === "pending").length;
+  const nextStop = orderedStops.find((s) => s.status === "pending") ?? null;
   // Order: loading done -> security gate out -> driver start checks -> on road.
   const loadingNotDone = trip.status === "planned" || trip.status === "loading";
   const awaitingGateOut = (trip.status === "loaded" || trip.status === "in_progress") && !trip.gate_out_at;
@@ -765,8 +768,46 @@ function TripScreen() {
             {toolBtn("pickup", t("dr.pickup"))}
             {settings.allow_spot_sale && toolBtn("spot", t("dr.spotSale"))}
             {settings.sos_enabled && toolBtn("sos", t("dr.sos"), true)}
-            {toolBtn("end", t("dr.endTrip"))}
+            {pendingCount === 0 && toolBtn("end", t("dr.endTrip"))}
           </div>
+          {pendingCount > 0 && <p className="mb-3 text-xs text-muted-foreground">{t("dr.endLocked", { n: pendingCount })}</p>}
+
+          {nextStop && selected !== nextStop.id && (
+            <div className="mb-4 rounded-2xl border-2 border-primary bg-card p-4 shadow-card" data-testid="next-stop">
+              <p className="text-xs font-bold uppercase text-muted-foreground">{t("dr.nextStop")} · {t("dr.stop", { n: nextStop.seq })}</p>
+              <p className="mt-1 font-display text-2xl font-bold text-foreground break-words">{nextStop.orders?.business_name || nextStop.orders?.customer_name || "—"}</p>
+              <p className="mt-1 text-base text-muted-foreground break-words">{nextStop.orders?.delivery_address_text ?? ""}</p>
+              <p className="mt-2 text-sm text-foreground">
+                {(lines[nextStop.orders?.id ?? ""] ?? []).map((l) => `${l.product_name ?? ""} × ${l.qty}`).join(", ")}
+              </p>
+              {nextStop.orders?.payment_mode === "cod" && (
+                <p className="mt-1 text-lg font-bold text-foreground">₹{Number(nextStop.orders?.grand_total ?? 0)}</p>
+              )}
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const o = nextStop.orders;
+                    const url = o?.delivery_latitude != null && o?.delivery_longitude != null
+                      ? `https://www.google.com/maps/dir/?api=1&travelmode=driving&dir_action=navigate&destination=${o.delivery_latitude},${o.delivery_longitude}`
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o?.delivery_address_text ?? "")}`;
+                    void openExternal(url);
+                  }}
+                  className="rounded-xl border-2 border-primary py-5 font-display text-lg font-bold text-primary active:bg-accent"
+                >
+                  {t("dr.navigate")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelected(nextStop.id)}
+                  className="rounded-xl bg-primary py-5 font-display text-lg font-bold text-primary-foreground active:scale-[0.99]"
+                >
+                  {t("dr.reached")}
+                </button>
+              </div>
+            </div>
+          )}
+          <p className="mb-2 text-sm font-bold text-foreground">{t("dr.allStopsLeft", { n: pendingCount })}</p>
 
           {showTools === "expense" && (
             <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-card">
