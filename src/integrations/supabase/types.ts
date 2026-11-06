@@ -178,8 +178,10 @@ export type Database = {
           about_text: string | null
           about_text_hi: string | null
           about_text_mr: string | null
+          all_category_image_url: string | null
           allow_cancel_before: string
           allow_order_notes: boolean
+          auto_plan_last_date: string | null
           closed_weekdays: number[]
           company_id: string
           default_gst_rate: number
@@ -187,8 +189,12 @@ export type Database = {
           delivery_days_ahead: number
           delivery_slots: Json
           feedback_enabled: boolean
+          google_routes_enabled: boolean
+          google_routes_min_stops: number
           holidays: string[]
           latest_app_version: string
+          launch_image_url: string | null
+          login_image_url: string | null
           login_tagline: string | null
           login_tagline_hi: string | null
           login_tagline_mr: string | null
@@ -199,6 +205,7 @@ export type Database = {
           pickup_hours: string | null
           pickup_hours_hi: string | null
           pickup_hours_mr: string | null
+          plan_time: string
           plant_address: string | null
           plant_address_hi: string | null
           plant_address_mr: string | null
@@ -225,8 +232,10 @@ export type Database = {
           about_text?: string | null
           about_text_hi?: string | null
           about_text_mr?: string | null
+          all_category_image_url?: string | null
           allow_cancel_before?: string
           allow_order_notes?: boolean
+          auto_plan_last_date?: string | null
           closed_weekdays?: number[]
           company_id: string
           default_gst_rate?: number
@@ -234,8 +243,12 @@ export type Database = {
           delivery_days_ahead?: number
           delivery_slots?: Json
           feedback_enabled?: boolean
+          google_routes_enabled?: boolean
+          google_routes_min_stops?: number
           holidays?: string[]
           latest_app_version?: string
+          launch_image_url?: string | null
+          login_image_url?: string | null
           login_tagline?: string | null
           login_tagline_hi?: string | null
           login_tagline_mr?: string | null
@@ -246,6 +259,7 @@ export type Database = {
           pickup_hours?: string | null
           pickup_hours_hi?: string | null
           pickup_hours_mr?: string | null
+          plan_time?: string
           plant_address?: string | null
           plant_address_hi?: string | null
           plant_address_mr?: string | null
@@ -272,8 +286,10 @@ export type Database = {
           about_text?: string | null
           about_text_hi?: string | null
           about_text_mr?: string | null
+          all_category_image_url?: string | null
           allow_cancel_before?: string
           allow_order_notes?: boolean
+          auto_plan_last_date?: string | null
           closed_weekdays?: number[]
           company_id?: string
           default_gst_rate?: number
@@ -281,8 +297,12 @@ export type Database = {
           delivery_days_ahead?: number
           delivery_slots?: Json
           feedback_enabled?: boolean
+          google_routes_enabled?: boolean
+          google_routes_min_stops?: number
           holidays?: string[]
           latest_app_version?: string
+          launch_image_url?: string | null
+          login_image_url?: string | null
           login_tagline?: string | null
           login_tagline_hi?: string | null
           login_tagline_mr?: string | null
@@ -293,6 +313,7 @@ export type Database = {
           pickup_hours?: string | null
           pickup_hours_hi?: string | null
           pickup_hours_mr?: string | null
+          plan_time?: string
           plant_address?: string | null
           plant_address_hi?: string | null
           plant_address_mr?: string | null
@@ -987,6 +1008,7 @@ export type Database = {
         Row: {
           address_line1: string
           address_line2: string | null
+          area_id: string | null
           city: string | null
           contact_mobile: string | null
           contact_name: string | null
@@ -1006,6 +1028,7 @@ export type Database = {
         Insert: {
           address_line1: string
           address_line2?: string | null
+          area_id?: string | null
           city?: string | null
           contact_mobile?: string | null
           contact_name?: string | null
@@ -1025,6 +1048,7 @@ export type Database = {
         Update: {
           address_line1?: string
           address_line2?: string | null
+          area_id?: string | null
           city?: string | null
           contact_mobile?: string | null
           contact_name?: string | null
@@ -1042,6 +1066,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "customer_addresses_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "geo_areas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "customer_addresses_customer_id_fkey"
             columns: ["customer_id"]
@@ -2498,6 +2529,7 @@ export type Database = {
           code: string
           company_id: string
           created_at: string
+          default_vehicle_id: string | null
           id: string
           is_active: boolean
           map_colour: string | null
@@ -2507,6 +2539,7 @@ export type Database = {
           pincodes: string[]
           primary_distributor_id: string | null
           salesman_user_id: string | null
+          unit_id: string | null
           updated_at: string
           zone_id: string
         }
@@ -2518,6 +2551,7 @@ export type Database = {
           code: string
           company_id: string
           created_at?: string
+          default_vehicle_id?: string | null
           id?: string
           is_active?: boolean
           map_colour?: string | null
@@ -2527,6 +2561,7 @@ export type Database = {
           pincodes?: string[]
           primary_distributor_id?: string | null
           salesman_user_id?: string | null
+          unit_id?: string | null
           updated_at?: string
           zone_id: string
         }
@@ -2538,6 +2573,7 @@ export type Database = {
           code?: string
           company_id?: string
           created_at?: string
+          default_vehicle_id?: string | null
           id?: string
           is_active?: boolean
           map_colour?: string | null
@@ -2547,6 +2583,7 @@ export type Database = {
           pincodes?: string[]
           primary_distributor_id?: string | null
           salesman_user_id?: string | null
+          unit_id?: string | null
           updated_at?: string
           zone_id?: string
         }
@@ -2566,6 +2603,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "geo_areas_default_vehicle_id_fkey"
+            columns: ["default_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "geo_areas_primary_distributor_id_fkey"
             columns: ["primary_distributor_id"]
             isOneToOne: false
@@ -2577,6 +2621,13 @@ export type Database = {
             columns: ["salesman_user_id"]
             isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "geo_areas_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
           {
@@ -4203,22 +4254,28 @@ export type Database = {
       }
       product_images: {
         Row: {
+          alt: string | null
           created_at: string
           id: string
+          is_primary: boolean
           product_id: string
           sort_order: number
           url: string
         }
         Insert: {
+          alt?: string | null
           created_at?: string
           id?: string
+          is_primary?: boolean
           product_id: string
           sort_order?: number
           url: string
         }
         Update: {
+          alt?: string | null
           created_at?: string
           id?: string
+          is_primary?: boolean
           product_id?: string
           sort_order?: number
           url?: string
@@ -4243,13 +4300,18 @@ export type Database = {
           company_id: string
           created_at: string
           created_by: string | null
+          delivery_info: string | null
+          delivery_info_hi: string | null
+          delivery_info_mr: string | null
           deposit_amount: number
           description: string | null
           description_hi: string | null
           description_mr: string | null
           factory_only: boolean
+          faqs: Json
           firm_id: string
           gst_rate: number
+          highlights: Json
           hsn_code: string | null
           id: string
           image_url: string | null
@@ -4287,13 +4349,18 @@ export type Database = {
           company_id: string
           created_at?: string
           created_by?: string | null
+          delivery_info?: string | null
+          delivery_info_hi?: string | null
+          delivery_info_mr?: string | null
           deposit_amount?: number
           description?: string | null
           description_hi?: string | null
           description_mr?: string | null
           factory_only?: boolean
+          faqs?: Json
           firm_id: string
           gst_rate?: number
+          highlights?: Json
           hsn_code?: string | null
           id?: string
           image_url?: string | null
@@ -4331,13 +4398,18 @@ export type Database = {
           company_id?: string
           created_at?: string
           created_by?: string | null
+          delivery_info?: string | null
+          delivery_info_hi?: string | null
+          delivery_info_mr?: string | null
           deposit_amount?: number
           description?: string | null
           description_hi?: string | null
           description_mr?: string | null
           factory_only?: boolean
+          faqs?: Json
           firm_id?: string
           gst_rate?: number
+          highlights?: Json
           hsn_code?: string | null
           id?: string
           image_url?: string | null
@@ -5746,6 +5818,9 @@ export type Database = {
           name_hi: string | null
           name_mr: string | null
           phone: string | null
+          pickup_hours: string | null
+          pickup_hours_hi: string | null
+          pickup_hours_mr: string | null
           pincode: string | null
           state: string | null
           unit_type: Database["public"]["Enums"]["unit_type"]
@@ -5771,6 +5846,9 @@ export type Database = {
           name_hi?: string | null
           name_mr?: string | null
           phone?: string | null
+          pickup_hours?: string | null
+          pickup_hours_hi?: string | null
+          pickup_hours_mr?: string | null
           pincode?: string | null
           state?: string | null
           unit_type: Database["public"]["Enums"]["unit_type"]
@@ -5796,6 +5874,9 @@ export type Database = {
           name_hi?: string | null
           name_mr?: string | null
           phone?: string | null
+          pickup_hours?: string | null
+          pickup_hours_hi?: string | null
+          pickup_hours_mr?: string | null
           pincode?: string | null
           state?: string | null
           unit_type?: Database["public"]["Enums"]["unit_type"]
@@ -6105,6 +6186,8 @@ export type Database = {
       }
       vehicles: {
         Row: {
+          capacity_boxes: number | null
+          capacity_jars: number | null
           capacity_kg: number | null
           capacity_units: number
           company_id: string
@@ -6131,6 +6214,8 @@ export type Database = {
           vehicle_type: string | null
         }
         Insert: {
+          capacity_boxes?: number | null
+          capacity_jars?: number | null
           capacity_kg?: number | null
           capacity_units?: number
           company_id: string
@@ -6157,6 +6242,8 @@ export type Database = {
           vehicle_type?: string | null
         }
         Update: {
+          capacity_boxes?: number | null
+          capacity_jars?: number | null
           capacity_kg?: number | null
           capacity_units?: number
           company_id?: string
@@ -6277,6 +6364,11 @@ export type Database = {
         Args: { p_customer_id: string; p_firm_id: string }
         Returns: number
       }
+      _area_for_point: {
+        Args: { p_company: string; p_lat: number; p_lng: number }
+        Returns: string
+      }
+      _auto_plan: { Args: { p_company: string; p_date: string }; Returns: Json }
       _check_allocations: {
         Args: { p_allocations: Json; p_receipt_id: string }
         Returns: undefined
@@ -6368,6 +6460,11 @@ export type Database = {
         Args: { p_order_id: string; p_trip_id: string }
         Returns: string
       }
+      _geo_rings: { Args: { b: Json }; Returns: Json[] }
+      _hav_km: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
+      }
       _is_my_trip: { Args: { p_trip_id: string }; Returns: boolean }
       _is_new_customer: {
         Args: { p_customer_id: string; p_except_order?: string }
@@ -6383,6 +6480,10 @@ export type Database = {
           kind: string
           ref_id: string
         }[]
+      }
+      _optimise_trip: {
+        Args: { p_method?: string; p_trip_id: string }
+        Returns: undefined
       }
       _photo_days: {
         Args: { p_company: string; p_type: string }
@@ -6403,6 +6504,38 @@ export type Database = {
           p_type: string
         }
         Returns: undefined
+      }
+      _pickup_for_customer: {
+        Args: { p_cid: string; p_company: string }
+        Returns: Json
+      }
+      _plan_candidates: {
+        Args: { p_company: string; p_date: string }
+        Returns: {
+          area_id: string
+          boxes: number
+          company_id: string
+          jars: number
+          order_id: string
+          reason: string
+          route_id: string
+          route_sort: number
+          unit_id: string
+          units: number
+          vehicle_id: string
+        }[]
+      }
+      _plan_candidates_load: {
+        Args: { p_order_id: string }
+        Returns: {
+          boxes: number
+          jars: number
+          units: number
+        }[]
+      }
+      _point_in_boundary: {
+        Args: { p_boundary: Json; p_lat: number; p_lng: number }
+        Returns: boolean
       }
       _price_lines:
         | {
@@ -6548,6 +6681,7 @@ export type Database = {
         Returns: undefined
       }
       auto_block_overdue_customers: { Args: never; Returns: number }
+      auto_plan_trips: { Args: { p_date: string }; Returns: Json }
       bulk_approve_orders: { Args: { p_order_ids: string[] }; Returns: Json }
       bulk_update_plan_prices: {
         Args: {
@@ -6587,6 +6721,16 @@ export type Database = {
           id: string
         }[]
       }
+      cc_assign_trip: {
+        Args: {
+          p_driver_user_id: string
+          p_hired_driver_mobile?: string
+          p_hired_driver_name?: string
+          p_trip_id: string
+          p_vehicle_id: string
+        }
+        Returns: Json
+      }
       cc_cash_mismatch: {
         Args: { p_id: string; p_reason: string; p_received: number }
         Returns: undefined
@@ -6624,6 +6768,31 @@ export type Database = {
           p_trip_id: string
         }
         Returns: undefined
+      }
+      cc_unplanned_orders: {
+        Args: { p_date: string }
+        Returns: {
+          area_id: string
+          customer_name: string
+          delivery_address: string
+          order_id: string
+          order_no: string
+          reason: string
+        }[]
+      }
+      cc_unzoned_addresses: {
+        Args: never
+        Returns: {
+          address: string
+          address_id: string
+          customer_id: string
+          customer_name: string
+          label: string
+          latitude: number
+          longitude: number
+          pincode: string
+          updated_at: string
+        }[]
       }
       check_pin: {
         Args: {
@@ -6906,6 +7075,8 @@ export type Database = {
       is_staff: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       job_auto_block_overdue: { Args: never; Returns: number }
+      job_auto_plan_trips: { Args: never; Returns: number }
+      job_missed_stops_check: { Args: never; Returns: number }
       job_release_dispatch_batches: { Args: never; Returns: number }
       job_reroute_stale_orders: { Args: never; Returns: number }
       log_location: {
@@ -6928,6 +7099,7 @@ export type Database = {
         Args: { p_ids: string[]; p_zip_path: string }
         Returns: string
       }
+      missed_stops_check: { Args: never; Returns: number }
       my_approval_limit: { Args: never; Returns: number }
       my_cash_to_confirm: {
         Args: never
@@ -7089,6 +7261,7 @@ export type Database = {
           module: string
         }[]
       }
+      my_product: { Args: { p_id: string }; Returns: Json }
       my_session_is_valid: { Args: never; Returns: boolean }
       my_staff_session_verified: { Args: never; Returns: boolean }
       next_document_number: {
@@ -7396,6 +7569,7 @@ export type Database = {
         Args: { p_order_id: string; p_reason?: string; p_trip_id: string }
         Returns: undefined
       }
+      reoptimise_trip: { Args: { p_trip_id: string }; Returns: Json }
       reply_query: {
         Args: {
           p_attachment_name?: string
@@ -7466,6 +7640,16 @@ export type Database = {
           p_language?: string
           p_platform?: string
           p_token: string
+        }
+        Returns: undefined
+      }
+      save_trip_order: {
+        Args: {
+          p_est_km: number
+          p_est_minutes: number
+          p_method?: string
+          p_stop_ids: string[]
+          p_trip_id: string
         }
         Returns: undefined
       }
