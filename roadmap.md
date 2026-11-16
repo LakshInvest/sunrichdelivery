@@ -1,9 +1,10 @@
 # Roadmap — Sunrich Delivery
 
 ## Customer-style login (Nov 16, no SQL)
-- [ ] Photo and appearance settings with cached images; white content-height card for every login step.
-- [ ] Phone-language login, no language switch; transparent native status bar on login.
-- [ ] Verify mobile/PIN/OTP at 360×640, 390×844, 412×915 and request publishing.
+- [x] Photo and appearance settings with cached images; white content-height card for every login step. Anonymous app_settings returns no rows; narrow publicLoginAppearance exposes only the three branding fields, no SQL.
+- [x] Phone-language login, no language switch; transparent native status bar code on login.
+- [x] Mobile/PIN/OTP at 360×640, 390×844, 412×915 passed Android Chromium emulation; keyboard-height simulation, real QA PIN sign-in, settings/image cache and 11 tests passed. Publishing requested.
+- [ ] Physical APK status bar and keyboard check — requires an Android device; browser emulation cannot verify native chrome.
 
 ## Nov 16 fix round (no SQL)
 - [x] Separate OTP/PIN errors and recover expired OTP locks with server-side code replacement; no SQL.
