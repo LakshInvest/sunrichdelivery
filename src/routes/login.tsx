@@ -8,6 +8,8 @@ import { getDeviceId, getDeviceLabel, initDeviceId } from "@/lib/device";
 import { checkDeviceStatus, staffLogin, staffRequestOtp, staffVerifyOtp } from "@/lib/staff-login.functions";
 import { haptic } from "@/lib/native";
 import { WaterLoader, BrandLogo } from "@/components/team/ui";
+import { Button } from "@/components/ui/button";
+import { loginErrorKey } from "@/lib/staff-otp-policy";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -114,16 +116,16 @@ function CodeBoxes({
 }
 
 /** Small ring timer around the resend action. */
-function ResendRing({ seconds, onResend, label }: { seconds: number; onResend: () => void; label: string }) {
+function ResendRing({ seconds, onResend, label, busy }: { seconds: number; onResend: () => void; label: string; busy: boolean }) {
   const total = 30;
   const r = 9;
   const c = 2 * Math.PI * r;
   const done = seconds <= 0;
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={onResend}
-      disabled={!done}
+      disabled={!done || busy}
       className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground disabled:opacity-70"
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5 -rotate-90">
@@ -137,12 +139,12 @@ function ResendRing({ seconds, onResend, label }: { seconds: number; onResend: (
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeDasharray={c}
-          strokeDashoffset={done ? 0 : c * (1 - (total - seconds) / total)}
+          strokeDashoffset={done ? 0 : c * Math.min(1, seconds / total)}
           style={{ transition: "stroke-dashoffset 1s linear" }}
         />
       </svg>
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -161,12 +163,19 @@ function Login() {
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
   const otpToken = useRef<string | null>(null);
   const [resendIn, setResendIn] = useState(0);
+  const [pinLocked, setPinLocked] = useState(false);
+  const [otpBlocked, setOtpBlocked] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
   const [clipboardCode, setClipboardCode] = useState<string | null>(null);
-  const [resendTimer, setResendTimer] = useState<ReturnType<typeof setInterval> | null>(null);
   const otpInput = useRef<HTMLInputElement>(null);
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [pinStage, setPinStage] = useState<"new" | "confirm">("new");
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = setTimeout(() => setResendIn((s) => Math.max(0, s - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [resendIn]);
 
   // Remember the last number on this device (device id itself is never regenerated).
   useEffect(() => {
@@ -214,30 +223,44 @@ function Login() {
   };
 
   const goOtp = useCallback(async () => {
+    if (busy || (step === "otp" && resendIn > 0)) return;
+    setBusy(true);
     setStep("otp");
     setOtpState("idle");
     setCode("");
     setError(null);
+    setOtpBlocked(false);
+    setOtpSent(false);
+    setOtpEmail(null);
+    otpToken.current = null;
     setResendIn(30);
-    if (resendTimer) clearInterval(resendTimer);
-    const timer = setInterval(() => setResendIn((s) => (s <= 1 ? 0 : s - 1)), 1000);
-    setResendTimer(timer);
     // The server generates the code and keeps it; the browser never receives
     // it. Only login_without_otp accounts get an auto-verifiable session token.
-    const res = await staffRequestOtp({ data: { mobile: `+91${mobile}`, deviceId: getDeviceId() } });
+    try {
+    const res = await staffRequestOtp({ data: { mobile: `+91${mobile}`, deviceId: await initDeviceId() } });
     if (!res.ok) {
-      setError(t(`err.${res.code}`) === `err.${res.code}` ? t("err.login_failed") : t(`err.${res.code}`));
+      const key = loginErrorKey("otp", res.code);
+      setError(t(key) === key ? t("err.login_failed") : t(key));
+      if (res.retryAfterSeconds !== undefined) setResendIn(Math.max(30, res.retryAfterSeconds));
+      setOtpBlocked(true);
       return;
     }
+    setOtpSent(true);
     if (res.auto) {
       setOtpEmail(res.email);
       otpToken.current = res.token;
     }
     setTimeout(() => otpInput.current?.focus(), 250);
-  }, [mobile, resendTimer, t]);
+    } catch {
+      setError(t("err.login_failed"));
+      setOtpBlocked(true);
+    } finally {
+      setBusy(false);
+    }
+  }, [mobile, busy, step, resendIn, t]);
 
   const verifyCode = async (candidate: string) => {
-    if (busy) return;
+    if (busy || otpBlocked) return;
     setBusy(true);
     setError(null);
 
@@ -269,12 +292,15 @@ function Login() {
       setBusy(false);
       void haptic("error");
       setOtpState("error");
+      const key = loginErrorKey("otp", res.code);
+      if (res.code === "otp_locked" || res.code === "expired") setOtpBlocked(true);
+      if (res.retryAfterSeconds !== undefined) setResendIn((s) => Math.max(s, res.retryAfterSeconds ?? 0));
       setError(
         res.code === "wrong_otp"
           ? t("err.wrong_otp", { n: res.attemptsLeft ?? 0 })
-          : t(`err.${res.code}`) === `err.${res.code}`
+          : t(key) === key
             ? t("err.otp_mismatch")
-            : t(`err.${res.code}`),
+            : t(key),
       );
       setTimeout(() => {
         setOtpState("idle");
@@ -362,6 +388,7 @@ function Login() {
   };
 
   const onOtpChange = (raw: string) => {
+    if (otpBlocked) return;
     const digits = raw.replace(/\D/g, "").slice(0, 4);
     setCode(digits);
     setError(null);
@@ -387,6 +414,7 @@ function Login() {
     window.localStorage.setItem(LAST_MOBILE_KEY, digits);
     setName(status.firstName);
     if (status.hasPin && (status.trusted || status.skipOtp)) {
+      setPinLocked(false);
       setPin("");
       setPinState("idle");
       setError(null);
@@ -412,7 +440,10 @@ function Login() {
     }
     setBusy(false);
     if (res.code === "locked_use_otp" || res.code === "locked") {
-      void goOtp();
+      setPinLocked(true);
+      setPinState("error");
+      setError(t("err.pin_locked"));
+      setPin("");
       return;
     }
     void haptic("error");
@@ -431,6 +462,7 @@ function Login() {
   };
 
   const onPinChange = (raw: string) => {
+    if (pinLocked) return;
     const digits = raw.replace(/\D/g, "").slice(0, 4);
     setPin(digits);
     setError(null);
@@ -466,7 +498,7 @@ function Login() {
           </div>
         </div>
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-6 text-center">
-          <BrandLogo tone="white" className="h-16" />
+          <BrandLogo tone="white" className="h-32" />
           <p className={`mt-4 text-sm font-bold uppercase text-aqua ${lang === "en" ? "tracking-[0.35em]" : "tracking-wide"}`}>
             {lang === "hi" ? "डिलीवरी" : lang === "mr" ? "डिलिव्हरी" : "DELIVERY"}
           </p>
@@ -542,8 +574,8 @@ function Login() {
               >
                 <ChevronLeft className="h-4 w-4" /> {t("login.changeNumber")}
               </button>
-              <h1 className="font-display text-2xl font-bold text-foreground">{t("login.welcome", { name: name ?? "" })}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{t("login.pinHint")}</p>
+              <h1 className="font-display text-2xl font-bold text-foreground">{t("login.pinHint")}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">{name ?? maskedMobile}</p>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -559,6 +591,7 @@ function Login() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   value={pin}
+                  disabled={pinLocked || busy}
                   onChange={(e) => onPinChange(e.target.value)}
                   className="absolute inset-0 z-10 h-16 w-full cursor-pointer bg-transparent text-[16px] text-transparent caret-transparent opacity-[0.01] outline-none"
                   aria-label={t("login.pin")}
@@ -568,7 +601,7 @@ function Login() {
               </div>
               <button
                 type="submit"
-                disabled={busy || pin.length !== 4}
+                disabled={busy || pinLocked || pin.length !== 4}
                 className="mt-5 flex w-full items-center justify-center rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
               >
                 {t("login.continue")}
@@ -579,13 +612,14 @@ function Login() {
                   {error}
                 </p>
               )}
-              <button
+              <Button variant="link"
                 type="button"
+                disabled={busy}
                 onClick={() => void goOtp()}
                 className="mx-auto mt-5 block text-sm font-semibold text-navy underline-offset-4 hover:underline"
               >
-                {t("login.forgotPin")}
-              </button>
+                {t(pinLocked ? "login.otpLogin" : "login.forgotPin")}
+              </Button>
             </div>
           )}
 
@@ -599,7 +633,7 @@ function Login() {
                 <ChevronLeft className="h-4 w-4" /> {t("login.changeNumber")}
               </button>
               <h1 className="font-display text-2xl font-bold text-foreground">{t("login.otpTitle")}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{t("login.otpSent", { mobile: maskedMobile })}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t(otpSent ? "login.otpSent" : "login.otpHint", { mobile: maskedMobile })}</p>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -613,6 +647,7 @@ function Login() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   value={code}
+                  disabled={otpBlocked || busy}
                   onChange={(e) => onOtpChange(e.target.value)}
                   onPaste={(e) => {
                     e.preventDefault();
@@ -625,7 +660,7 @@ function Login() {
               </div>
               <button
                 type="submit"
-                disabled={busy || code.length !== 4}
+                disabled={busy || otpBlocked || code.length !== 4}
                 className="mt-5 flex w-full items-center justify-center rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
               >
                 {t("login.verify")}
@@ -647,18 +682,19 @@ function Login() {
               )}
               <div className="mt-5 flex flex-col items-center gap-3">
                 <ResendRing
+                  busy={busy}
                   seconds={resendIn}
                   label={resendIn > 0 ? t("login.resendIn", { n: resendIn }) : t("login.resend")}
                   onResend={() => void goOtp()}
                 />
-                <button
+                {otpToken.current && <button
                   type="button"
                   onClick={() => void autoVerify()}
                   disabled={busy || !otpToken.current}
                   className="text-xs font-semibold text-navy underline-offset-4 hover:underline"
                 >
                   {t("login.otpAuto")}
-                </button>
+                </button>}
               </div>
             </div>
           )}
