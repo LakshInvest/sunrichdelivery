@@ -51,8 +51,9 @@ export async function initNative(navigate: (path: string) => void) {
       import("@capacitor/local-notifications"),
     ]);
     void StatusBar.setStyle({ style: Style.Light }).catch(() => {});
-    void StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
-    void StatusBar.setBackgroundColor({ color: "#0D3278" }).catch(() => {});
+    const login = window.location.pathname === "/login";
+    void StatusBar.setOverlaysWebView({ overlay: login }).catch(() => {});
+    void StatusBar.setBackgroundColor({ color: login ? "#00000000" : "#0D3278" }).catch(() => {});
     void SplashScreen.hide().catch(() => {});
     void Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});
 
@@ -73,6 +74,17 @@ export async function initNative(navigate: (path: string) => void) {
 }
 
 let pushRegistered = false;
+
+/** Login photo extends under a transparent status bar; other screens keep their native chrome. */
+export async function setLoginStatusBar(login: boolean) {
+  if (!isNative()) return;
+  try {
+    const { StatusBar, Style } = await import("@capacitor/status-bar");
+    await StatusBar.setStyle({ style: Style.Light });
+    await StatusBar.setOverlaysWebView({ overlay: login });
+    await StatusBar.setBackgroundColor({ color: login ? "#00000000" : "#0D3278" });
+  } catch { /* Browser and unsupported native versions remain usable. */ }
+}
 
 /** Register for FCM and save the token. Skipped (with a log) when google-services.json was not bundled. */
 export async function registerPush(language: string) {
