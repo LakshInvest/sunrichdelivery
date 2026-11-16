@@ -9,13 +9,12 @@ import { isNative, takeNativePhoto, haptic } from "@/lib/native";
 import { Link } from "@tanstack/react-router";
 import { UserRound } from "lucide-react";
 import { useTeamAuth } from "@/lib/team-auth";
-import logoNavy from "@/assets/sunrich-logo-navy.png.asset.json";
-import logoWhite from "@/assets/sunrich-logo-white.png.asset.json";
+import appIcon from "@/assets/sunrich-delivery-final.png.asset.json";
 
-/** Sunrich wordmark from the CDN (navy on light, white on navy). */
-export function BrandLogo({ tone = "navy", className = "h-8" }: { tone?: "navy" | "white"; className?: string }) {
+/** Uploaded Delivery identity, shared by every in-app brand icon. */
+export function BrandLogo({ className = "h-8" }: { tone?: "navy" | "white"; className?: string }) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={tone === "white" ? logoWhite.url : logoNavy.url} alt="Sunrich" className={`${className} w-auto`} />;
+  return <img src={appIcon.url} alt="Sunrich Delivery" className={`${className} w-auto object-contain`} />;
 }
 
 /** Tiny bottle that fills with water — the app's loader. Water is clipped to the bottle. */
