@@ -6,6 +6,7 @@
 //   is minted only after a correct PIN or a correct, unexpired OTP.
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { otpExhausted, otpRetrySeconds } from "@/lib/staff-otp-policy";
 
 type LoginInput = { mobile: string; pin: string; deviceId: string; deviceLabel?: string };
 
@@ -251,7 +252,7 @@ export const checkDeviceStatus = createServerFn({ method: "POST" })
 export type StaffOtpRequestResult =
   | { ok: true; auto: true; email: string; token: string; staff: StaffBrief }
   | { ok: true; auto?: false }
-  | { ok: false; code: string };
+  | { ok: false; code: string; retryAfterSeconds?: number };
 
 /**
  * Step 1 of the OTP path. Generates a 4-digit code, stores only its hash
@@ -306,19 +307,16 @@ export const staffRequestOtp = createServerFn({ method: "POST" })
     // 15-minute lock after 5 wrong tries on the newest outstanding code.
     const { data: lastRow } = await supabaseAdmin
       .from("otp_requests")
-      .select("locked_until, attempts, max_attempts, consumed_at")
+      .select("locked_until, attempts, max_attempts, consumed_at, created_at")
       .eq("user_id", profile.id)
       .eq("destination", mobile)
       .eq("purpose", "staff_2fa")
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (
-      lastRow &&
-      !lastRow.consumed_at &&
-      (lastRow.locked_until ? new Date(lastRow.locked_until).getTime() > Date.now() : false)
-    ) {
-      return { ok: false, code: "locked" };
+    const retryAfterSeconds = otpRetrySeconds(lastRow, Date.now());
+    if (retryAfterSeconds > 0) {
+      return { ok: false, code: lastRow && !lastRow.consumed_at && otpExhausted(lastRow) ? "otp_locked" : "resend_wait", retryAfterSeconds };
     }
 
     // Rate limit: max 3 codes per mobile per 15 minutes, counting every row
@@ -335,13 +333,17 @@ export const staffRequestOtp = createServerFn({ method: "POST" })
     }
 
     // Single use: any earlier outstanding code is invalidated.
-    await supabaseAdmin
+    const { error: closeErr } = await supabaseAdmin
       .from("otp_requests")
       .update({ consumed_at: new Date().toISOString() })
       .eq("user_id", profile.id)
       .eq("destination", mobile)
       .eq("purpose", "staff_2fa")
       .is("consumed_at", null);
+    if (closeErr) {
+      console.error("[staffRequestOtp] close previous code failed", closeErr.message);
+      return { ok: false, code: "login_failed" };
+    }
 
     const code = fourDigitCode();
     const { data: inserted, error: insertErr } = await supabaseAdmin
@@ -377,7 +379,7 @@ export const staffRequestOtp = createServerFn({ method: "POST" })
 /** Result of checking a typed OTP. */
 export type StaffOtpVerifyResult =
   | { ok: true; email: string; token: string; staff: StaffBrief }
-  | { ok: false; code: "wrong_otp" | "locked" | "expired" | "invalid_mobile" | "not_registered" | "login_failed"; attemptsLeft?: number };
+  | { ok: false; code: "wrong_otp" | "otp_locked" | "expired" | "invalid_mobile" | "not_registered" | "login_failed"; attemptsLeft?: number; retryAfterSeconds?: number };
 
 /**
  * Step 2 of the OTP path. Checks the typed code against the stored hash
@@ -407,7 +409,7 @@ export const staffVerifyOtp = createServerFn({ method: "POST" })
 
     const { data: row } = await supabaseAdmin
       .from("otp_requests")
-      .select("id, code_hash, attempts, max_attempts, expires_at, locked_until")
+      .select("id, code_hash, attempts, max_attempts, expires_at, locked_until, created_at")
       .eq("user_id", profile.id)
       .eq("destination", mobile)
       .eq("purpose", "staff_2fa")
@@ -417,17 +419,15 @@ export const staffVerifyOtp = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!row) return { ok: false, code: "expired" };
     if (row.locked_until && new Date(row.locked_until).getTime() > Date.now()) {
-      return { ok: false, code: "locked" };
+      return { ok: false, code: "otp_locked", retryAfterSeconds: otpRetrySeconds(row, Date.now()) };
+    }
+    // A used-up code stays unusable, but checking it must never renew its lock.
+    // The request endpoint closes it and creates a fresh code after the wait.
+    if (otpExhausted(row)) {
+      return { ok: false, code: "otp_locked", retryAfterSeconds: otpRetrySeconds(row, Date.now()) };
     }
     if (new Date(row.expires_at).getTime() < Date.now()) {
       return { ok: false, code: "expired" };
-    }
-    if (row.attempts >= row.max_attempts) {
-      await supabaseAdmin
-        .from("otp_requests")
-        .update({ locked_until: new Date(Date.now() + OTP_LOCK_MS).toISOString() })
-        .eq("id", row.id);
-      return { ok: false, code: "locked" };
     }
 
     if ((await sha256Hex(`${code}:${profile.id}`)) !== row.code_hash) {
@@ -441,7 +441,7 @@ export const staffVerifyOtp = createServerFn({ method: "POST" })
         })
         .eq("id", row.id);
       return locked
-        ? { ok: false, code: "locked" }
+        ? { ok: false, code: "otp_locked", retryAfterSeconds: OTP_LOCK_MS / 1000 }
         : { ok: false, code: "wrong_otp", attemptsLeft: row.max_attempts - attempts };
     }
 
