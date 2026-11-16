@@ -89,4 +89,4 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 ## Nov 16 Home and Profile cleanup (no SQL)
 - [x] Unified role cards and live existing-data counts; per-user last-role selection and explicit chooser from Profile.
 - [x] Single profile card, full role list, language segments, app info and confirmed sign-out.
-- [ ] Check 360/390/412 screens, role navigation, regression tests and publish.
+- [x] Real QA Driver sign-in opens /driver directly; Profile/chooser at 360/390/412, saved-role return, sign-out cancel/confirm passed; 24 tests passed and compilation clean. Publishing requested after checks. Multi-role live account not exercised; selection policy covered by tests.
