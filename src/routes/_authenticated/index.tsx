@@ -1,12 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useTeamAuth } from "@/lib/team-auth";
 import { useLang } from "@/lib/l10n";
 import { CashToConfirm } from "@/components/team/cash-handover";
-import { AvatarLink, LanguageChips, NoRoleScreen, Screen, Spinner, SyncBadge } from "@/components/team/ui";
+import { AvatarLink, NoRoleScreen, Spinner, SyncBadge } from "@/components/team/ui";
 import { Truck, Boxes, ShieldCheck, ChevronRight } from "lucide-react";
+import { availableRoles, preferredRole, readLastRole, rememberRole } from "@/lib/role-home";
+import { RoleCount, useRoleCounts } from "@/components/team/role-counts";
+import whiteLogo from "@/assets/sunrich-logo-white.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/")({
+  validateSearch: (search: Record<string, unknown>) => ({ chooser: search.chooser === true || search.chooser === "true" }),
   head: () => ({
     meta: [
       { title: "Home · Sunrich Delivery" },
@@ -20,70 +24,67 @@ export const Route = createFileRoute("/_authenticated/")({
   component: Home,
 });
 
-type RoleCard = { to: "/driver" | "/loader" | "/security"; titleKey: string; icon: ReactNode };
-
-const ROLE_CARDS: Record<string, RoleCard> = {
-  DRIVER: { to: "/driver", titleKey: "home.driverCard", icon: <Truck className="h-7 w-7" /> },
-  LOADER: { to: "/loader", titleKey: "home.loaderCard", icon: <Boxes className="h-7 w-7" /> },
-  SECURITY: { to: "/security", titleKey: "home.securityCard", icon: <ShieldCheck className="h-7 w-7" /> },
-};
-
-const TILE_TONES = ["bg-aqua-soft text-navy", "bg-primary text-primary-foreground", "bg-emerald-500/15 text-emerald-700"];
+const ROLE_ICONS = { DRIVER: Truck, LOADER: Boxes, SECURITY: ShieldCheck };
 
 function Home() {
-  const { ready, staff, signOut } = useTeamAuth();
+  const { ready, staff } = useTeamAuth();
   const { t } = useLang();
+  const { chooser } = Route.useSearch();
+  const navigate = useNavigate();
+  const counts = useRoleCounts(staff);
+  useEffect(() => {
+    if (!ready || !staff) return;
+    const role = preferredRole(staff.roles, readLastRole(staff.id), chooser);
+    if (role) {
+      rememberRole(staff.id, role.code);
+      void navigate({ to: role.to, replace: true });
+    }
+  }, [ready, staff, chooser, navigate]);
 
   if (!ready) return <Spinner label={t("c.loading")} />;
 
   if (!staff) return <NoRoleScreen />;
 
-  const cards = staff.roles
-    .map((r) => ROLE_CARDS[r])
-    .filter((c): c is (typeof ROLE_CARDS)[string] => Boolean(c));
+  const cards = availableRoles(staff.roles);
   const isCashier = staff.permissions.includes("finance:create");
   if (cards.length === 0 && !isCashier) return <NoRoleScreen />;
 
   return (
-    <Screen
-      title={t("home.greeting", { name: staff.fullName.split(" ")[0] ?? staff.fullName })}
-      right={<AvatarLink />}
-    >
-      <div className="mb-5 flex flex-wrap items-center gap-2">
+    <main className="account-page">
+      <header className="bg-navy px-5 pb-6 pt-[max(env(safe-area-inset-top),1.25rem)] text-primary-foreground">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="min-w-0"><img src={whiteLogo.url} alt="Sunrich" className="h-7 w-auto object-contain" /><p className="mt-1 text-xs font-semibold">Sunrich Delivery</p></div>
+          <AvatarLink />
+        </div>
+        <h1 className="mt-5 font-display text-2xl font-bold">{t("home.greeting", { name: staff.fullName.split(" ")[0] ?? staff.fullName })}</h1>
+      </header>
+      <div className="px-4 py-5">
         <SyncBadge />
-        <div className="flex-1" />
-        <LanguageChips />
-      </div>
-
-      <CashToConfirm />
-
-      {(
         <div className="grid gap-3">
-          {cards.map((c, i) => (
+          {cards.map((c) => {
+            const Icon = ROLE_ICONS[c.code];
+            return (
             <Link
-              key={c.titleKey}
+              key={c.code}
               to={c.to}
-              className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card transition-transform active:scale-[0.99]"
+              onClick={() => rememberRole(staff.id, c.code)}
+              className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-card active:bg-secondary"
             >
-              <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-xl ${TILE_TONES[i % TILE_TONES.length]}`}>
-                {c.icon}
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary text-navy">
+                <Icon className="h-6 w-6" strokeWidth={1.75} />
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-display text-lg font-bold text-foreground">{t(c.titleKey)}</span>
-                <span className="mt-0.5 block text-sm text-muted-foreground">{t(`${c.titleKey}Sub`)}</span>
+              <span className="min-w-0">
+                <span className="block font-display text-base font-bold text-foreground">{t(c.key)}</span>
+                <span className="mt-1 block truncate text-xs text-muted-foreground">{t(`${c.key}Sub`)}</span>
+                <RoleCount code={c.code} count={counts[c.code]} />
               </span>
               <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
             </Link>
-          ))}
+            );
+          })}
         </div>
-      )}
-
-      <button
-        onClick={() => void signOut()}
-        className="mt-8 w-full rounded-lg border border-input bg-card py-3.5 text-sm font-semibold text-foreground shadow-card active:bg-accent"
-      >
-        {t("c.signOut")}
-      </button>
-    </Screen>
+        <div className="mt-5"><CashToConfirm /></div>
+      </div>
+    </main>
   );
 }
