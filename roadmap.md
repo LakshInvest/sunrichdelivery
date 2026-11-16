@@ -1,5 +1,10 @@
 # Roadmap — Sunrich Delivery
 
+## Customer-style login (Nov 16, no SQL)
+- [ ] Photo and appearance settings with cached images; white content-height card for every login step.
+- [ ] Phone-language login, no language switch; transparent native status bar on login.
+- [ ] Verify mobile/PIN/OTP at 360×640, 390×844, 412×915 and request publishing.
+
 ## Nov 16 fix round (no SQL)
 - [x] Separate OTP/PIN errors and recover expired OTP locks with server-side code replacement; no SQL.
 - [x] Replace web icons, including safe-zone maskable and in-app icon. Existing public icons overwritten; no offline HTML page or app-shell service worker exists. Historic CDN wordmarks retained for previous deployments; native APK artwork unchanged.
