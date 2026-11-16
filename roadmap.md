@@ -1,5 +1,10 @@
 # Roadmap — Sunrich Delivery
 
+## Nov 16 fix round (no SQL)
+- [ ] Separate OTP/PIN errors and recover expired OTP locks with server-side code replacement.
+- [ ] Replace web icons, including safe-zone maskable and in-app icon.
+- [ ] Test login states and icon rendering; request publishing.
+
 Prompt-3 (rename + login redesign + phone fit): complete.
 Prompt-4 (login security + vehicle-check languages): complete.
 Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting user's receive-and-verify confirmation.
