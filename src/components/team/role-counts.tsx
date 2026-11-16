@@ -33,7 +33,7 @@ export function useRoleCounts(staff: Staff | null) {
   return counts;
 }
 
-export function RoleCount({ code, count }: { code: string; count?: { n: number; stops?: number } }) {
+export function RoleCount({ code, count }: { code: string; count: { n: number; stops?: number } | undefined }) {
   const { t } = useLang();
   return <span className="block text-xs font-semibold leading-relaxed text-primary" aria-live="polite">{count ? t(`home.count${code}`, { n: count.n, stops: count.stops ?? 0 }) : "—"}</span>;
 }

@@ -10,7 +10,8 @@ import { RoleCount, useRoleCounts } from "@/components/team/role-counts";
 import whiteLogo from "@/assets/sunrich-logo-white.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/")({
-  validateSearch: (search: Record<string, unknown>) => ({ chooser: search.chooser === true || search.chooser === "true" }),
+  validateSearch: (search: Record<string, unknown>): { chooser?: boolean } =>
+    search['chooser'] === true || search['chooser'] === "true" ? { chooser: true } : {},
   head: () => ({
     meta: [
       { title: "Home · Sunrich Delivery" },
@@ -68,7 +69,7 @@ function Home() {
               key={c.code}
               to={c.to}
               onClick={() => rememberRole(staff.id, c.code)}
-              className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-card active:bg-secondary"
+              className="grid grid-cols-[auto_minmax(0,1fr)_5.5rem] items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-card active:bg-secondary"
             >
               <span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary text-navy">
                 <Icon className="h-6 w-6" strokeWidth={1.75} />
@@ -76,9 +77,8 @@ function Home() {
               <span className="min-w-0">
                 <span className="block font-display text-base font-bold text-foreground">{t(c.key)}</span>
                 <span className="mt-1 block truncate text-xs text-muted-foreground">{t(`${c.key}Sub`)}</span>
-                <RoleCount code={c.code} count={counts[c.code]} />
               </span>
-              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+              <span className="min-w-0 text-right"><RoleCount code={c.code} count={counts[c.code]} /><ChevronRight className="ml-auto mt-1 h-4 w-4 text-muted-foreground" aria-hidden /></span>
             </Link>
             );
           })}
