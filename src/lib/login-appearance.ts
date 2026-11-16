@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { publicLoginAppearance } from "@/lib/login-appearance.functions";
 import defaultPhoto from "@/assets/sunrich-launch-default.webp.asset.json";
 import currentPhoto from "@/assets/sunrich-login-photo.webp.asset.json";
 import whiteLogo from "@/assets/sunrich-logo-white.png.asset.json";
@@ -50,7 +50,7 @@ export function useLoginAppearance() {
         void display({ photo: cached.photo, logo: cached.logo, showLogo: cached.showLogo });
       } else void display(initial);
     } catch { void display(initial); }
-    void supabase.from("app_settings").select("login_image_url, app_logo_url, login_show_logo").limit(1).maybeSingle().then(({ data }) => {
+    void publicLoginAppearance().then((data) => {
       if (!data || !active) return;
       const source = data.login_image_url?.trim();
       const value: Appearance = {
@@ -60,7 +60,7 @@ export function useLoginAppearance() {
       };
       try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(value)); } catch { /* Optional cache. */ }
       void display(value);
-    });
+    }).catch(() => { /* Cached branding remains available during a network failure. */ });
     return () => { active = false; objects.forEach((url) => URL.revokeObjectURL(url)); };
   }, []);
   return { ...appearance, fallbackPhoto: defaultPhoto.url, fallbackLogo: whiteLogo.url };
