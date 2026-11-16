@@ -11,6 +11,14 @@ export const LANGS: { code: Lang; label: string; short: string }[] = [
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "home.countSECURITY": "{n} vehicles outside · due back",
+  "home.countLOADER": "{n} trips to load",
+  "home.countDRIVER": "Today {n} trips · {stops} stops",
+  "home.chooseRole": "Choose role",
+  "profile.currentRole": "Current role",
+  "profile.version": "Version {n}",
+  "profile.signOutTitle": "Sign out?",
+  "profile.signOutConfirm": "You will need to sign in again to continue.",
   "dx.otherVehicle": "Delivered by another vehicle",
   "dx.noOtherTrips": "No other vehicle on the road today",
   "dx.noteOptional": "Note (optional)",
@@ -485,6 +493,14 @@ const en: Dict = {
 };
 
 const hi: Dict = {
+  "home.countSECURITY": "{n} गाड़ी बाहर · अंदर आनी हैं",
+  "home.countLOADER": "{n} ट्रिप लोड करनी हैं",
+  "home.countDRIVER": "आज {n} ट्रिप · {stops} स्टॉप",
+  "home.chooseRole": "भूमिका चुनें",
+  "profile.currentRole": "वर्तमान भूमिका",
+  "profile.version": "वर्शन {n}",
+  "profile.signOutTitle": "साइन आउट करें?",
+  "profile.signOutConfirm": "काम जारी रखने के लिए दोबारा साइन इन करना होगा।",
   "dx.otherVehicle": "दूसरी गाड़ी ने डिलीवर किया",
   "dx.noOtherTrips": "आज रास्ते पर कोई दूसरी गाड़ी नहीं",
   "dx.noteOptional": "नोट (ज़रूरी नहीं)",
@@ -950,6 +966,14 @@ const hi: Dict = {
 };
 
 const mr: Dict = {
+  "home.countSECURITY": "{n} गाड्या बाहेर · परत यायच्या आहेत",
+  "home.countLOADER": "{n} ट्रिप लोड करायच्या आहेत",
+  "home.countDRIVER": "आज {n} ट्रिप · {stops} थांबे",
+  "home.chooseRole": "भूमिका निवडा",
+  "profile.currentRole": "सध्याची भूमिका",
+  "profile.version": "आवृत्ती {n}",
+  "profile.signOutTitle": "साइन आउट करायचे?",
+  "profile.signOutConfirm": "काम सुरू ठेवण्यासाठी पुन्हा साइन इन करावे लागेल.",
   "dx.otherVehicle": "दुसऱ्या गाडीने डिलिव्हर केले",
   "dx.noOtherTrips": "आज रस्त्यावर दुसरी गाडी नाही",
   "dx.noteOptional": "नोट (गरजेचे नाही)",

@@ -85,3 +85,8 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 - [x] Part 3 Guard (SCAN, Entry, Exit, Vehicles out, menu Problem/Change guard; remove register screen) — tapped with QA Loader, 72-screen sweep clean
 - [x] Part 4 Photos compression + expiry, 2 am IST clean-up job, backup list/ZIP, 7-day notice, offline chip
 - [ ] Full QA tap test at 360/390/412 × HI/MR/EN, one Pass/Fixed/Fail table
+
+## Nov 16 Home and Profile cleanup (no SQL)
+- [x] Unified role cards and live existing-data counts; per-user last-role selection and explicit chooser from Profile.
+- [x] Single profile card, full role list, language segments, app info and confirmed sign-out.
+- [x] Real QA Driver sign-in opens /driver directly; Profile/chooser at 360/390/412, saved-role return, sign-out cancel/confirm passed; 24 tests passed and compilation clean. Publishing requested after checks. Multi-role live account not exercised; selection policy covered by tests.
