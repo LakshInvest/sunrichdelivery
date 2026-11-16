@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({ calls: [] as Array<{ table: string; op: string; value?: unknown }>, exhausted: true, lock: "2026-11-16T05:19:00Z" }));
 vi.mock("@tanstack/react-start", () => ({ createServerFn: () => {
@@ -26,6 +26,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
 import { staffRequestOtp, staffVerifyOtp } from "@/lib/staff-login.functions";
 
 describe("server OTP replacement", () => {
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
   beforeEach(() => {
     state.calls.length = 0;
     state.exhausted = true;

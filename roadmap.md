@@ -1,9 +1,10 @@
 # Roadmap — Sunrich Delivery
 
 ## Nov 16 fix round (no SQL)
-- [ ] Separate OTP/PIN errors and recover expired OTP locks with server-side code replacement.
-- [ ] Replace web icons, including safe-zone maskable and in-app icon.
-- [ ] Test login states and icon rendering; request publishing.
+- [x] Separate OTP/PIN errors and recover expired OTP locks with server-side code replacement; no SQL.
+- [x] Replace web icons, including safe-zone maskable and in-app icon. Existing public icons overwritten; no offline HTML page or app-shell service worker exists. Historic CDN wordmarks retained for previous deployments; native APK artwork unchanged.
+- [x] Nine regression tests; real QA PIN sign-in and controlled PIN/OTP lock + 30-second resend UI checks passed. Publishing requested after final checks.
+- [ ] Real WhatsApp locked-code recovery confirmation — requires the staff member to receive and enter the replacement code; not exercised against live OTP rows.
 
 Prompt-3 (rename + login redesign + phone fit): complete.
 Prompt-4 (login security + vehicle-check languages): complete.
