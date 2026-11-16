@@ -305,7 +305,7 @@ export const staffRequestOtp = createServerFn({ method: "POST" })
     }
 
     // 15-minute lock after 5 wrong tries on the newest outstanding code.
-    const { data: lastRow } = await supabaseAdmin
+    const { data: lastRow, error: lastError } = await supabaseAdmin
       .from("otp_requests")
       .select("locked_until, attempts, max_attempts, consumed_at, created_at")
       .eq("user_id", profile.id)
@@ -314,9 +314,14 @@ export const staffRequestOtp = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+    if (lastError) {
+      console.error("[staffRequestOtp] read previous code failed", lastError.message);
+      return { ok: false, code: "login_failed" };
+    }
     const retryAfterSeconds = otpRetrySeconds(lastRow, Date.now());
     if (retryAfterSeconds > 0) {
-      return { ok: false, code: lastRow && !lastRow.consumed_at && otpExhausted(lastRow) ? "otp_locked" : "resend_wait", retryAfterSeconds };
+      const locked = lastRow && !lastRow.consumed_at && (otpExhausted(lastRow) || (lastRow.locked_until && new Date(lastRow.locked_until).getTime() > Date.now()));
+      return { ok: false, code: locked ? "otp_locked" : "resend_wait", retryAfterSeconds };
     }
 
     // Rate limit: max 3 codes per mobile per 15 minutes, counting every row
@@ -433,20 +438,28 @@ export const staffVerifyOtp = createServerFn({ method: "POST" })
     if ((await sha256Hex(`${code}:${profile.id}`)) !== row.code_hash) {
       const attempts = row.attempts + 1;
       const locked = attempts >= row.max_attempts;
-      await supabaseAdmin
+      const { error: attemptError } = await supabaseAdmin
         .from("otp_requests")
         .update({
           attempts,
           ...(locked ? { locked_until: new Date(Date.now() + OTP_LOCK_MS).toISOString() } : {}),
         })
         .eq("id", row.id);
+      if (attemptError) {
+        console.error("[staffVerifyOtp] record attempt failed", attemptError.message);
+        return { ok: false, code: "login_failed" };
+      }
       return locked
         ? { ok: false, code: "otp_locked", retryAfterSeconds: OTP_LOCK_MS / 1000 }
         : { ok: false, code: "wrong_otp", attemptsLeft: row.max_attempts - attempts };
     }
 
     // Correct code: consume it (single use) and mint the session token.
-    await supabaseAdmin.from("otp_requests").update({ consumed_at: new Date().toISOString() }).eq("id", row.id);
+    const { error: consumeError } = await supabaseAdmin.from("otp_requests").update({ consumed_at: new Date().toISOString() }).eq("id", row.id);
+    if (consumeError) {
+      console.error("[staffVerifyOtp] consume code failed", consumeError.message);
+      return { ok: false, code: "login_failed" };
+    }
     const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({ type: "magiclink", email });
     if (error || !link) {
       console.error("[staffVerifyOtp] generateLink failed", error?.message);
