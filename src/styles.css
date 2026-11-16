@@ -189,9 +189,11 @@ html:has(.delivery-login), body.delivery-login-body { background: var(--login-pa
 .login-delivery-label { margin-top: 10px; font-size: 14px; font-weight: 700; letter-spacing: 0.2em; color: var(--primary-foreground); }
 .login-sheet { position: relative; flex: 0 0 auto; margin-top: -28px; border-radius: 28px 28px 0 0; background: var(--login-paper); padding: 24px 24px calc(16px + env(safe-area-inset-bottom)); }
 .login-sheet > div { max-width: 400px; margin-inline: auto; }
-.login-sheet h1 { font-size: 22px; line-height: 1.35; letter-spacing: 0; }
+.login-sheet h1 { font-size: 22px; line-height: 1.35; letter-spacing: 0; color: var(--navy); }
 .login-sheet .login-number-link { display: flex; height: 28px; margin: 4px auto 0; font-size: 12px; }
 .login-sheet button { white-space: normal; }
+.login-sheet button:disabled:not([data-slot]) { opacity: 0.7; }
+.login-sheet button[type="submit"]:disabled { background: var(--primary); color: var(--primary-foreground); opacity: 0.5; }
 @media (max-height: 520px) {
   .login-sheet { padding-top: 12px; }
   .login-sheet .mt-4 { margin-top: 8px; }

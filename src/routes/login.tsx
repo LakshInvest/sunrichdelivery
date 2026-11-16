@@ -498,9 +498,9 @@ function Login() {
                 }}
                 className="mt-4"
               >
-                <label htmlFor="mobile" className="sr-only">{t("login.mobile")}</label>
-                <div className="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 focus-within:border-aqua focus-within:ring-2 focus-within:ring-aqua/30">
-                  <span className="text-xl font-semibold tabular-nums text-foreground">+91</span>
+                <label htmlFor="mobile" className="mb-2 block text-left text-sm font-medium">{t("login.mobile")}</label>
+                <div className="flex w-full items-center gap-4 rounded-lg border border-input bg-background px-4 focus-within:border-aqua focus-within:ring-2 focus-within:ring-aqua/30">
+                  <span className="border-r border-input pr-4 text-base font-semibold tabular-nums text-foreground">+91</span>
                   <input
                     id="mobile"
                     inputMode="numeric"
