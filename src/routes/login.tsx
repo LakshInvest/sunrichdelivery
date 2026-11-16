@@ -3,13 +3,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Lock, ChevronLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeamAuth } from "@/lib/team-auth";
-import { LANGS, useLang, type Lang } from "@/lib/l10n";
+import { translate, type Lang } from "@/lib/l10n";
 import { getDeviceId, getDeviceLabel, initDeviceId } from "@/lib/device";
-import { checkDeviceStatus, staffLogin, staffRequestOtp, staffVerifyOtp } from "@/lib/staff-login.functions";
-import { haptic } from "@/lib/native";
-import { WaterLoader, BrandLogo } from "@/components/team/ui";
+import { checkDeviceStatus, staffRequestOtp, staffVerifyOtp } from "@/lib/staff-login.functions";
+import { setLoginStatusBar, haptic } from "@/lib/native";
+import { WaterLoader } from "@/components/team/ui";
 import { Button } from "@/components/ui/button";
 import { loginErrorKey } from "@/lib/staff-otp-policy";
+import { useLoginAppearance, phoneLoginLanguage } from "@/lib/login-appearance";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -35,30 +36,6 @@ export const Route = createFileRoute("/login")({
 type Step = "mobile" | "pin" | "otp" | "setpin";
 
 const LAST_MOBILE_KEY = "sunrich_last_mobile";
-
-/** Soft rising bubbles behind the navy hero — no wave strip, one clean block. */
-function BubbleScene() {
-  const bubbles = [
-    { left: "8%", size: 14, dur: 13, delay: 0 },
-    { left: "22%", size: 8, dur: 17, delay: 4 },
-    { left: "38%", size: 18, dur: 11, delay: 2 },
-    { left: "55%", size: 10, dur: 15, delay: 7 },
-    { left: "68%", size: 14, dur: 12, delay: 1 },
-    { left: "82%", size: 9, dur: 18, delay: 5 },
-    { left: "92%", size: 16, dur: 14, delay: 9 },
-  ];
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      {bubbles.map((b, i) => (
-        <span
-          key={i}
-          className="bubble"
-          style={{ left: b.left, width: b.size, height: b.size, animationDuration: `${b.dur}s`, animationDelay: `-${b.delay}s` }}
-        />
-      ))}
-    </div>
-  );
-}
 
 /** Code boxes that fill with water from the bottom as digits are entered. */
 function CodeBoxes({
@@ -149,7 +126,30 @@ function ResendRing({ seconds, onResend, label, busy }: { seconds: number; onRes
 }
 
 function Login() {
-  const { t, lang, setLang } = useLang();
+  const [lang, setLoginLang] = useState<Lang>("hi");
+  const t = (key: string, vars?: Record<string, string | number>) => translate(lang, key, vars);
+  const appearance = useLoginAppearance();
+  const viewport = useRef<HTMLElement>(null);
+  useEffect(() => {
+    setLoginLang(phoneLoginLanguage(navigator.languages ?? [navigator.language]));
+    document.body.classList.add("delivery-login-body");
+    void setLoginStatusBar(true);
+    const resize = () => {
+      viewport.current?.style.setProperty("--login-height", `${window.visualViewport?.height ?? window.innerHeight}px`);
+      viewport.current?.style.setProperty("--login-offset", `${window.visualViewport?.offsetTop ?? 0}px`);
+    };
+    resize();
+    window.visualViewport?.addEventListener("resize", resize);
+    window.visualViewport?.addEventListener("scroll", resize);
+    window.addEventListener("resize", resize);
+    return () => {
+      document.body.classList.remove("delivery-login-body");
+      void setLoginStatusBar(false);
+      window.visualViewport?.removeEventListener("resize", resize);
+      window.visualViewport?.removeEventListener("scroll", resize);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
   const { signIn } = useTeamAuth();
   const [step, setStep] = useState<Step>("mobile");
   const [mobile, setMobile] = useState("");
@@ -472,63 +472,33 @@ function Login() {
   const formatted = (digits: string) => (digits.length > 5 ? `${digits.slice(0, 5)} ${digits.slice(5)}` : digits);
   const maskedMobile = `+91 ${formatted(mobile.replace(/\D/g, ""))}`;
 
+  const changeNumber = () => { setStep("mobile"); setError(null); };
   return (
-    <main className="relative mx-auto flex h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-navy-deep">
-      {/* Navy hero — one clean block, soft bubbles, logo + tagline centred. Shrinks with the keyboard. */}
-      <div
-        className="relative flex shrink-0 flex-col overflow-hidden bg-gradient-to-b from-navy via-navy to-navy-deep pt-[max(env(safe-area-inset-top),0.75rem)] transition-[height] duration-300 ease-out"
-        style={{ height: "55dvh", minHeight: "220px" }}
-      >
-        <BubbleScene />
-        <div className="relative z-10 flex justify-end px-4">
-          <div className="flex gap-1 rounded-full bg-white/10 p-1" role="group" aria-label="Language">
-            {LANGS.map((l: { code: Lang; short: string }) => (
-              <button
-                key={l.code}
-                type="button"
-                onClick={() => setLang(l.code)}
-                aria-pressed={lang === l.code}
-                className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
-                  lang === l.code ? "bg-aqua text-navy" : "text-white/80"
-                }`}
-              >
-                {l.short}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-6 text-center">
-          <BrandLogo tone="white" className="h-32" />
-          <p className={`mt-4 text-sm font-bold uppercase text-aqua ${lang === "en" ? "tracking-[0.35em]" : "tracking-wide"}`}>
-            {lang === "hi" ? "डिलीवरी" : lang === "mr" ? "डिलिव्हरी" : "DELIVERY"}
-          </p>
-        </div>
+    <main ref={viewport} className="delivery-login">
+      <div className="login-photo">
+        <img src={appearance.photo} alt="Sunrich drinking water" className="login-photo-image" fetchPriority="high"
+          onError={(event) => { if (event.currentTarget.getAttribute("src") !== appearance.fallbackPhoto) event.currentTarget.src = appearance.fallbackPhoto; }} />
+        <div className="login-photo-shade" />
+        {appearance.showLogo && <div className="login-photo-brand">
+          <img src={appearance.logo} alt="Sunrich" className="login-wordmark"
+            onError={(event) => { if (event.currentTarget.getAttribute("src") !== appearance.fallbackLogo) event.currentTarget.src = appearance.fallbackLogo; }} />
+          <p className="login-delivery-label">DELIVERY</p>
+        </div>}
       </div>
-
-      {/* White sheet docked low: rounded top, small centred progress bar, centred content */}
-      <div className="relative z-10 -mt-7 flex min-h-0 flex-1 flex-col rounded-t-[28px] bg-card px-6 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-4 shadow-[0_-12px_40px_-20px_rgba(13,50,120,0.45)]">
-        <div aria-hidden className="mx-auto mb-5 h-1 w-20 shrink-0 overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full bg-aqua transition-all duration-300"
-            style={{ width: step === "mobile" ? "34%" : step === "setpin" ? "100%" : "67%" }}
-          />
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+      <section className="login-sheet" aria-label="Sign in">
+        <div>
           {step === "mobile" && (
-            <div key="mobile" className="animate-in text-center fade-in slide-in-from-bottom-3 duration-300">
-              <h1 className="font-display text-2xl font-bold text-foreground">{t("login.title")}</h1>
+            <div key="mobile" className="text-center">
+              <h1 className="font-display text-2xl font-bold text-foreground">Sunrich Delivery</h1>
               <p className="mt-1 text-sm text-muted-foreground">{t("login.subtitle")}</p>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   void checkMobile();
                 }}
-                className="mt-6"
+                className="mt-4"
               >
-                <label htmlFor="mobile" className="mb-1.5 block text-center text-sm font-medium text-foreground">
-                  {t("login.mobile")}
-                </label>
+                <label htmlFor="mobile" className="sr-only">{t("login.mobile")}</label>
                 <div className="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 focus-within:border-aqua focus-within:ring-2 focus-within:ring-aqua/30">
                   <span className="text-xl font-semibold tabular-nums text-foreground">+91</span>
                   <input
@@ -550,14 +520,14 @@ function Login() {
                     {error}
                   </p>
                 )}
-                <button
+                <Button
                   type="submit"
                   disabled={busy || mobile.replace(/\D/g, "").length !== 10}
-                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+                  className="mt-4 h-14 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
                 >
                   {busy ? <WaterLoader className="h-5 w-5" light /> : <WhatsAppIcon />}
                   {busy ? t("login.verifying") : t("login.cta")}
-                </button>
+                </Button>
                 <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                   <Lock className="h-3.5 w-3.5" /> {t("login.secure")}
                 </p>
@@ -566,23 +536,16 @@ function Login() {
           )}
 
           {step === "pin" && (
-            <div key="pin" className="animate-in text-center fade-in slide-in-from-right-3 duration-300">
-              <button
-                type="button"
-                onClick={() => setStep("mobile")}
-                className="mx-auto mb-3 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground"
-              >
-                <ChevronLeft className="h-4 w-4" /> {t("login.changeNumber")}
-              </button>
+            <div key="pin" className="text-center">
               <h1 className="font-display text-2xl font-bold text-foreground">{t("login.pinHint")}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{name ?? maskedMobile}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{name ? `👋 ${name}` : maskedMobile}</p>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (pin.length === 4 && !busy) void submitPin(pin);
                 }}
               >
-              <div className="relative mt-6" onPointerDown={(e) => { const el = e.currentTarget.querySelector("input"); if (el) { el.focus(); } }}>
+              <div className="relative mt-4" onPointerDown={(e) => { const el = e.currentTarget.querySelector("input"); if (el) { el.focus(); } }}>
                 <input
                   enterKeyHint="done"
                   ref={(el) => {
@@ -599,13 +562,13 @@ function Login() {
                 />
                 <CodeBoxes count={4} code={pin} state={pinState} />
               </div>
-              <button
+              <Button
                 type="submit"
                 disabled={busy || pinLocked || pin.length !== 4}
-                className="mt-5 flex w-full items-center justify-center rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+                className="mt-4 h-14 flex w-full items-center justify-center rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
               >
                 {t("login.continue")}
-              </button>
+              </Button>
               </form>
               {error && (
                 <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive" role="alert">
@@ -616,22 +579,16 @@ function Login() {
                 type="button"
                 disabled={busy}
                 onClick={() => void goOtp()}
-                className="mx-auto mt-5 block text-sm font-semibold text-navy underline-offset-4 hover:underline"
+                className="mx-auto mt-2 block text-sm font-semibold text-navy underline-offset-4 hover:underline"
               >
                 {t(pinLocked ? "login.otpLogin" : "login.forgotPin")}
               </Button>
+              <Button variant="link" type="button" onClick={changeNumber} className="login-number-link">{t("login.otherNumber")}</Button>
             </div>
           )}
 
           {step === "otp" && (
-            <div key="otp" className="animate-in text-center fade-in slide-in-from-right-3 duration-300">
-              <button
-                type="button"
-                onClick={() => setStep("mobile")}
-                className="mx-auto mb-3 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground"
-              >
-                <ChevronLeft className="h-4 w-4" /> {t("login.changeNumber")}
-              </button>
+            <div key="otp" className="text-center">
               <h1 className="font-display text-2xl font-bold text-foreground">{t("login.otpTitle")}</h1>
               <p className="mt-1 text-sm text-muted-foreground">{t(otpSent ? "login.otpSent" : "login.otpHint", { mobile: maskedMobile })}</p>
               <form
@@ -640,7 +597,7 @@ function Login() {
                   if (code.length === 4 && !busy) void verifyCode(code);
                 }}
               >
-              <div className="relative mt-6" onPointerDown={(e) => { const el = e.currentTarget.querySelector("input"); if (el) { el.focus(); } }}>
+              <div className="relative mt-4" onPointerDown={(e) => { const el = e.currentTarget.querySelector("input"); if (el) { el.focus(); } }}>
                 <input
                   enterKeyHint="done"
                   ref={otpInput}
@@ -658,49 +615,50 @@ function Login() {
                 />
                 <CodeBoxes count={4} code={code} state={otpState} />
               </div>
-              <button
+              <Button
                 type="submit"
                 disabled={busy || otpBlocked || code.length !== 4}
-                className="mt-5 flex w-full items-center justify-center rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+                className="mt-4 h-14 flex w-full items-center justify-center rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
               >
                 {t("login.verify")}
-              </button>
+              </Button>
               </form>
               {clipboardCode && (
-                <button
+                <Button
                   type="button"
                   onClick={() => onOtpChange(clipboardCode)}
                   className="mt-4 w-full rounded-md bg-aqua-soft px-3 py-2.5 text-sm font-semibold text-navy"
                 >
                   {t("login.clipboard")} · <span className="font-mono">{clipboardCode}</span>
-                </button>
+                </Button>
               )}
               {error && (
                 <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive" role="alert">
                   {error}
                 </p>
               )}
-              <div className="mt-5 flex flex-col items-center gap-3">
+              <div className="mt-2 flex flex-col items-center gap-1">
                 <ResendRing
                   busy={busy}
                   seconds={resendIn}
                   label={resendIn > 0 ? t("login.resendIn", { n: resendIn }) : t("login.resend")}
                   onResend={() => void goOtp()}
                 />
-                {otpToken.current && <button
+                {otpToken.current && <Button
                   type="button"
                   onClick={() => void autoVerify()}
                   disabled={busy || !otpToken.current}
                   className="text-xs font-semibold text-navy underline-offset-4 hover:underline"
                 >
                   {t("login.otpAuto")}
-                </button>}
+                </Button>}
               </div>
+              <Button variant="link" type="button" onClick={changeNumber} className="login-number-link"><ChevronLeft className="h-4 w-4" />{t("login.changeNumber")}</Button>
             </div>
           )}
 
           {step === "setpin" && (
-            <div key={`setpin-${pinStage}`} className="animate-in text-center fade-in slide-in-from-right-3 duration-300">
+            <div key={`setpin-${pinStage}`} className="text-center">
               <h1 className="font-display text-2xl font-bold text-foreground">
                 {pinStage === "new" ? t("login.setPinTitle") : t("login.confirmPinTitle")}
               </h1>
@@ -713,7 +671,7 @@ function Login() {
                   void savePin();
                 }}
               >
-                <div className="relative mt-6" onPointerDown={(e) => { const el = e.currentTarget.querySelector("input"); if (el) el.focus(); }}>
+                <div className="relative mt-4" onPointerDown={(e) => { const el = e.currentTarget.querySelector("input"); if (el) el.focus(); }}>
                   <input
                     enterKeyHint="done"
                     ref={(el) => {
@@ -734,13 +692,13 @@ function Login() {
                   />
                   <CodeBoxes count={4} code={pinStage === "new" ? newPin : confirmPin} state={pinState} />
                 </div>
-                <button
+                <Button
                   type="submit"
                   disabled={busy || (pinStage === "new" ? newPin : confirmPin).length !== 4}
-                  className="mt-5 flex w-full items-center justify-center rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+                  className="mt-4 h-14 flex w-full items-center justify-center rounded-lg bg-primary py-4 text-base font-bold text-primary-foreground shadow-soft transition-opacity active:opacity-80 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
                 >
                   {t("login.continue")}
-                </button>
+                </Button>
               </form>
               {error && (
                 <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive" role="alert">
@@ -750,13 +708,9 @@ function Login() {
             </div>
           )}
 
-          {busy && step !== "mobile" && (
-            <div className="mt-6 flex justify-center">
-              <WaterLoader />
-            </div>
-          )}
+
         </div>
-      </div>
+      </section>
     </main>
   );
 }
