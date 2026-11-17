@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { istToday } from "@/lib/ist";
+import { useLiveRefresh } from "@/lib/use-live-refresh";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { ErrorCard, Screen, Spinner, StatusBadge, SyncBadge, AvatarLink } from "@/components/team/ui";
@@ -63,9 +64,7 @@ function LoaderHome() {
     setDoneRows((done.data ?? []) as unknown as TripRow[]);
   }, [t]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLiveRefresh(load, [{table:"trips"}, {table:"trip_stops"}, {table:"trip_loading"}, {table:"gate_passes"}], "loader-home");
 
   const card = (r: TripRow) => (
     <Link

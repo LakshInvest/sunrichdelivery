@@ -61,7 +61,7 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
     const map: Record<string,LineRow[]> = {};
     const sold: Record<string,number> = {};
     for (const l of lr.data ?? []) {
-      (map[l.order_id] ??= []).push({ id:l.id,product_name:l.product_name,pack_label:l.pack_label,qty:Number(l.qty),value:Number(l.line_total)+Number(l.deposit_total),kept:delivered.get(l.id) });
+      (map[l.order_id] ??= []).push({ id:l.id,product_name:l.product_name,pack_label:l.pack_label,qty:Number(l.qty),value:Number(l.line_total)+Number(l.deposit_total),...(delivered.has(l.id)?{kept:delivered.get(l.id) ?? 0}:{}) });
       sold[l.product_id] = (sold[l.product_id] ?? 0) + (delivered.get(l.id) ?? 0);
     }
     setTrip(tr.data as unknown as Trip); setStops(list); setLines(map);
@@ -69,7 +69,7 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
     setToken(gp.data?.qr_token ?? null);
     setCash(Math.max(0,(cc.data ?? []).filter(x=>x.mode==="cash").reduce((a,x)=>a+Number(x.amount),0)-(ex.data ?? []).filter(x=>x.approved!==false).reduce((a,x)=>a+Number(x.amount),0)));
     const cashList = (ca.data ?? []) as {id:string;full_name:string}[];
-    setCashiers(cashList); setPendingCash(ch.data ? cashList.find(x=>x.id===ch.data.to_user_id)?.full_name ?? "—" : null);
+    const pendingTo=ch.data?.to_user_id; setCashiers(cashList); setPendingCash(pendingTo ? cashList.find(x=>x.id===pendingTo)?.full_name ?? "—" : null);
     setProducts((pr.data ?? []).map(p=>({id:p.id,name:(lang==="hi" ? p.name_hi : lang==="mr" ? p.name_mr : p.name)||p.name,returnable:p.is_returnable,left:Math.max(0,Number(ld.data?.find(x=>x.product_id===p.id)?.loaded_qty ?? 0)-(sold[p.id] ?? 0))})));
     const firm = list.find(s=>s.orders?.firm_id)?.orders?.firm_id;
     if (firm) { const f=await supabase.from("firms").select("upi_id,upi_payee_name").eq("id",firm).maybeSingle(); setUpi(f.data ? {id:f.data.upi_id ?? "",payee:f.data.upi_payee_name}:null); }
@@ -94,7 +94,7 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
 }
 
 const titleKeys: Record<string,string> = {home:"dr.title",pass:"dr.gatePass",start:"dr.startTrip",next:"dr.nextStop",goods:"dr.allAsOrdered",counts:"dr.somethingDifferent",proof:"dr.deliveryOtp",photo:"dr.proofPhoto",signature:"dr.signature",payment:"dr.toCollect",cash:"dr.modeCash",upi:"dr.modeUpi",bank:"dr.reference",cheque:"dr.modeCheque",split:"dr.modeSplit",udhaar:"dr.udhaar",office:"dr.askOffice",done:"dr.stopDone",stops:"dr.allStopsLeft",end:"dr.endTrip",handover:"dr.handedToCashier",expense:"dr.expenses",pickup:"dr.pickup",spot:"dr.spotSale",customer:"dr.customer",sos:"dr.sos",failed:"dr.markFailed",selfie:"dr.selfie",check:"dr.vehicleCheck"};
-export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:string}) {
+export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:string | undefined}) {
   const w=useWorkflow();const {tripId,trip,stops,lines,settings,token,upi,busy,error,write,update}=w;
   const {t}=useLang();const {staff}=useTeamAuth();const navigate=useNavigate();
   const pending=stops.filter(s=>s.status==="pending").sort((a,b)=>Number(!!a.do_later_at)-Number(!!b.do_later_at)||a.seq-b.seq);
@@ -143,7 +143,7 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
   useLiveRefresh(officeLoad,[{table:"trip_alerts",filter:`trip_id=eq.${tripId}`}],`office:${tripId}:${draft.alertId ?? "none"}`);
   useEffect(()=>{
     if(step!=="customer"||q.trim().length<3){setFound([]);return;}
-    let active=true;const timer=window.setTimeout(()=>{void supabase.rpc("driver_find_customers",{p_trip_id:tripId,p_q:q.trim()}).then(r=>{if(!active)return; if(r.error)setLocalError(t("c.error"));setFound(((r.data ?? []) as {customer_id:string;business_name?:string;contact_name?:string}[]).map(c=>({id:c.customer_id,name:c.business_name||c.contact_name||"—"})));});},300);
+    let active=true;const timer=window.setTimeout(()=>{void supabase.rpc("driver_find_customers",{p_trip_id:tripId,p_q:q.trim()}).then(r=>{if(!active)return; if(r.error)setLocalError(t("c.error"));setFound((r.data ?? []).map(c=>({id:c.id,name:c.business_name||c.contact_name||"—"})));});},300);
     return()=>{active=false;window.clearTimeout(timer);};
   },[step,q,tripId]);
   const deliver=async(proof:Partial<Draft>={},failed=false)=>{

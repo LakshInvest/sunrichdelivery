@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { useLiveRefresh } from "@/lib/use-live-refresh";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { useTeamAuth } from "@/lib/team-auth";
@@ -53,9 +54,7 @@ function DriverHome() {
     setRows((data ?? []) as unknown as TripRow[]);
   }, [staff]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLiveRefresh(load, [{table:"trips"}, {table:"trip_stops"}, {table:"trip_loading"}, {table:"gate_passes"}], "driver-home");
 
   return (
     <Screen title={t("dr.title")} right={<div className="flex items-center gap-2"><SyncBadge /><AvatarLink /></div>}>
