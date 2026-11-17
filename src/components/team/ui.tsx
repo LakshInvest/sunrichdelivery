@@ -55,7 +55,7 @@ export function LanguageChips({ className = "" }: { className?: string }) {
           type="button"
           onClick={() => setLang(l.code)}
           aria-pressed={lang === l.code}
-          className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+          className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
             lang === l.code ? "bg-primary text-primary-foreground shadow-soft" : "bg-muted text-muted-foreground hover:bg-accent"
           }`}
         >
@@ -86,7 +86,7 @@ export function SyncBadge() {
   if (n === 0 && online) return null;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+      className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
         !online ? "bg-destructive/10 text-destructive" : "bg-amber-500/15 text-amber-700 dark:text-amber-400"
       }`}
     >

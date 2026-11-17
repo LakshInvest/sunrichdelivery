@@ -46,7 +46,7 @@ export function VehiclesOutList({ refreshKey, onArrived }: { refreshKey: number;
         {rows.map((r) => (
           <div key={r.trip_id} className="rounded-lg bg-muted p-3">
             <button type="button" onClick={() => setOpen(open === r.trip_id ? null : r.trip_id)} className="w-full text-left">
-              <p className="font-display text-base font-bold text-foreground">{r.reg_no ?? r.trip_no}</p>
+              <p className="truncate font-display text-base font-bold text-foreground">{r.reg_no ?? r.trip_no}</p>
               <p className="break-words text-xs text-muted-foreground">{[r.driver, r.trip_no, time(r.gate_out_at)].filter(Boolean).join(" · ")}</p>
             </button>
             {open === r.trip_id && (

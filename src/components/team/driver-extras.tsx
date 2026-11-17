@@ -50,7 +50,7 @@ export function HandoverStop({ tripId, stopId, onDone }: { tripId: string; stopI
   return (
     <div className="grid gap-2 rounded-xl border border-border bg-card p-3 shadow-card">
       <p className="text-sm font-bold text-foreground">{t("dx.otherVehicle")}</p>
-      {trips === null && <p className="text-sm text-muted-foreground">{t("c.loading")}</p>}
+      {trips === null && <Spinner label={t("c.loading")} />}
       {trips?.length === 0 && <p className="text-sm text-muted-foreground">{t("dx.noOtherTrips")}</p>}
       {trips?.map((tr) => (
         <button
@@ -60,7 +60,7 @@ export function HandoverStop({ tripId, stopId, onDone }: { tripId: string; stopI
           aria-pressed={pick === tr.trip_id}
           className={`rounded-lg border px-3 py-3 text-left text-sm ${pick === tr.trip_id ? "border-aqua bg-aqua/10" : "border-input bg-background"}`}
         >
-          <span className="block font-bold text-foreground">{tr.vehicle_no || tr.trip_no}</span>
+          <span className="block truncate font-bold text-foreground">{tr.vehicle_no || tr.trip_no}</span>
           <span className="block break-words text-xs text-muted-foreground">{tr.trip_no}{tr.driver_name ? ` · ${tr.driver_name}` : ""}</span>
         </button>
       ))}
@@ -141,7 +141,7 @@ export function SpotCustomerPicker({
   };
 
   const tabBtn = (k: typeof tab, label: string) => (
-    <button type="button" onClick={() => setTab(k)} aria-pressed={tab === k} className={`rounded-full px-2 py-2 text-xs font-semibold ${tab === k ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+    <button type="button" onClick={() => setTab(k)} aria-pressed={tab === k} className={`truncate whitespace-nowrap rounded-full px-2 py-2 text-xs font-semibold ${tab === k ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
       {label}
     </button>
   );

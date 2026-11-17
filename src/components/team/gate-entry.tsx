@@ -309,7 +309,7 @@ export function GateExitPanel({ onChange }: { onChange: () => void }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="truncate font-display font-bold text-foreground">{e.name}</span>
-              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${e.person_type === "staff" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              <span className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold ${e.person_type === "staff" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                 {e.person_type === "staff" ? t("sec.staffTag") : t(`sec.type.${e.entry_type}`)}
               </span>
             </div>
