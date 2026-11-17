@@ -1,0 +1,1 @@
+UPDATE public.user_profiles SET preferred_language='hi' WHERE mobile='+919999900013' AND full_name='QA Driver';

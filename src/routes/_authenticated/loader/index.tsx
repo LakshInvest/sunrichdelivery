@@ -1,7 +1,7 @@
 import { HomeScreen, EmptyState, ListFilter, SummaryCard, isTodayTrip } from "@/components/team/role-home";
 import { Boxes, Undo2 } from "lucide-react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { istToday } from "@/lib/ist";
 import { useLiveRefresh } from "@/lib/use-live-refresh";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +54,8 @@ function LoaderHome() {
     setBack((r.data ?? []) as unknown as TripRow[]);
   }, [t]);
 
+  // Load as soon as the signed-in profile arrives; the live channel's first refresh can run before it.
+  useEffect(() => { void load(); }, [load]);
   useLiveRefresh(load, [{ table: "trips" }, { table: "trip_stops" }, { table: "trip_loading" }, { table: "gate_passes" }], "loader-home");
 
   const today = istToday();

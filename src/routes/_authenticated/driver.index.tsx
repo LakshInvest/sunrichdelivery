@@ -1,6 +1,6 @@
 import { HomeScreen, EmptyState, ListFilter, SummaryCard, isTodayTrip } from "@/components/team/role-home";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Truck } from "lucide-react";
 import { useLiveRefresh } from "@/lib/use-live-refresh";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +49,8 @@ function DriverHome() {
     setRows((data ?? []) as unknown as TripRow[]);
   }, [staff]);
 
+  // Load as soon as the signed-in profile arrives; the live channel's first refresh can run before it.
+  useEffect(() => { if (staff) void load(); }, [staff, load]);
   useLiveRefresh(load, [{ table: "trips" }, { table: "trip_stops" }, { table: "trip_loading" }, { table: "gate_passes" }], "driver-home");
 
   const today = istToday();
