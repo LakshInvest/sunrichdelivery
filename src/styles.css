@@ -113,7 +113,7 @@
 .task-action { flex: 0 0 auto; padding: 12px 16px max(env(safe-area-inset-bottom), 16px); background: var(--card); border-top: 1px solid var(--border); }
 .home-screen { margin-inline: auto; width: 100%; max-width: 28rem; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background: var(--background); color: var(--foreground); }
 .home-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-bottom: max(env(safe-area-inset-bottom), 24px); }
-.home-hero { background: var(--navy); color: var(--primary-foreground); border-radius: 0 0 28px 28px; padding: max(env(safe-area-inset-top), 20px) 16px 28px; }
+.home-hero { background: var(--navy); color: var(--primary-foreground); border-radius: 0 0 28px 28px; padding-top: max(env(safe-area-inset-top), 20px); padding-inline: 16px; }
 .home-hero h1 { letter-spacing: 0; }
 .home-card { background: var(--card); border-radius: 16px; box-shadow: var(--shadow-card); border: 1px solid var(--border); min-width: 0; overflow-wrap: anywhere; transition: transform .1s; }
 .task-content .text-sm { font-size: 1rem; }
