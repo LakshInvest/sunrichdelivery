@@ -1,0 +1,1 @@
+insert into public.user_roles(user_id,role_id) values ('03e8f36b-3bb9-44ed-b000-e254f4db69a4','9fd46332-5979-4016-93cc-a945879e7a0b') on conflict do nothing; update public.delivery_settings set require_start_selfie=false,vehicle_check_enabled=false where company_id='ebd6f904-55a0-46f1-b4c9-2324c5b61aea';
