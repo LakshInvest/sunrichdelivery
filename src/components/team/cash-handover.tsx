@@ -4,6 +4,8 @@ import { useLang } from "@/lib/l10n";
 import { queueRpc } from "@/lib/offline";
 import { friendlyError } from "@/lib/friendly-error";
 import { Banknote } from "lucide-react";
+import { useLiveRefresh } from "@/lib/use-live-refresh";
+import { useTeamAuth } from "@/lib/team-auth";
 
 const inputCls = "rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30";
 
@@ -74,6 +76,7 @@ type Row = { id: string; amount: number; note: string | null; from_name: string 
 /** Cashier: cash handed to me, waiting for my confirmation. Renders nothing when empty. */
 export function CashToConfirm() {
   const { t } = useLang();
+  const { staff } = useTeamAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -81,9 +84,7 @@ export function CashToConfirm() {
     const r = await supabase.rpc("my_cash_to_confirm" as never);
     setRows((r.data ?? []) as unknown as Row[]);
   }, []);
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLiveRefresh(load, [{table: "cash_handovers", ...(staff ? {filter: `to_user_id=eq.${staff.id}`} : {})}], `cashier:${staff?.id ?? "none"}`);
   const confirm = async (id: string) => {
     setBusy(id);
     setErr(null);
