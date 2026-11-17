@@ -6057,6 +6057,8 @@ export type Database = {
           gate_in_manual: boolean
           gate_out_at: string | null
           gate_out_by: string | null
+          gate_out_manual: boolean
+          gate_return_note: string | null
           helper_user_ids: string[]
           hired_driver_mobile: string | null
           hired_driver_name: string | null
@@ -6103,6 +6105,8 @@ export type Database = {
           gate_in_manual?: boolean
           gate_out_at?: string | null
           gate_out_by?: string | null
+          gate_out_manual?: boolean
+          gate_return_note?: string | null
           helper_user_ids?: string[]
           hired_driver_mobile?: string | null
           hired_driver_name?: string | null
@@ -6149,6 +6153,8 @@ export type Database = {
           gate_in_manual?: boolean
           gate_out_at?: string | null
           gate_out_by?: string | null
+          gate_out_manual?: boolean
+          gate_return_note?: string | null
           helper_user_ids?: string[]
           hired_driver_mobile?: string | null
           hired_driver_name?: string | null
@@ -7309,6 +7315,28 @@ export type Database = {
           pincode: string
           updated_at: string
         }[]
+      }
+      cc69_assert_driver: {
+        Args: { p_trip: Database["public"]["Tables"]["trips"]["Row"] }
+        Returns: undefined
+      }
+      cc69_assign_trip: {
+        Args: {
+          p_driver_user_id: string
+          p_hired_driver_mobile?: string
+          p_hired_driver_name?: string
+          p_trip_id: string
+          p_vehicle_id: string
+        }
+        Returns: Json
+      }
+      cc69_driver_valid: {
+        Args: { p_company: string; p_driver: string }
+        Returns: boolean
+      }
+      cc69_return_trip: {
+        Args: { p_note?: string; p_trip_id: string }
+        Returns: undefined
       }
       check_pin: {
         Args: {
