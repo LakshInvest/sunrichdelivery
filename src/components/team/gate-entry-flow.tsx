@@ -39,7 +39,7 @@ const W: Record<string, [string, string, string]> = {
   needChallan: ["Take the challan photo", "चालान फोटो लें", "चलन फोटो घ्या"], already: ["Already inside", "पहले से अंदर है", "आधीच आत आहे"], err: ["Something went wrong. Try again.", "कुछ गड़बड़ हुई। दोबारा करें।", "काहीतरी चुकले. पुन्हा करा."],
 };
 const PURPOSES = ["p_meeting", "p_delivery", "p_interview", "p_service", "p_other"];
-const chip = (on: boolean) => `chip min-h-12 whitespace-nowrap px-4 text-base font-semibold ${on ? "bg-primary text-primary-foreground" : "bg-card text-primary shadow-card"}`;
+const chip = (on: boolean) => `inline-flex h-12 items-center rounded-full whitespace-nowrap px-5 text-base font-semibold ${on ? "bg-primary text-primary-foreground" : "bg-card text-primary shadow-card"}`;
 
 export function GateEntry({ step, draft, update, photoRule, refresh }: { step: string; draft: GateDraft; update: (d: Partial<GateDraft>) => void; photoRule: string; refresh: () => Promise<void> }) {
   const { lang, t } = useLang();
