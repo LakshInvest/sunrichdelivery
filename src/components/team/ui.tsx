@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fileToDataUrl, photoUrl, uploadPhoto } from "@/lib/photo";
 import { isNative, takeNativePhoto, haptic } from "@/lib/native";
 import { Link } from "@tanstack/react-router";
-import { UserRound } from "lucide-react";
+import { Camera, UserRound } from "lucide-react";
 import { useTeamAuth } from "@/lib/team-auth";
 import appIcon from "@/assets/sunrich-delivery-final.png.asset.json";
 
@@ -240,7 +240,17 @@ export function Stepper({
   );
 }
 
-/** Camera capture button that uploads to the operations bucket and shows a preview. */
+let uploadsInFlight = 0;
+const uploadListeners = new Set<(n: number) => void>();
+function bumpUploads(d: number) { uploadsInFlight = Math.max(0, uploadsInFlight + d); uploadListeners.forEach((f) => f(uploadsInFlight)); }
+/** True while any PhotoInput upload is running, so main actions can wait instead of blocking on a "missing" photo. */
+export function usePhotoUploading() {
+  const [n, setN] = useState(uploadsInFlight);
+  useEffect(() => { uploadListeners.add(setN); return () => { uploadListeners.delete(setN); }; }, []);
+  return n > 0;
+}
+
+/** Big camera tile: tap opens camera, shows preview, Retake, upload status with automatic retry. */
 export function PhotoInput({
   userId,
   kind,
@@ -260,74 +270,59 @@ export function PhotoInput({
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState<File | null>(null);
+  const retryTimer = useRef<number | null>(null);
 
   useEffect(() => {
     let alive = true;
-    if (!value) {
-      setPreview(null);
-      return;
-    }
-    void photoUrl(value).then((u) => alive && setPreview(u));
-    return () => {
-      alive = false;
-    };
+    if (!value) { if (!failed && !busy) setPreview(null); return; }
+    void photoUrl(value).then((u) => alive && u && setPreview(u));
+    return () => { alive = false; };
   }, [value]);
+  useEffect(() => () => { if (retryTimer.current) window.clearTimeout(retryTimer.current); }, []);
 
-  const pick = async (file: File | undefined) => {
+  const pick = async (file: File | undefined, attempt = 0) => {
     if (!file) return;
+    if (retryTimer.current) window.clearTimeout(retryTimer.current);
     setBusy(true);
-    setError(null);
+    setFailed(null);
+    if (attempt === 0) { onChange(null); try { setPreview(await fileToDataUrl(file)); } catch { /* ignore */ } }
+    bumpUploads(1);
     try {
       const path = await uploadPhoto(file, userId, kind);
       onChange(path);
       void haptic("success");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("c.error"));
-      // keep a local preview so the flow can continue offline
-      try {
-        setPreview(await fileToDataUrl(file));
-      } catch {
-        // ignore
-      }
+    } catch {
+      setFailed(file);
+      if (attempt < 3) retryTimer.current = window.setTimeout(() => void pick(file, attempt + 1), 3000 * (attempt + 1));
     } finally {
+      bumpUploads(-1);
       setBusy(false);
     }
   };
+  const open = () => {
+    if (isNative()) void takeNativePhoto().then((f) => (f ? void pick(f) : ref.current?.click()));
+    else ref.current?.click();
+  };
 
   return (
-    <div>
-      <label className="mb-1 flex items-center gap-1 text-sm font-medium text-foreground">
+    <div data-testid={`photo-${kind}`}>
+      <p className="mb-1 flex items-center gap-1 text-base font-semibold text-foreground">
         {label}
         {required && <span className="text-destructive">*</span>}
-      </label>
-      <input
-        ref={ref}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={(e) => void pick(e.target.files?.[0])}
-      />
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => {
-            if (isNative()) void takeNativePhoto().then((f) => (f ? void pick(f) : ref.current?.click()));
-            else ref.current?.click();
-          }}
-          disabled={busy}
-          className="flex items-center gap-2 rounded-md border border-input bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-card active:bg-accent disabled:opacity-60"
-        >
-          {busy ? <WaterLoader className="h-5 w-5" /> : preview ? t("c.retake") : t("c.takePhoto")}
-        </button>
-        {preview && (
+      </p>
+      <input ref={ref} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
+      <button type="button" onClick={open} disabled={busy} aria-label={preview ? t("c.retake") : t("c.takePhoto")}
+        className="relative flex min-h-36 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-secondary/50 bg-card text-primary shadow-card active:scale-[0.99] disabled:opacity-80">
+        {preview
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="" className="h-14 w-14 rounded-xl border border-border object-cover" />
-        )}
-      </div>
-      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
-      {!error && value && <p className="mt-1 text-xs text-muted-foreground">{t("c.photoTaken")}</p>}
+          ? <img src={preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          : <span className="flex flex-col items-center gap-2 text-lg font-semibold"><Camera className="h-10 w-10 text-secondary" aria-hidden />{t("c.takePhoto")}</span>}
+        {preview && !busy && <span className="absolute bottom-2 right-2 rounded-full bg-primary px-3 py-1 text-sm font-semibold text-primary-foreground">{t("c.retake")}</span>}
+      </button>
+      {busy && <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-muted-foreground"><WaterLoader className="h-4 w-4" />{t("c.photoUploading")}</p>}
+      {!busy && failed && <button type="button" onClick={() => void pick(failed)} className="mt-1 text-sm font-semibold text-destructive underline">{t("c.photoFailed")}</button>}
+      {!busy && !failed && value && <p className="mt-1 text-sm font-semibold text-success">✓ {t("c.photoTaken")}</p>}
     </div>
   );
 }

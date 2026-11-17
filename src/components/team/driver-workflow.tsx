@@ -12,7 +12,7 @@ import { useLiveRefresh } from "@/lib/use-live-refresh";
 import { driverHomeAction, optionalDriverTasks, needsPayment, STOP_DONE_MS } from "@/lib/task-policy";
 import { DEFAULT_SETTINGS, getCoords, keptValue, signatureToPath, SignaturePad, type Settings, type StopRow, type LineRow } from "@/components/team/driver-parts";
 import { buildUpiUri } from "@/components/team/upi-qr";
-import { PhotoInput, Spinner, StatusBadge, Stepper } from "@/components/team/ui";
+import { PhotoInput, Spinner, StatusBadge, Stepper, usePhotoUploading } from "@/components/team/ui";
 import { Button } from "@/components/ui/button";
 import { TaskScreen, BackIcon, MainAction, taskInput } from "@/components/team/task-screen";
 import { HomeScreen, DriverTripPicker } from "@/components/team/role-home";
@@ -115,7 +115,7 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
   const orderLines=lines[stop?.orders?.id ?? ""] ?? [];
   const goods=draft.goods.length ? draft.goods:orderLines.map(l=>({order_line_id:l.id,delivered:l.qty,short:0,damaged:0,refused:0,empties:0}));
   const due=Math.max(0,keptValue(orderLines,l=>stop?.status==="pending" ? goods.find(g=>g.order_line_id===l.id)?.delivered ?? l.qty:l.kept ?? l.qty)-Number(stop?.orders?.amount_paid ?? 0));
-  const [localError,setLocalError]=useState<string|null>(null);
+  const [localError,setLocalError]=useState<string|null>(null);const uploading=usePhotoUploading();
   const [menu,setMenu]=useState(false);
   const {selfie,checkPhoto,checks}=w.form;const isEnd=step==="end";const odo=isEnd?w.form.endOdo:w.form.odo;const odoPhoto=isEnd?w.form.endOdoPhoto:w.form.odoPhoto;
   const setOdo=(v:string)=>{setLocalError(null);w.setForm(isEnd?{endOdo:v}:{odo:v});};const setOdoPhoto=(v:string|null)=>{setLocalError(null);w.setForm(isEnd?{endOdoPhoto:v}:{odoPhoto:v});};const setSelfie=(selfie:string|null)=>w.setForm({selfie});const setCheckPhoto=(checkPhoto:string|null)=>w.setForm({checkPhoto});const setChecks=(fn:(v:string[])=>string[])=>w.setForm({checks:fn(checks)});
@@ -206,7 +206,7 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
   const title=step==="stops"?copy("stops"):step==="bank"?copy("bank"):t(titleKeys[step] ?? "dr.title",{n:stops.length});
   const shell=(body:ReactNode,action?:ReactNode)=> <TaskScreen title={title} back={back} action={action} error={localError||error} menu={step==="home"?<Button variant="ghost" size="icon" aria-label={t("sec.menu")} onClick={()=>setMenu(v=>!v)}><MoreHorizontal /></Button>:undefined}>{body}</TaskScreen>;
   const homeShell=(body:ReactNode,action?:ReactNode)=> <HomeScreen role={t("dr.title")} action={action} tabs={{role:"driver",active:"today"}}><DriverTripPicker tripId={tripId} />{body}{(localError||error)&&<p role="alert" className="break-words text-lg font-semibold text-destructive">{localError||error}</p>}</HomeScreen>;
-  const main=(label:string,fn:()=>void,disabled=false)=> <MainAction onClick={fn} disabled={busy||disabled}>{busy?t("c.loading"):label}</MainAction>;
+  const main=(label:string,fn:()=>void,disabled=false)=> <MainAction onClick={fn} disabled={busy||uploading||disabled}>{busy?t("c.loading"):uploading?t("c.photoUploading"):label}</MainAction>;
   const small=(next:string,label:string)=> <Button asChild variant="link" className="justify-start px-0 text-base"><Link to="/driver/$tripId/$step" params={{tripId,step:next}} search={stop?{stopId:stop.id}:{}}>{label}</Link></Button>;
   if(w.loading)return (step==="home"?homeShell:shell)(<Spinner />);if(!trip)return (step==="home"?homeShell:shell)(<p>{t("c.error")}</p>);
   if(!titleKeys[step])return shell(<p>{t("c.none")}</p>);
