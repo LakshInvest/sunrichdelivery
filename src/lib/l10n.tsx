@@ -708,7 +708,7 @@ const hi: Dict = {
   "list.today": "आज", "list.old": "पुराने", "sum.today": "आज का सारांश", "sum.open": "खुली ट्रिप", "sum.done": "आज पूरी", "sum.returns": "उतारना है", "sum.stopsLeft": "बाकी स्टॉप",
   "ld.noReturns": "कोई गाड़ी माल उतारने के लिए नहीं है", "dr.noTripsToday": "आज आपकी कोई ट्रिप नहीं है", "dr.noOld": "कोई पुरानी ट्रिप नहीं",
   "profile.about": "ऐप के बारे में", "profile.aboutText": "ड्राइवर, लोडर और गेट सुरक्षा के लिए सनरिच डिलीवरी।", "sec.peopleIn": "अंदर मौजूद लोग",
-  "role.DRIVER": "ड्राइवर", "role.LOADER": "लोडर", "role.SECURITY": "सुरक्षा", "role.DISPATCH": "डिस्पैच", "role.ACCOUNTS": "अकाउंट्स", "role.ADMIN": "एडमिन", "role.CASHIER": "कैशियर", "role.STORE": "स्टोर",
+  "role.DRIVER": "ड्राइवर", "role.LOADER": "लोडर", "role.SECURITY": "सिक्योरिटी", "role.DISPATCH": "डिस्पैच", "role.ACCOUNTS": "अकाउंट्स", "role.ADMIN": "एडमिन", "role.CASHIER": "कैशियर", "role.STORE": "स्टोर",
   "login.setPinTitle": "अपना 4 अंकों का PIN बनाएँ",
   "login.setPinHint": "अगली बार इस फ़ोन पर सिर्फ़ यह PIN लगेगा।",
   "login.confirmPinTitle": "PIN दोबारा डालें",
