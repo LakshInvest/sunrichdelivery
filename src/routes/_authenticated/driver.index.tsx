@@ -1,3 +1,4 @@
+import { HomeScreen } from "@/components/team/role-home";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { useLiveRefresh } from "@/lib/use-live-refresh";
@@ -58,7 +59,7 @@ function DriverHome() {
 
   if (rows?.length === 1 && rows[0]) return <Navigate to="/driver/$tripId" params={{tripId:rows[0].id}} replace />;
   return (
-    <Screen title={t("dr.title")} right={<div className="flex items-center gap-2"><SyncBadge /><AvatarLink /></div>}>
+    <HomeScreen role={t("dr.title")} menu={<SyncBadge />}>
       {rows === null && !error ? (
         <Spinner label={t("c.loading")} />
       ) : (
@@ -74,7 +75,7 @@ function DriverHome() {
                     key={r.id}
                     to="/driver/$tripId"
                     params={{ tripId: r.id }}
-                    className="block rounded-xl border border-border bg-card p-5 shadow-card transition-transform active:scale-[0.99]"
+                    className="home-card block p-5 active:scale-[0.99]"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-display text-base font-bold text-foreground">{t("ld.trip", { no: r.trip_no })}</span>
@@ -94,6 +95,6 @@ function DriverHome() {
           </div>
         </>
       )}
-    </Screen>
+    </HomeScreen>
   );
 }
