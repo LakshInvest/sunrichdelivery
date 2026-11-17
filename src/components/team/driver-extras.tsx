@@ -5,6 +5,7 @@ import { useLang } from "@/lib/l10n";
 import { friendlyError } from "@/lib/friendly-error";
 import { istDisplay } from "@/lib/ist";
 import { getCoords } from "@/components/team/driver-parts";
+import { Spinner } from "@/components/team/ui";
 
 const input = "w-full rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-aqua focus:ring-2 focus:ring-aqua/30";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
