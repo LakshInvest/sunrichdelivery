@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_appearance: {
+        Row: {
+          app: string
+          company_id: string
+          created_at: string
+          screen_changed_at: Json
+          settings: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          app?: string
+          company_id: string
+          created_at?: string
+          screen_changed_at?: Json
+          settings?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          app?: string
+          company_id?: string
+          created_at?: string
+          screen_changed_at?: Json
+          settings?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_appearance_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_banners: {
         Row: {
           company_id: string
@@ -182,6 +220,7 @@ export type Database = {
           allow_cancel_before: string
           allow_order_notes: boolean
           app_logo_url: string | null
+          appearance_changed_at: Json
           auto_plan_last_date: string | null
           closed_weekdays: number[]
           company_id: string
@@ -257,6 +296,7 @@ export type Database = {
           allow_cancel_before?: string
           allow_order_notes?: boolean
           app_logo_url?: string | null
+          appearance_changed_at?: Json
           auto_plan_last_date?: string | null
           closed_weekdays?: number[]
           company_id: string
@@ -332,6 +372,7 @@ export type Database = {
           allow_cancel_before?: string
           allow_order_notes?: boolean
           app_logo_url?: string | null
+          appearance_changed_at?: Json
           auto_plan_last_date?: string | null
           closed_weekdays?: number[]
           company_id?: string
@@ -1915,6 +1956,7 @@ export type Database = {
           expense_types: string[]
           expenses_enabled: boolean
           failed_reasons: string[]
+          gate_approval_wait_minutes: number
           gate_pass_print: boolean
           location_at_each_stop: boolean
           location_interval_minutes: number
@@ -1973,6 +2015,7 @@ export type Database = {
           expense_types?: string[]
           expenses_enabled?: boolean
           failed_reasons?: string[]
+          gate_approval_wait_minutes?: number
           gate_pass_print?: boolean
           location_at_each_stop?: boolean
           location_interval_minutes?: number
@@ -2031,6 +2074,7 @@ export type Database = {
           expense_types?: string[]
           expenses_enabled?: boolean
           failed_reasons?: string[]
+          gate_approval_wait_minutes?: number
           gate_pass_print?: boolean
           location_at_each_stop?: boolean
           location_interval_minutes?: number
@@ -2509,8 +2553,169 @@ export type Database = {
           },
         ]
       }
+      gate_approval_events: {
+        Row: {
+          actor_id: string
+          company_id: string
+          created_at: string
+          data: Json
+          entity_id: string | null
+          event: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          actor_id?: string
+          company_id?: string
+          created_at?: string
+          data?: Json
+          entity_id?: string | null
+          event: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          actor_id?: string
+          company_id?: string
+          created_at?: string
+          data?: Json
+          entity_id?: string | null
+          event?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gate_approval_recipients: {
+        Row: {
+          company_id: string
+          created_at: string
+          request_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          request_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          request_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gate_approval_recipients_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "gate_approval_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gate_approval_requests: {
+        Row: {
+          answered_by: string | null
+          approval_mode: string | null
+          company_id: string
+          created_at: string
+          details: Json
+          host_id: string | null
+          id: string
+          phone_approved_by: string | null
+          reason: string | null
+          requested_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          answered_by?: string | null
+          approval_mode?: string | null
+          company_id?: string
+          created_at?: string
+          details: Json
+          host_id?: string | null
+          id?: string
+          phone_approved_by?: string | null
+          reason?: string | null
+          requested_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          answered_by?: string | null
+          approval_mode?: string | null
+          company_id?: string
+          created_at?: string
+          details?: Json
+          host_id?: string | null
+          id?: string
+          phone_approved_by?: string | null
+          reason?: string | null
+          requested_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gate_blocks: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string
+          id: string
+          mobile: string | null
+          name: string
+          reason: string
+          removal_note: string | null
+          removed_at: string | null
+          removed_by: string | null
+          until_day: string | null
+          updated_at: string
+          vehicle_no: string | null
+        }
+        Insert: {
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          mobile?: string | null
+          name: string
+          reason: string
+          removal_note?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          until_day?: string | null
+          updated_at?: string
+          vehicle_no?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          mobile?: string | null
+          name?: string
+          reason?: string
+          removal_note?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          until_day?: string | null
+          updated_at?: string
+          vehicle_no?: string | null
+        }
+        Relationships: []
+      }
       gate_entries: {
         Row: {
+          approval_by: string | null
+          approval_mode: string | null
+          approval_request_id: string | null
           challan_photo_path: string | null
           company_id: string
           courier_name: string | null
@@ -2538,6 +2743,9 @@ export type Database = {
           vehicle_no: string | null
         }
         Insert: {
+          approval_by?: string | null
+          approval_mode?: string | null
+          approval_request_id?: string | null
           challan_photo_path?: string | null
           company_id?: string
           courier_name?: string | null
@@ -2565,6 +2773,9 @@ export type Database = {
           vehicle_no?: string | null
         }
         Update: {
+          approval_by?: string | null
+          approval_mode?: string | null
+          approval_request_id?: string | null
           challan_photo_path?: string | null
           company_id?: string
           courier_name?: string | null
@@ -2627,6 +2838,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gate_pre_invites: {
+        Row: {
+          cancelled_at: string | null
+          cancelled_by: string | null
+          company_id: string
+          created_at: string
+          created_by: string
+          from_day: string
+          host_id: string
+          id: string
+          mobile: string | null
+          name: string
+          purpose: string
+          to_day: string
+          updated_at: string
+          vehicle_no: string | null
+        }
+        Insert: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          from_day: string
+          host_id: string
+          id?: string
+          mobile?: string | null
+          name: string
+          purpose: string
+          to_day: string
+          updated_at?: string
+          vehicle_no?: string | null
+        }
+        Update: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          from_day?: string
+          host_id?: string
+          id?: string
+          mobile?: string | null
+          name?: string
+          purpose?: string
+          to_day?: string
+          updated_at?: string
+          vehicle_no?: string | null
+        }
+        Relationships: []
       }
       gate_problems: {
         Row: {
@@ -6887,6 +7149,7 @@ export type Database = {
         }
         Returns: Json
       }
+      cc_can_edit_delivery_appearance: { Args: never; Returns: boolean }
       cc_cash_mismatch: {
         Args: { p_id: string; p_reason: string; p_received: number }
         Returns: undefined
@@ -6903,6 +7166,7 @@ export type Database = {
         }
         Returns: Json
       }
+      cc_delivery_appearance: { Args: never; Returns: Json }
       cc_list_drivers: {
         Args: { p_date?: string; p_unit_id?: string }
         Returns: {
@@ -7272,8 +7536,21 @@ export type Database = {
         }
         Returns: number
       }
+      gate_admit_pre_invite: {
+        Args: { p_details?: Json; p_invite_id: string }
+        Returns: string
+      }
+      gate_admit_request: { Args: { p_request_id: string }; Returns: string }
+      gate_answer: {
+        Args: { p_approve: boolean; p_reason?: string; p_request_id: string }
+        Returns: Json
+      }
       gate_change_guard: {
         Args: { p_mobile: string; p_pin: string; p_selfie: string }
+        Returns: Json
+      }
+      gate_check: {
+        Args: { p_mobile?: string; p_vehicle_no?: string }
         Returns: Json
       }
       gate_entry_in: { Args: { p: Json }; Returns: string }
@@ -7288,6 +7565,16 @@ export type Database = {
           p_trip_id: string
         }
         Returns: undefined
+      }
+      gate_manage_block: { Args: { p: Json }; Returns: string }
+      gate_manage_invite: { Args: { p: Json }; Returns: string }
+      gate_mark_phone_approved: {
+        Args: {
+          p_approved_by_user_id: string
+          p_note: string
+          p_request_id: string
+        }
+        Returns: Json
       }
       gate_material_scan: { Args: { p_token: string }; Returns: undefined }
       gate_out: {
@@ -7317,6 +7604,11 @@ export type Database = {
         Args: { p_note: string; p_photo?: string; p_type: string }
         Returns: string
       }
+      gate_request_approval: {
+        Args: { p_details: Json; p_host_id?: string }
+        Returns: string
+      }
+      gate_request_status: { Args: { p_request_id: string }; Returns: Json }
       gate_scan_lookup: { Args: { p_token: string }; Returns: Json }
       gate_staff_list: {
         Args: never
@@ -7336,6 +7628,9 @@ export type Database = {
           trip_no: string
         }[]
       }
+      gate67_can_read: { Args: { p_id: string }; Returns: boolean }
+      gate67_mobile: { Args: { p: string }; Returns: string }
+      gate67_vehicle: { Args: { p: string }; Returns: string }
       geo_find_shape: {
         Args: { p_kind: string; p_name: string; p_state?: string }
         Returns: {
@@ -7468,6 +7763,7 @@ export type Database = {
           expense_types: string[]
           expenses_enabled: boolean
           failed_reasons: string[]
+          gate_approval_wait_minutes: number
           gate_pass_print: boolean
           location_at_each_stop: boolean
           location_interval_minutes: number
