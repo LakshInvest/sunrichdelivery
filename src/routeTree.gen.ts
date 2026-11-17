@@ -22,6 +22,8 @@ import { Route as AuthenticatedLoaderTripIdRouteImport } from './routes/_authent
 import { Route as ApiPublicPhotoCleanupRouteImport } from './routes/api/public/photo-cleanup'
 import { Route as AuthenticatedDriverTripIdIndexRouteImport } from './routes/_authenticated/driver.$tripId.index'
 import { Route as AuthenticatedDriverTripIdStepRouteImport } from './routes/_authenticated/driver.$tripId.$step'
+import { Route as AuthenticatedLoaderTripIdIndexRouteImport } from './routes/_authenticated/loader/$tripId.index'
+import { Route as AuthenticatedLoaderTripIdStepRouteImport } from './routes/_authenticated/loader/$tripId.$step'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -93,6 +95,18 @@ const AuthenticatedDriverTripIdStepRoute =
     path: '/$step',
     getParentRoute: () => AuthenticatedDriverTripIdRoute,
   } as any)
+const AuthenticatedLoaderTripIdIndexRoute =
+  AuthenticatedLoaderTripIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedLoaderTripIdRoute,
+  } as any)
+const AuthenticatedLoaderTripIdStepRoute =
+  AuthenticatedLoaderTripIdStepRouteImport.update({
+    id: '/$step',
+    path: '/$step',
+    getParentRoute: () => AuthenticatedLoaderTripIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -101,24 +115,27 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/driver/$tripId': typeof AuthenticatedDriverTripIdRouteWithChildren
-  '/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
+  '/loader/$tripId': typeof AuthenticatedLoaderTripIdRouteWithChildren
   '/api/public/photo-cleanup': typeof ApiPublicPhotoCleanupRoute
   '/driver/': typeof AuthenticatedDriverIndexRoute
   '/loader/': typeof AuthenticatedLoaderIndexRoute
   '/driver/$tripId/$step': typeof AuthenticatedDriverTripIdStepRoute
+  '/loader/$tripId/$step': typeof AuthenticatedLoaderTripIdStepRoute
   '/driver/$tripId/': typeof AuthenticatedDriverTripIdIndexRoute
+  '/loader/$tripId/': typeof AuthenticatedLoaderTripIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/': typeof AuthenticatedIndexRoute
-  '/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
   '/api/public/photo-cleanup': typeof ApiPublicPhotoCleanupRoute
   '/driver': typeof AuthenticatedDriverIndexRoute
   '/loader': typeof AuthenticatedLoaderIndexRoute
   '/driver/$tripId/$step': typeof AuthenticatedDriverTripIdStepRoute
+  '/loader/$tripId/$step': typeof AuthenticatedLoaderTripIdStepRoute
   '/driver/$tripId': typeof AuthenticatedDriverTripIdIndexRoute
+  '/loader/$tripId': typeof AuthenticatedLoaderTripIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -129,12 +146,14 @@ export interface FileRoutesById {
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/driver/$tripId': typeof AuthenticatedDriverTripIdRouteWithChildren
-  '/_authenticated/loader/$tripId': typeof AuthenticatedLoaderTripIdRoute
+  '/_authenticated/loader/$tripId': typeof AuthenticatedLoaderTripIdRouteWithChildren
   '/api/public/photo-cleanup': typeof ApiPublicPhotoCleanupRoute
   '/_authenticated/driver/': typeof AuthenticatedDriverIndexRoute
   '/_authenticated/loader/': typeof AuthenticatedLoaderIndexRoute
   '/_authenticated/driver/$tripId/$step': typeof AuthenticatedDriverTripIdStepRoute
+  '/_authenticated/loader/$tripId/$step': typeof AuthenticatedLoaderTripIdStepRoute
   '/_authenticated/driver/$tripId/': typeof AuthenticatedDriverTripIdIndexRoute
+  '/_authenticated/loader/$tripId/': typeof AuthenticatedLoaderTripIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -150,19 +169,22 @@ export interface FileRouteTypes {
     | '/driver/'
     | '/loader/'
     | '/driver/$tripId/$step'
+    | '/loader/$tripId/$step'
     | '/driver/$tripId/'
+    | '/loader/$tripId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/profile'
     | '/security'
     | '/'
-    | '/loader/$tripId'
     | '/api/public/photo-cleanup'
     | '/driver'
     | '/loader'
     | '/driver/$tripId/$step'
+    | '/loader/$tripId/$step'
     | '/driver/$tripId'
+    | '/loader/$tripId'
   id:
     | '__root__'
     | '/_authenticated'
@@ -177,7 +199,9 @@ export interface FileRouteTypes {
     | '/_authenticated/driver/'
     | '/_authenticated/loader/'
     | '/_authenticated/driver/$tripId/$step'
+    | '/_authenticated/loader/$tripId/$step'
     | '/_authenticated/driver/$tripId/'
+    | '/_authenticated/loader/$tripId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -279,6 +303,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDriverTripIdStepRouteImport
       parentRoute: typeof AuthenticatedDriverTripIdRoute
     }
+    '/_authenticated/loader/$tripId/': {
+      id: '/_authenticated/loader/$tripId/'
+      path: '/'
+      fullPath: '/loader/$tripId/'
+      preLoaderRoute: typeof AuthenticatedLoaderTripIdIndexRouteImport
+      parentRoute: typeof AuthenticatedLoaderTripIdRoute
+    }
+    '/_authenticated/loader/$tripId/$step': {
+      id: '/_authenticated/loader/$tripId/$step'
+      path: '/$step'
+      fullPath: '/loader/$tripId/$step'
+      preLoaderRoute: typeof AuthenticatedLoaderTripIdStepRouteImport
+      parentRoute: typeof AuthenticatedLoaderTripIdRoute
+    }
   }
 }
 
@@ -311,12 +349,28 @@ const AuthenticatedDriverRouteChildren: AuthenticatedDriverRouteChildren = {
 const AuthenticatedDriverRouteWithChildren =
   AuthenticatedDriverRoute._addFileChildren(AuthenticatedDriverRouteChildren)
 
+interface AuthenticatedLoaderTripIdRouteChildren {
+  AuthenticatedLoaderTripIdStepRoute: typeof AuthenticatedLoaderTripIdStepRoute
+  AuthenticatedLoaderTripIdIndexRoute: typeof AuthenticatedLoaderTripIdIndexRoute
+}
+
+const AuthenticatedLoaderTripIdRouteChildren: AuthenticatedLoaderTripIdRouteChildren =
+  {
+    AuthenticatedLoaderTripIdStepRoute: AuthenticatedLoaderTripIdStepRoute,
+    AuthenticatedLoaderTripIdIndexRoute: AuthenticatedLoaderTripIdIndexRoute,
+  }
+
+const AuthenticatedLoaderTripIdRouteWithChildren =
+  AuthenticatedLoaderTripIdRoute._addFileChildren(
+    AuthenticatedLoaderTripIdRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDriverRoute: typeof AuthenticatedDriverRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedLoaderTripIdRoute: typeof AuthenticatedLoaderTripIdRoute
+  AuthenticatedLoaderTripIdRoute: typeof AuthenticatedLoaderTripIdRouteWithChildren
   AuthenticatedLoaderIndexRoute: typeof AuthenticatedLoaderIndexRoute
 }
 
@@ -325,7 +379,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-  AuthenticatedLoaderTripIdRoute: AuthenticatedLoaderTripIdRoute,
+  AuthenticatedLoaderTripIdRoute: AuthenticatedLoaderTripIdRouteWithChildren,
   AuthenticatedLoaderIndexRoute: AuthenticatedLoaderIndexRoute,
 }
 
