@@ -9659,6 +9659,7 @@ export type Database = {
           vehicle_id: string
         }[]
       }
+      cc71_reorder_couriers: { Args: { p_ids: string[] }; Returns: undefined }
       check_pin: {
         Args: {
           p_device_id: string
