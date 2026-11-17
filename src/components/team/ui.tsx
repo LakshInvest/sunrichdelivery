@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fileToDataUrl, photoUrl, uploadPhoto } from "@/lib/photo";
 import { isNative, takeNativePhoto, haptic } from "@/lib/native";
 import { Link } from "@tanstack/react-router";
-import { UserRound } from "lucide-react";
+import { Camera, UserRound } from "lucide-react";
 import { useTeamAuth } from "@/lib/team-auth";
 import appIcon from "@/assets/sunrich-delivery-final.png.asset.json";
 
