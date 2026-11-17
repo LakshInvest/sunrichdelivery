@@ -4,11 +4,12 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -166,9 +167,8 @@ function NativeBridge() {
 function LaunchOverlay() {
   const { ready } = useTeamAuth();
   const show = useLaunchGate(ready);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  if (!mounted || !show || location.pathname.startsWith("/login")) return null;
+  const path = useRouterState({ select: (st) => st.location.pathname });
+  if (!show || path.startsWith("/login")) return null;
   return <LaunchScreen />;
 }
 
