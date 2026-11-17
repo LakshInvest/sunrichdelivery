@@ -69,9 +69,9 @@ function Home() {
               key={c.code}
               to={c.to}
               onClick={() => rememberRole(staff.id, c.code)}
-              className="grid grid-cols-[auto_minmax(0,1fr)_5.5rem] items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-card active:bg-secondary"
+              className="grid grid-cols-[auto_minmax(0,1fr)_5.5rem] items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-card active:bg-secondary/10"
             >
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary text-navy">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary/10 text-secondary">
                 <Icon className="h-6 w-6" strokeWidth={1.75} />
               </span>
               <span className="min-w-0">

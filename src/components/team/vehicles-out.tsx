@@ -44,7 +44,7 @@ export function VehiclesOutList({ refreshKey, onArrived }: { refreshKey: number;
       {rows.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
       <div className="grid gap-2">
         {rows.map((r) => (
-          <div key={r.trip_id} className="rounded-lg bg-secondary p-3">
+          <div key={r.trip_id} className="rounded-lg bg-muted p-3">
             <button type="button" onClick={() => setOpen(open === r.trip_id ? null : r.trip_id)} className="w-full text-left">
               <p className="font-display text-base font-bold text-foreground">{r.reg_no ?? r.trip_no}</p>
               <p className="break-words text-xs text-muted-foreground">{[r.driver, r.trip_no, time(r.gate_out_at)].filter(Boolean).join(" · ")}</p>

@@ -43,7 +43,7 @@ export function HomeScreen({ role, menu, stats, children, action }: { role: stri
 export function StatCard({ icon: Icon, value, label, to, step }: { icon: LucideIcon; value: number; label: string; to: "/security/$step"; step: string }) {
   return (
     <Link to={to} params={{ step }} className="home-card flex min-h-24 flex-col justify-between gap-2 p-4 active:scale-[0.98]">
-      <span className="flex items-center justify-between gap-2"><span className="font-display text-3xl font-bold text-navy">{value}</span><span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary text-navy"><Icon className="h-5 w-5" aria-hidden /></span></span>
+      <span className="flex items-center justify-between gap-2"><span className="font-display text-3xl font-bold text-navy">{value}</span><span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary/10 text-secondary"><Icon className="h-5 w-5" aria-hidden /></span></span>
       <span className="break-words text-sm font-semibold text-muted-foreground">{label}</span>
     </Link>
   );
@@ -62,7 +62,7 @@ export function TileLink({ icon: Icon, label, to, params }: { icon: LucideIcon; 
 export function EmptyState({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
   return (
     <div className="home-card flex flex-col items-center gap-3 px-4 py-10 text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-full bg-secondary text-navy"><Icon className="h-7 w-7" aria-hidden /></span>
+      <span className="grid h-14 w-14 place-items-center rounded-full bg-secondary/10 text-secondary"><Icon className="h-7 w-7" aria-hidden /></span>
       <p className="text-lg font-semibold text-muted-foreground">{text}</p>
     </div>
   );

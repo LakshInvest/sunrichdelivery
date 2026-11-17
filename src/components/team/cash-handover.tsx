@@ -48,7 +48,7 @@ export function CashHandoverPanel({ tripId, amount }: { tripId: string; amount: 
 
   if (pending)
     return (
-      <p className="mt-3 rounded-lg bg-secondary px-3 py-2 text-sm font-medium text-foreground" data-testid="handover-waiting">
+      <p className="mt-3 rounded-lg bg-muted px-3 py-2 text-sm font-medium text-foreground" data-testid="handover-waiting">
         {t("dr.handoverWaiting", { name: pending })}
       </p>
     );
@@ -102,7 +102,7 @@ export function CashToConfirm() {
       {err && <p className="mb-2 text-sm text-destructive">{err}</p>}
       <div className="grid gap-2">
         {rows.map((r) => (
-          <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg bg-secondary p-3">
+          <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg bg-muted p-3">
             <div className="min-w-0 flex-1">
               <p className="font-display text-lg font-bold text-foreground">₹{Number(r.amount)}</p>
               <p className="break-words text-xs text-muted-foreground">
