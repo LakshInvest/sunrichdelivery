@@ -28,7 +28,7 @@ export function HomeScreen({ role, menu, stats, children, action }: { role: stri
               <h1 className="mt-1 break-words font-display text-2xl font-bold">{t("home.greeting", { name: staff?.fullName?.split(" ")[0] ?? "" })}</h1>
               <p className="mt-1 break-words text-sm opacity-80">{[unit, date].filter(Boolean).join(" · ")}</p>
             </div>
-            <div className="flex shrink-0 items-center gap-1">{menu}<AvatarLink /></div>
+            <div className="flex shrink-0 items-center gap-1">{menu}<AvatarLink className="bg-aqua text-navy" /></div>
           </div>
         </header>
         {stats && <div className="relative -mt-12 grid grid-cols-2 gap-3 px-4">{stats}</div>}

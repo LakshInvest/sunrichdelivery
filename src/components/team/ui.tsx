@@ -353,7 +353,7 @@ export function useSignOut() {
 }
 
 /** Profile avatar shown top-right on every role home. */
-export function AvatarLink() {
+export function AvatarLink({ className = "bg-primary text-primary-foreground" }: { className?: string } = {}) {
   const { staff } = useTeamAuth();
   const { t } = useLang();
   const initials = (staff?.fullName ?? "")
@@ -366,7 +366,7 @@ export function AvatarLink() {
     <Link
       to="/profile"
       aria-label={t("home.profile")}
-      className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-soft"
+      className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-base font-bold shadow-soft ${className}`}
     >
       {initials || <UserRound className="h-5 w-5" />}
     </Link>
