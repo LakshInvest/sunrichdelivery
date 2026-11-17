@@ -6817,6 +6817,17 @@ export type Database = {
         }
         Returns: Json
       }
+      cc_list_drivers: {
+        Args: { p_date?: string; p_unit_id?: string }
+        Returns: {
+          full_name: string
+          mobile: string
+          photo_url: string
+          trips_on_date: number
+          unit_id: string
+          user_id: string
+        }[]
+      }
       cc_move_stops: {
         Args: { p_stop_ids: string[]; p_to_trip_id: string }
         Returns: number
