@@ -36,3 +36,5 @@
 - Photo expiry lives in `photo_files` (filled by triggers on each photo column); files are removed only by `/api/public/photo-cleanup` via the Storage API using `photo_cleanup_due` — SQL cannot delete storage files and records are never deleted.
 - Staff OTP retry timing and error classification are shared through a browser-safe policy module; server enforcement remains authoritative so UI countdowns cannot bypass locks.
 - Login appearance exposes only three public branding fields through a server function because anonymous table reads return no rows; images cache without a service worker and visualViewport sizes the keyboard sheet.
+- Every QR scan goes through `scanCode()` in src/lib/native.ts (isSupported → permission → Google module install → scan) and is called directly from the tap — no intermediate page — so the camera opens at once; browsers get only the type-code box.
+- Role homes (driver trip home, loader list, guard home) use `HomeScreen` from role-home.tsx: navy header with avatar → Profile and no back arrow; inner pages keep TaskScreen with back.

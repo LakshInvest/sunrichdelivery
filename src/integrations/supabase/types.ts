@@ -704,6 +704,59 @@ export type Database = {
           },
         ]
       }
+      cc_backup_metrics: {
+        Row: {
+          backup_id: string
+          byte_size: number
+          company_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          backup_id: string
+          byte_size: number
+          company_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          backup_id?: string
+          byte_size?: number
+          company_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cc_backup_metrics_backup_id_fkey"
+            columns: ["backup_id"]
+            isOneToOne: true
+            referencedRelation: "photo_backups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc_notification_reads: {
+        Row: {
+          created_at: string
+          item_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          item_key: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          item_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_ops: {
         Row: {
           created_at: string
@@ -6835,9 +6888,49 @@ export type Database = {
         }[]
       }
       cc_logout_session: { Args: { p_session_id: string }; Returns: boolean }
+      cc_mark_redelivery: {
+        Args: { p_order_id: string; p_reason: string }
+        Returns: undefined
+      }
       cc_move_stops: {
         Args: { p_stop_ids: string[]; p_to_trip_id: string }
         Returns: number
+      }
+      cc_notification_feed: {
+        Args: never
+        Returns: {
+          body: string
+          created_at: string
+          item_key: string
+          kind: string
+          read_at: string
+          ref_id: string
+          title: string
+        }[]
+      }
+      cc_notifications: { Args: never; Returns: Json }
+      cc_photo_inventory: {
+        Args: {
+          p_expiring?: boolean
+          p_from?: string
+          p_to?: string
+          p_types?: string[]
+        }
+        Returns: {
+          bucket: string
+          byte_size: number
+          downloaded_at: string
+          expires_on: string
+          id: string
+          path: string
+          photo_type: string
+          taken_at: string
+        }[]
+      }
+      cc_read_notifications: { Args: { p_keys?: string[] }; Returns: undefined }
+      cc_record_backup_size: {
+        Args: { p_backup_id: string; p_bytes: number }
+        Returns: undefined
       }
       cc_register_staff_session: {
         Args: {

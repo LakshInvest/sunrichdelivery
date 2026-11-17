@@ -191,19 +191,66 @@ export async function nativeCoords(): Promise<{ latitude: number; longitude: num
   }
 }
 
-/** Scan a QR code (gate pass / pickup pass). Returns null in a browser or when cancelled. */
-export async function scanQr(): Promise<string | null> {
-  if (!isNative()) return null;
+export type ScanResult =
+  | { status: "ok"; value: string }
+  | { status: "cancelled" | "denied" | "unsupported" | "error"; value?: undefined };
+
+/**
+ * The one QR scanner for every scan in the app (gate SCAN, pickup pass, material pass).
+ * Opens the camera at once: isSupported → camera permission → Google scanner module
+ * (installs it with `onPreparing(true)` while downloading) → scan QR only.
+ */
+export async function scanCode(onPreparing?: (preparing: boolean) => void): Promise<ScanResult> {
+  if (!isNative()) return { status: "unsupported" };
   try {
     const { BarcodeScanner, BarcodeFormat } = await import("@capacitor-mlkit/barcode-scanning");
-    const perm = await BarcodeScanner.requestPermissions();
-    if (perm.camera !== "granted" && perm.camera !== "limited") return null;
+    const { supported } = await BarcodeScanner.isSupported();
+    if (!supported) return { status: "unsupported" };
+    let perm = await BarcodeScanner.checkPermissions();
+    if (perm.camera !== "granted" && perm.camera !== "limited") perm = await BarcodeScanner.requestPermissions();
+    if (perm.camera !== "granted" && perm.camera !== "limited") return { status: "denied" };
+    const platform = (window as unknown as { Capacitor?: CapGlobal }).Capacitor?.getPlatform?.();
+    if (platform === "android") {
+      const { available } = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable();
+      if (!available) {
+        onPreparing?.(true);
+        await new Promise<void>((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error("scanner install timeout")), 60000);
+          void BarcodeScanner.addListener("googleBarcodeScannerModuleInstallProgress", (e) => {
+            // GoogleBarcodeScannerModuleInstallState: 4 = COMPLETED, 3 = CANCELED, 5 = FAILED
+            if (Number(e.state) === 4) { clearTimeout(timer); resolve(); }
+            if (Number(e.state) === 3 || Number(e.state) === 5) { clearTimeout(timer); reject(new Error("scanner install failed")); }
+          });
+          void BarcodeScanner.installGoogleBarcodeScannerModule().catch(reject);
+        }).finally(() => { onPreparing?.(false); void BarcodeScanner.removeAllListeners(); });
+      }
+    }
     const { barcodes } = await BarcodeScanner.scan({ formats: [BarcodeFormat.QrCode] });
-    return barcodes[0]?.rawValue ?? null;
+    const value = barcodes[0]?.rawValue?.trim();
+    return value ? { status: "ok", value } : { status: "cancelled" };
   } catch (e) {
+    const msg = String((e as { message?: string })?.message ?? e).toLowerCase();
+    if (msg.includes("cancel")) return { status: "cancelled" };
     console.warn("[native] scan failed", e);
-    return null;
+    return { status: "error" };
   }
+}
+
+/** Opens this app's Android settings page (used after camera permission is denied). */
+export async function openScannerSettings() {
+  if (!isNative()) return;
+  try {
+    const { BarcodeScanner } = await import("@capacitor-mlkit/barcode-scanning");
+    await BarcodeScanner.openSettings();
+  } catch (e) {
+    console.warn("[native] open settings failed", e);
+  }
+}
+
+/** Back-compat: value or null. */
+export async function scanQr(): Promise<string | null> {
+  const r = await scanCode();
+  return r.status === "ok" ? r.value : null;
 }
 
 export async function haptic(kind: "light" | "success" | "error" = "light") {
