@@ -73,7 +73,7 @@ function Profile() {
           </section>
           <section className="mt-4 divide-y divide-border rounded-2xl bg-card shadow-sm">
             {roles.length > 0 && <MenuItemRow icon={Repeat} label={t("profile.switchRole")} onClick={() => void navigate({ to: "/", search: { chooser: true } })} />}
-            {currentRole?.code==="SECURITY" && <><MenuItemRow icon={TriangleAlert} label={t("sec.problem")} onClick={() => void navigate({ to: "/security/$step", params: { step: "problem" } })} /><MenuItemRow icon={UserCog} label={t("sec.changeGuard")} onClick={() => void navigate({ to: "/security/$step", params: { step: "guard" } })} /></>}
+            {(currentRole ? currentRole.code==="SECURITY" : staff.roles.includes("SECURITY")) && <><MenuItemRow icon={TriangleAlert} label={t("sec.problem")} onClick={() => void navigate({ to: "/security/$step", params: { step: "problem" } })} /><MenuItemRow icon={UserCog} label={t("sec.changeGuard")} onClick={() => void navigate({ to: "/security/$step", params: { step: "guard" } })} /></>}
             <MenuItemRow icon={Languages} label={t("profile.language")} open={panel === "lang"} onClick={() => setPanel(panel === "lang" ? null : "lang")} />
             {panel === "lang" && <div className="grid gap-1 p-2" role="group" aria-label={t("profile.language")}>
               {LANGS.map((l) => <button key={l.code} type="button" onClick={() => setLang(l.code)} aria-pressed={lang === l.code} className={`flex min-h-12 items-center justify-between rounded-xl px-4 text-base font-semibold ${lang === l.code ? "bg-secondary/10 text-primary" : "text-foreground"}`}>{l.label}{lang === l.code && <Check className="h-5 w-5 text-secondary" aria-hidden />}</button>)}
