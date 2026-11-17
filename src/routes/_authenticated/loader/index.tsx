@@ -86,7 +86,7 @@ function LoaderHome() {
           <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t(view === "returns" ? "ld.returns" : "ld.toLoad")}</h2>
           <ListFilter value={filter} onChange={setFilter} />
           <div className="grid gap-3">
-            {list.length > 0 ? list.map(card) : view === "returns" ? <EmptyState icon={Undo2} text={t("ld.noReturns")} /> : <EmptyState icon={Boxes} text={t("c.none")} />}
+            {list.length > 0 ? list.map(card) : view === "returns" ? <EmptyState icon={Undo2} text={t("ld.noReturns")} /> : <EmptyState icon={Boxes} text={t(filter === "today" ? "empty.loadToday" : "dr.noOld")} />}
           </div>
           {view !== "returns" && done.some((r) => (filter === "today") === isTodayTrip(r, today)) && <>
             <h2 className="mt-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("ld.loadedToday")}</h2>
