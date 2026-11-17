@@ -6918,6 +6918,7 @@ export type Database = {
         Args: { p_customer_id: string; p_except_order?: string }
         Returns: boolean
       }
+      _is_qa_trip: { Args: { p_id: string }; Returns: boolean }
       _is_trip_order: { Args: { p_order_id: string }; Returns: boolean }
       _next_order_no: { Args: { p_firm_id: string }; Returns: string }
       _open_bills: {
