@@ -1,11 +1,11 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Truck, Boxes, ShieldCheck, ChevronRight, ArrowLeft, Check, LogOut } from "lucide-react";
+import { ChevronRight, Info, Languages, LogOut, Repeat, Check, type LucideIcon } from "lucide-react";
 import { useTeamAuth } from "@/lib/team-auth";
 import { LANGS, useLang } from "@/lib/l10n";
 import { BrandLogo, NoRoleScreen, Spinner } from "@/components/team/ui";
-import { Button } from "@/components/ui/button";
-import { availableRoles, formatStaffMobile, readLastRole, rememberRole } from "@/lib/role-home";
+import { BottomNav, type TabRole } from "@/components/team/role-home";
+import { availableRoles, formatStaffMobile, readLastRole } from "@/lib/role-home";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -22,62 +22,73 @@ export const Route = createFileRoute("/_authenticated/profile")({
   component: Profile,
 });
 
+const tabRole: Record<string, TabRole> = { DRIVER: "driver", LOADER: "loader", SECURITY: "security" };
+
+function MenuItemRow({ icon: Icon, label, onClick, danger, open }: { icon: LucideIcon; label: string; onClick: () => void; danger?: boolean; open?: boolean }) {
+  return (
+    <button type="button" onClick={onClick} aria-expanded={open} className="flex min-h-14 w-full items-center gap-3 px-4 text-left transition active:bg-secondary/5">
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${danger ? "bg-destructive/10" : "bg-secondary/10"}`}>
+        <Icon className={`h-5 w-5 ${danger ? "text-destructive" : "text-secondary"}`} aria-hidden />
+      </span>
+      <span className={`flex-1 truncate text-[15px] font-medium ${danger ? "text-destructive" : "text-foreground"}`}>{label}</span>
+      {!danger && <ChevronRight className={`h-4 w-4 shrink-0 text-muted-foreground transition ${open ? "rotate-90" : ""}`} aria-hidden />}
+    </button>
+  );
+}
+
 function Profile() {
   const { ready, staff, signOut } = useTeamAuth();
   const { t, lang, setLang } = useLang();
   const navigate = useNavigate();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [panel, setPanel] = useState<"lang" | "about" | null>(null);
   if (!ready) return <Spinner label={t("c.loading")} />;
   if (!staff) return <NoRoleScreen />;
   const roles = availableRoles(staff.roles);
   const current = readLastRole(staff.id) ?? (roles.length === 1 ? roles[0]?.code : null);
-  const icons = { DRIVER: Truck, LOADER: Boxes, SECURITY: ShieldCheck };
-  const initials = staff.fullName.split(" ").slice(0, 2).map((word) => word[0] ?? "").join("").toUpperCase();
-  const back = () => {
-    const role = roles.find((r) => r.code === current);
-    void navigate(role ? { to: role.to } : { to: "/", search: { chooser: true } });
-  };
+  const currentRole = roles.find((r) => r.code === current);
+  const name = staff.fullName || "—";
   return (
-    <main className="account-page flex flex-col">
-      <header className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 px-4 pb-4 pt-[max(env(safe-area-inset-top),1rem)]">
-        <Button variant="ghost" size="icon" onClick={back} aria-label={t("c.back")} className="shrink-0"><ArrowLeft className="h-5 w-5" /></Button>
-        <h1 className="font-display text-xl font-bold">{t("profile.title")}</h1>
-      </header>
-      <div className="px-4">
-        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card">
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary text-lg font-bold text-primary-foreground">{initials || "—"}</span>
-          <div className="min-w-0">
-            <p className="break-words font-display text-lg font-bold">{staff.fullName || "—"}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{formatStaffMobile(staff.mobile)}</p>
-            <div className="mt-3 flex flex-wrap gap-1.5">{staff.roles.map((code) => <span key={code} className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-primary">{t(roles.find((role) => role.code === code)?.key ?? `role.${code}`) === `role.${code}` ? code : t(roles.find((role) => role.code === code)?.key ?? `role.${code}`)}</span>)}</div>
-          </div>
-        </div>
-        {roles.length > 0 && <section className="mt-6">
-          <div className="mb-2 flex items-center justify-between gap-2"><h2 className="text-sm font-semibold">{t("profile.switchRole")}</h2><Button variant="ghost" size="icon" asChild><Link to="/" search={{ chooser: true }} aria-label={t("home.chooseRole")}><Boxes className="h-4 w-4" /></Link></Button></div>
-          <div className="grid gap-1">{roles.map((role) => {
-            const Icon = icons[role.code];
-            return <Link key={role.code} to={role.to} onClick={() => rememberRole(staff.id, role.code)} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2 py-3 active:bg-secondary" aria-current={role.code === current ? "page" : undefined}>
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-secondary text-navy"><Icon className="h-5 w-5" strokeWidth={1.75} /></span>
-              <span className="min-w-0 text-sm font-semibold">{t(role.key)}</span>
-              {role.code === current ? <Check className="h-4 w-4 shrink-0 text-primary" aria-label={t("profile.currentRole")} /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
-            </Link>;
-          })}</div>
-        </section>}
-        <section className="mt-6 border-t border-border pt-5">
-          <h2 className="mb-3 text-sm font-semibold">{t("profile.language")}</h2>
-          <div className="grid grid-cols-3 gap-1 rounded-lg bg-secondary p-1" role="group" aria-label={t("profile.language")}>
-            {LANGS.map((l) => <Button key={l.code} variant="ghost" onClick={() => setLang(l.code)} aria-pressed={lang === l.code} className={`h-10 rounded-md ${lang === l.code ? "bg-card text-primary shadow-card hover:bg-card" : "text-muted-foreground"}`}>{l.short}</Button>)}
-          </div>
-        </section>
-        <div className="mt-6 flex items-center gap-3 border-t border-border py-5">
-          <BrandLogo className="h-8 w-8 shrink-0 rounded-lg" />
-          <div><p className="text-sm font-semibold">Sunrich Delivery</p><p className="mt-0.5 text-xs text-muted-foreground">{t("profile.version", { n: "1.0" })}</p></div>
+    <main className="home-screen">
+      <div className="home-scroll">
+        <header className="sticky top-0 z-30 bg-background/95 px-5 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-md">
+          <h1 className="text-2xl font-bold tracking-tight text-primary">{t("profile.title")}</h1>
+        </header>
+        <div className="px-4">
+          <section className="overflow-hidden rounded-2xl bg-card shadow-sm" data-testid="profile-card">
+            <div className="bg-primary px-5 py-6">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-primary-foreground/40 bg-primary-foreground/20 text-xl font-bold text-primary-foreground">{name.charAt(0).toUpperCase()}</div>
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 break-words text-lg font-bold leading-tight text-primary-foreground">{name}</p>
+                  <p className="text-sm text-primary-foreground/75">{formatStaffMobile(staff.mobile)}</p>
+                  {currentRole && <p className="mt-1 text-sm font-semibold text-aqua">{t(`role.${currentRole.code}`)}</p>}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 px-5 py-3">
+              {staff.roles.map((code) => <span key={code} className="chip bg-secondary/15 text-primary">{t(`role.${code}`) === `role.${code}` ? code.charAt(0) + code.slice(1).toLowerCase() : t(`role.${code}`)}</span>)}
+            </div>
+          </section>
+          <section className="mt-4 divide-y divide-border rounded-2xl bg-card shadow-sm">
+            {roles.length > 0 && <MenuItemRow icon={Repeat} label={t("profile.switchRole")} onClick={() => void navigate({ to: "/", search: { chooser: true } })} />}
+            <MenuItemRow icon={Languages} label={t("profile.language")} open={panel === "lang"} onClick={() => setPanel(panel === "lang" ? null : "lang")} />
+            {panel === "lang" && <div className="grid gap-1 p-2" role="group" aria-label={t("profile.language")}>
+              {LANGS.map((l) => <button key={l.code} type="button" onClick={() => setLang(l.code)} aria-pressed={lang === l.code} className={`flex min-h-12 items-center justify-between rounded-xl px-4 text-base font-semibold ${lang === l.code ? "bg-secondary/10 text-primary" : "text-foreground"}`}>{l.label}{lang === l.code && <Check className="h-5 w-5 text-secondary" aria-hidden />}</button>)}
+            </div>}
+            <MenuItemRow icon={Info} label={t("profile.about")} open={panel === "about"} onClick={() => setPanel(panel === "about" ? null : "about")} />
+            {panel === "about" && <div className="flex items-center gap-3 px-4 py-4">
+              <BrandLogo className="h-10 w-10 shrink-0 rounded-xl" />
+              <div className="min-w-0"><p className="text-sm font-semibold">Sunrich Delivery · {t("profile.version", { n: "1.0" })}</p><p className="mt-0.5 text-sm text-muted-foreground">{t("profile.aboutText")}</p></div>
+            </div>}
+            <MenuItemRow icon={LogOut} label={t("c.signOut")} danger onClick={() => setConfirm(true)} />
+          </section>
         </div>
       </div>
-      <div className="mt-auto px-4 pt-5"><Button variant="ghost" onClick={() => setConfirm(true)} className="h-12 w-full text-destructive hover:bg-destructive/5 hover:text-destructive"><LogOut className="h-4 w-4" />{t("c.signOut")}</Button></div>
+      {(currentRole ?? roles[0]) && <BottomNav role={tabRole[(currentRole ?? roles[0])!.code] ?? "driver"} active="profile" />}
       <AlertDialog open={confirm} onOpenChange={setConfirm}>
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] sm:max-w-sm">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-sm">
           <AlertDialogHeader><AlertDialogTitle>{t("profile.signOutTitle")}</AlertDialogTitle><AlertDialogDescription>{t("profile.signOutConfirm")}</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter><AlertDialogCancel disabled={busy}>{t("c.cancel")}</AlertDialogCancel><AlertDialogAction disabled={busy} onClick={(event) => { event.preventDefault(); setBusy(true); void signOut().finally(() => setBusy(false)); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{busy ? t("c.loading") : t("c.signOut")}</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>

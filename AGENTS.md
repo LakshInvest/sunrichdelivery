@@ -25,11 +25,8 @@
 - Stop outcomes are handled by the `trip_stops` status trigger: partial → pending credit note per GST rate (invoice never edited); failed → order back to `approved` with `redeliver_reason` (invoice reused on re-delivery, no note).
 - The driver screen shows its spinner only on first load — unmounting the live Google map on refresh throws IntersectionObserver errors.
 - Role tasks use routed leaves under a workflow context layout; shared drafts survive step navigation, while one TaskScreen owns the single bottom action so forms never open off-screen.
-- Task screens use a scoped realtime subscription with immediate trip/status patches, action refetch, foreground/network recovery and a 15-second fallback so remote work appears without navigation.
-- Live refresh emits credential-free `sunrich:live-refresh` timing events identifying realtime versus recovery refreshes, so QA measures the actual update source without increasing polling.
-- A trip workflow owns one stable subscription; task pages reuse it instead of registering overlapping filters, preventing channel teardown from removing shared server bindings.
-- Every table in a combined postgres_changes channel must belong to the realtime publication; one missing table rejects all bindings, so verify system acknowledgements as well as joined status.
-- Role-home counts use the shared realtime hook with their existing 30-second recovery interval; task screens keep 15 seconds, so live counts do not increase polling frequency.
+- Realtime: one stable subscription per trip workflow (task pages reuse it); every table in a combined channel must be in the realtime publication or all bindings fail; recovery polling stays 15s on tasks, 30s on role homes.
+- `sunrich:live-refresh` events tag realtime vs recovery refreshes so QA can time updates.
 - Security gate is one home (header counts, SCAN, Entry/Exit/Problem, Register): every pass type goes through SCAN and `gate_scan_lookup` decides trip out/in or material; pickup QRs are detected by their `order=` text. Gate RPCs check `has_perm('gate','create')` ("Gate entry"), because the role_permissions action list is fixed.
 - Staff actions go through `queueRpc` → `run_op(op_id, rpc, args)`: the op id is recorded in `client_ops`, so offline replays/retries run once; new queued RPCs must be added to run_op's allow-list. Offline photos keep their final storage path and upload from the local photo queue first.
 - Gate-in may come before the driver's End trip: `gate_in` sets `gate_in_at` and the trip becomes `returned` only when `ended_at` exists (otherwise `end_trip` moves it on); manual "Mark arrived" is `gate_in(p_manual=true)`. A trip's own driver never settles — they record a cash hand-over and the cashier's `confirm_cash_handover` runs `settle_trip`.
@@ -39,3 +36,4 @@
 - Every QR scan goes through `scanCode()` in src/lib/native.ts (isSupported → permission → Google module install → scan) and is called directly from the tap — no intermediate page — so the camera opens at once; browsers get only the type-code box.
 - Role homes (driver trip home, loader list, guard home) use `HomeScreen` from role-home.tsx: navy header with avatar → Profile and no back arrow; inner pages keep TaskScreen with back.
 - Staff read the overdue-hours limit only via `gate_overdue_hours()` (one value for the caller's company) — the settings table stays closed to staff.
+- Tab bar (`BottomNav`) shows only on role homes/Profile, never on TaskScreen, keeping one bottom action. Root launch overlay renders (SSR too) until auth is ready, so first paint is never white.

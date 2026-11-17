@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -16,6 +17,7 @@ import { TeamAuthProvider, useTeamAuth } from "../lib/team-auth";
 import { LanguageProvider, type Lang } from "../lib/l10n";
 import { supabase } from "../integrations/supabase/client";
 import { initNative, registerPush } from "../lib/native";
+import { LaunchScreen, useLaunchGate } from "../components/team/launch-screen";
 
 function NotFoundComponent() {
   return (
@@ -100,7 +102,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap",
       },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
@@ -161,6 +163,15 @@ function NativeBridge() {
   return null;
 }
 
+/** Customer-style launch overlay while the staff session is restored (not on the public login page). */
+function LaunchOverlay() {
+  const { ready } = useTeamAuth();
+  const show = useLaunchGate(ready);
+  const path = useRouterState({ select: (st) => st.location.pathname });
+  if (!show || path.startsWith("/login")) return null;
+  return <LaunchScreen />;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -169,6 +180,7 @@ function RootComponent() {
       <TeamAuthProvider>
         <TeamLocale>
           <NativeBridge />
+          <LaunchOverlay />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </TeamLocale>

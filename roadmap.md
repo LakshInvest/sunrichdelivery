@@ -107,3 +107,11 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 - [x] Unified role cards and live existing-data counts; per-user last-role selection and explicit chooser from Profile.
 - [x] Single profile card, full role list, language segments, app info and confirmed sign-out.
 - [x] Real QA Driver sign-in opens /driver directly; Profile/chooser at 360/390/412, saved-role return, sign-out cancel/confirm passed; 24 tests passed and compilation clean. Publishing requested after checks. Multi-role live account not exercised; selection policy covered by tests.
+
+## Prompt-23 customer-app look
+- [x] Tokens, fonts, buttons, chips, loader, empty state
+- [x] Launch screen with /launch-delivery.webp slot
+- [x] Profile card + menu rows
+- [x] Bottom tabs on role homes; guard Register; loader Returns; driver Trips
+- [x] Today / Purane filters, summary cards
+- [ ] Delivery brand photo (waiting on user)

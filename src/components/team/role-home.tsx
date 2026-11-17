@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Sun, ListChecks, UserRound, Boxes, Undo2, ScanLine, BookOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
@@ -10,7 +10,68 @@ import { AvatarLink } from "@/components/team/ui";
 const locales = { en: "en-IN", hi: "hi-IN", mr: "mr-IN" } as const;
 
 /** Role home (driver D1, loader L1, guard G1): navy header, no back arrow, avatar → Profile. */
-export function HomeScreen({ role, menu, stats, children, action }: { role: string; menu?: ReactNode; stats?: ReactNode; children: ReactNode; action?: ReactNode }) {
+export type RoleTab = { key: string; label: string; icon: LucideIcon; to: string; search?: Record<string, string>; params?: Record<string, string> };
+export type TabRole = "driver" | "loader" | "security";
+export function roleTabs(role: TabRole): Omit<RoleTab, "label">[] {
+  if (role === "driver") return [{ key: "today", icon: Sun, to: "/driver" }, { key: "trips", icon: ListChecks, to: "/driver", search: { view: "trips" } }, { key: "profile", icon: UserRound, to: "/profile" }];
+  if (role === "loader") return [{ key: "load", icon: Boxes, to: "/loader" }, { key: "returns", icon: Undo2, to: "/loader", search: { view: "returns" } }, { key: "profile", icon: UserRound, to: "/profile" }];
+  return [{ key: "gate", icon: ScanLine, to: "/security" }, { key: "register", icon: BookOpen, to: "/security/$step", params: { step: "register" } }, { key: "profile", icon: UserRound, to: "/profile" }];
+}
+
+/** Customer-app BottomNav, shown only on role home tabs (never on inner task pages). */
+export function BottomNav({ role, active }: { role: TabRole; active: string }) {
+  const { t } = useLang();
+  return (
+    <nav className="bottom-nav" aria-label={t("sec.menu")} data-testid="bottom-nav">
+      <div className="mx-auto flex max-w-md">
+        {roleTabs(role).map(({ key, icon: Icon, to, search, params }) => {
+          const on = key === active;
+          return (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            <Link key={key} to={to as any} search={(search ?? {}) as any} params={(params ?? {}) as any} aria-current={on ? "page" : undefined}
+              className={`relative flex min-h-16 flex-1 flex-col items-center justify-center gap-0.5 text-xs transition-colors ${on ? "font-bold text-secondary" : "font-medium text-muted-foreground"}`}>
+              <span className={`relative flex h-8 w-14 items-center justify-center rounded-full transition-all ${on ? "-translate-y-0.5 bg-secondary/15 shadow-sm" : ""}`}>
+                <Icon className="h-6 w-6" fill={on ? "currentColor" : "none"} fillOpacity={on ? 0.2 : 0} strokeWidth={on ? 2.4 : 1.8} aria-hidden />
+              </span>
+              <span className="whitespace-nowrap">{t(`tab.${key}`)}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+/** One line summary tiles under the header so a home never looks empty. */
+export function SummaryCard({ title, items }: { title: string; items: { label: string; value: number | string }[] }) {
+  return (
+    <section className="home-card p-4" data-testid="summary-card">
+      <h2 className="text-sm font-bold text-muted-foreground">{title}</h2>
+      <div className="mt-3 grid gap-2" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+        {items.map((it) => <div key={it.label} className="min-w-0 rounded-xl bg-secondary/10 p-3"><p className="font-display text-2xl font-bold text-primary">{it.value}</p><p className="truncate text-xs font-semibold text-muted-foreground">{it.label}</p></div>)}
+      </div>
+    </section>
+  );
+}
+
+/** Today / Older filter chips for trip lists. */
+export function ListFilter({ value, onChange }: { value: "today" | "old"; onChange: (v: "today" | "old") => void }) {
+  const { t } = useLang();
+  return (
+    <div className="flex gap-2" role="group">
+      {(["today", "old"] as const).map((v) => <button key={v} type="button" aria-pressed={value === v} onClick={() => onChange(v)}
+        className={`min-h-11 whitespace-nowrap rounded-full px-5 text-sm font-semibold transition active:scale-95 ${value === v ? "bg-primary text-primary-foreground shadow-sm" : "border border-border bg-card text-foreground"}`}>{t(v === "today" ? "list.today" : "list.old")}</button>)}
+    </div>
+  );
+}
+
+/** Older and QA trips go under "Purane"; the default list is today's open work. */
+export function isTodayTrip(r: { trip_date: string; trip_no: string; vehicles?: { reg_no: string } | null }, today: string) {
+  const qa = /^QA[-\s]/i.test(r.trip_no) || /^QA[-\s]/i.test(r.vehicles?.reg_no ?? "");
+  return !qa && r.trip_date >= today;
+}
+
+export function HomeScreen({ role, menu, stats, children, action, tabs }: { role: string; menu?: ReactNode; stats?: ReactNode; children: ReactNode; action?: ReactNode; tabs?: { role: TabRole; active: string } }) {
   const { staff } = useTeamAuth();
   const { t, lang } = useLang();
   const [unit, setUnit] = useState<string | null>(null);
@@ -36,6 +97,7 @@ export function HomeScreen({ role, menu, stats, children, action }: { role: stri
         <div className="grid gap-4 px-4 pt-4">{children}</div>
       </div>
       {action && <footer className="task-action" data-testid="task-action">{action}</footer>}
+      {tabs && <BottomNav role={tabs.role} active={tabs.active} />}
     </main>
   );
 }
@@ -43,7 +105,7 @@ export function HomeScreen({ role, menu, stats, children, action }: { role: stri
 export function StatCard({ icon: Icon, value, label, to, step }: { icon: LucideIcon; value: number; label: string; to: "/security/$step"; step: string }) {
   return (
     <Link to={to} params={{ step }} className="home-card flex min-h-24 flex-col justify-between gap-2 p-4 active:scale-[0.98]">
-      <span className="flex items-center justify-between gap-2"><span className="font-display text-3xl font-bold text-navy">{value}</span><span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary text-navy"><Icon className="h-5 w-5" aria-hidden /></span></span>
+      <span className="flex items-center justify-between gap-2"><span className="font-display text-3xl font-bold text-primary">{value}</span><span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary/10 text-secondary"><Icon className="h-5 w-5" aria-hidden /></span></span>
       <span className="break-words text-sm font-semibold text-muted-foreground">{label}</span>
     </Link>
   );
@@ -58,12 +120,13 @@ export function TileLink({ icon: Icon, label, to, params }: { icon: LucideIcon; 
   );
 }
 
-/** Friendly empty state: an icon and one line. */
-export function EmptyState({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
+/** Customer-app EmptyState: aqua icon circle and one friendly line. */
+export function EmptyState({ icon: Icon, text, body }: { icon: LucideIcon; text: string; body?: string }) {
   return (
-    <div className="home-card flex flex-col items-center gap-3 px-4 py-10 text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-full bg-secondary text-navy"><Icon className="h-7 w-7" aria-hidden /></span>
-      <p className="text-lg font-semibold text-muted-foreground">{text}</p>
+    <div className="flex flex-col items-center px-8 py-12 text-center">
+      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary/10"><Icon className="h-8 w-8 text-secondary" aria-hidden /></span>
+      <p className="mt-4 text-base font-semibold text-foreground">{text}</p>
+      {body && <p className="mt-1 max-w-72 text-sm text-muted-foreground">{body}</p>}
     </div>
   );
 }
