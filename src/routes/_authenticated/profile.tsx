@@ -86,7 +86,7 @@ function Profile() {
           </section>
         </div>
       </div>
-      {currentRole && <BottomNav role={tabRole[currentRole.code] ?? "driver"} active="profile" />}
+      {(currentRole ?? roles[0]) && <BottomNav role={tabRole[(currentRole ?? roles[0])!.code] ?? "driver"} active="profile" />}
       <AlertDialog open={confirm} onOpenChange={setConfirm}>
         <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-sm">
           <AlertDialogHeader><AlertDialogTitle>{t("profile.signOutTitle")}</AlertDialogTitle><AlertDialogDescription>{t("profile.signOutConfirm")}</AlertDialogDescription></AlertDialogHeader>
