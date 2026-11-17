@@ -1,0 +1,3 @@
+-- Vehicles out includes trips on the road without a gate-out record (gate_out_missing);
+-- gate_in accepts p_reason and requires it when no gate-out exists (saved in trips.gate_return_note).
+-- Applied via migration on 2026-11-17. See gate_vehicles_out() and gate_in(uuid,numeric,numeric,numeric,boolean,text).

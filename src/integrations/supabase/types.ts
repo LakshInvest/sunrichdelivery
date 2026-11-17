@@ -7596,6 +7596,7 @@ export type Database = {
           p_fuel_litres?: number
           p_manual?: boolean
           p_odometer?: number
+          p_reason?: string
           p_trip_id: string
         }
         Returns: undefined
@@ -7690,7 +7691,9 @@ export type Database = {
           driver: string
           ended: boolean
           gate_out_at: string
+          gate_out_missing: boolean
           reg_no: string
+          started_at: string
           trip_id: string
           trip_no: string
         }[]
