@@ -43,12 +43,12 @@ export function BottomNav({ role, active }: { role: TabRole; active: string }) {
 }
 
 /** One line summary tiles under the header so a home never looks empty. */
-export function SummaryCard({ title, items }: { title: string; items: { label: string; value: number | string }[] }) {
+export function SummaryCard({ title, items }: { title: string; items: { label: string; value: number | string; onClick?: () => void }[] }) {
   return (
     <section className="home-card p-4" data-testid="summary-card">
       <h2 className="text-sm font-bold text-muted-foreground">{title}</h2>
       <div className="mt-3 grid gap-2" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
-        {items.map((it) => <div key={it.label} className="min-w-0 rounded-xl bg-secondary/10 p-3"><p className="font-display text-2xl font-bold text-primary">{it.value}</p><p className="truncate text-xs font-semibold text-muted-foreground">{it.label}</p></div>)}
+        {items.map((it) => { const body = <><p className="font-display text-2xl font-bold text-primary">{it.value}</p><p className="truncate text-xs font-semibold text-muted-foreground">{it.label}</p></>; return it.onClick ? <button key={it.label} type="button" onClick={it.onClick} className="min-w-0 rounded-xl bg-secondary/10 p-3 text-left active:scale-95">{body}</button> : <div key={it.label} className="min-w-0 rounded-xl bg-secondary/10 p-3">{body}</div>; })}
       </div>
     </section>
   );

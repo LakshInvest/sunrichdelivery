@@ -230,7 +230,7 @@ export function Stepper({
         inputMode="numeric"
         value={String(value)}
         onChange={(e) => onChange(Math.min(max, Math.max(min, Number(e.target.value.replace(/\D/g, "")) || 0)))}
-        className={`w-14 bg-transparent text-center font-bold text-foreground outline-none ${size === "lg" ? "text-lg" : "text-base"}`}
+        className={`w-12 bg-transparent text-center font-bold text-foreground outline-none ${size === "lg" ? "text-lg" : "text-base"}`}
         aria-label={label ?? "count"}
       />
       <button type="button" aria-label="plus" onClick={() => set(value + 1)} disabled={value >= max} className={`${btn} rounded-full bg-primary text-primary-foreground shadow-soft disabled:opacity-40`}>

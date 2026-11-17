@@ -1,6 +1,6 @@
 import { HomeScreen, EmptyState, ListFilter, SummaryCard, isTodayTrip } from "@/components/team/role-home";
 import { Boxes, Undo2 } from "lucide-react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { istToday } from "@/lib/ist";
 import { useLiveRefresh } from "@/lib/use-live-refresh";
@@ -32,6 +32,7 @@ const cols = "id, trip_no, trip_date, status, gate_in_at, returns_received_at, v
 function LoaderHome() {
   const { t } = useLang();
   const { view } = Route.useSearch();
+  const navigate = useNavigate();
   const [open, setOpen] = useState<TripRow[] | null>(null);
   const [done, setDone] = useState<TripRow[]>([]);
   const [back, setBack] = useState<TripRow[]>([]);
@@ -67,7 +68,7 @@ function LoaderHome() {
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
         {r.vehicles?.reg_no && <span className="font-semibold text-foreground">{r.vehicles.reg_no}</span>}
         {r.geo_routes?.name && <span>{r.geo_routes.name}</span>}
-        <span className="font-semibold text-primary">{t("ld.stops", { n: r.trip_stops?.[0]?.count ?? 0 })}</span>
+        <span className="font-semibold text-primary">{t((r.trip_stops?.[0]?.count ?? 0) === 1 ? "ld.stops1" : "ld.stops", { n: r.trip_stops?.[0]?.count ?? 0 })}</span>
       </div>
     </Link>
   );
@@ -78,9 +79,9 @@ function LoaderHome() {
         <>
           {error && <ErrorCard message={error} onRetry={() => void load()} />}
           <SummaryCard title={t("sum.today")} items={[
-            { label: t("sum.open"), value: (open ?? []).filter((r) => isTodayTrip(r, today)).length },
+            { label: t("sum.open"), value: (open ?? []).filter((r) => isTodayTrip(r, today)).length, onClick: () => void navigate({ to: "/loader", search: {} }) },
             { label: t("sum.done"), value: done.filter((r) => isTodayTrip(r, today)).length },
-            { label: t("sum.returns"), value: back.length },
+            { label: t("sum.returns"), value: back.length, onClick: () => void navigate({ to: "/loader", search: { view: "returns" } }) },
           ]} />
           <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t(view === "returns" ? "ld.returns" : "ld.toLoad")}</h2>
           <ListFilter value={filter} onChange={setFilter} />
