@@ -67,6 +67,7 @@ export type Settings = {
   allow_partial_delivery: boolean;
   allow_extra_load: boolean;
   allow_spot_sale: boolean;
+  allow_pickup_only?: boolean;
   collect_old_dues: boolean;
   allow_cash: boolean;
   allow_upi: boolean;
@@ -87,7 +88,7 @@ export const DEFAULT_SETTINGS: Settings = {
   proof_photo_required: false,
   proof_otp_enabled: false,
   proof_otp_required: false,
-  proof_signature_enabled: true,
+  proof_signature_enabled: false,
   proof_signature_required: false,
   failed_reasons: [],
   location_tracking_enabled: false,
@@ -98,6 +99,7 @@ export const DEFAULT_SETTINGS: Settings = {
   allow_partial_delivery: true,
   allow_extra_load: false,
   allow_spot_sale: false,
+  allow_pickup_only: false,
   collect_old_dues: false,
   allow_cash: true,
   allow_upi: true,
