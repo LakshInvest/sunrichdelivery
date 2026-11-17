@@ -122,3 +122,13 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 - [x] Old guard pages re-checked (scan unknown code, vehicles out, problem, change guard, register, exit); QA visitors marked out.
 - [ ] Scan gate out/in, pickup, material pass with real codes — need an active QA trip/pickup/material pass.
 - [ ] Items 3–9 (exit card, register timeline, gate-out-missing, loader rework, shared photo/forms, CC appearance, leftovers).
+
+## Prompt-25/31 items
+- [x] 3 Guard Exit: list with photo, name/vehicle, type chip, in time, search; full card with details, "दे दिया" for parcels. Optional exit-goods photo not added (no place to store it).
+- [ ] 4 Register timeline + filters + date
+- [ ] 5 Vehicles out incl. gate-out-missing trips
+- [ ] 6 Loader rework
+- [ ] 7 Shared photo tile / chips everywhere
+- [ ] 8 Appearance from Command Center
+- [~] 9 Leftovers: splash images compressed to 100 KB (done); gap, EmptyState, role names open
+- [ ] Final QA data + SCAN tests (gate out/in, pickup, material pass)
