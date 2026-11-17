@@ -20,7 +20,7 @@ type Trip = { id: string; trip_no: string; status: string; gate_out_at: string |
 type Goods = { order_line_id: string; delivered: number; short: number; damaged: number; refused: number; empties: number };
 type Draft = { goods: Goods[]; otp: string; photo: string | null; signature: string | null; amount: string; reference: string; payPhoto: string | null; splitCash: string; alertId?: string; resolution?: string; collectionDone?: boolean };
 const emptyDraft = (): Draft => ({ goods: [], otp: "", photo: null, signature: null, amount: "", reference: "", payPhoto: null, splitCash: "" });
-type Workflow = { tripId: string; trip: Trip | null; stops: StopRow[]; lines: Record<string, LineRow[]>; settings: Settings; token: string | null; upi: { id: string; payee: string | null } | null; cash: number; cashiers: { id: string; full_name: string }[]; pendingCash: string | null; products: { id: string; name: string; left: number; returnable: boolean }[]; loading: boolean; error: string | null; busy: boolean; drafts: Record<string, Draft>; update: (id: string, value: Partial<Draft>) => void; load: () => Promise<void>; write: (rpc: string, args: Record<string, unknown>) => Promise<{ ok: boolean; data: unknown; queued: boolean }>; };
+type Workflow = { tripId: string; trip: Trip | null; stops: StopRow[]; lines: Record<string, LineRow[]>; settings: Settings; token: string | null; upi: { id: string; payee: string | null } | null; cash: number; cashiers: { id: string; full_name: string }[]; pendingCash: string | null; form: {odo:string;odoPhoto:string|null;selfie:string|null;checkPhoto:string|null;checks:string[];customer:string}; setForm:(patch:Partial<Workflow["form"]>)=>void; products: { id: string; name: string; left: number; returnable: boolean }[]; loading: boolean; error: string | null; busy: boolean; drafts: Record<string, Draft>; update: (id: string, value: Partial<Draft>) => void; load: () => Promise<void>; write: (rpc: string, args: Record<string, unknown>) => Promise<{ ok: boolean; data: unknown; queued: boolean }>; };
 const Context = createContext<Workflow | null>(null);
 function useWorkflow() { const v = useContext(Context); if (!v) throw new Error("Trip context unavailable"); return v; }
 export function DriverWorkflowProvider({ tripId, children }: { tripId: string; children: ReactNode }) {
@@ -38,6 +38,8 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [form,setFormState]=useState<Workflow["form"]>({odo:"",odoPhoto:null,selfie:null,checkPhoto:null,checks:[],customer:""});
+  const setForm=(patch:Partial<Workflow["form"]>)=>setFormState(v=>({...v,...patch}));
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   
   const load = async () => {
@@ -54,6 +56,7 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
       supabase.from("trip_loading").select("product_id,loaded_qty").eq("trip_id",tripId),
     ]);
     if (tr.error || st.error) { setError(t("c.error")); setLoading(false); return; }
+    setTrip(tr.data as unknown as Trip);
     const list = ((st.data ?? []) as unknown as StopRow[]).map(s=>({...s,orders:s.orders?{...s.orders,amount_paid:Math.max(Number(s.orders.amount_paid ?? 0),(cc.data ?? []).filter(c=>c.stop_id===s.id).reduce((a,c)=>a+Number(c.amount),0))}:null}));
     const orderIds = list.flatMap(s => s.orders ? [s.orders.id] : []);
     const lr = orderIds.length ? await supabase.from("order_lines").select("id,order_id,product_id,product_name,pack_label,qty,line_total,deposit_total").in("order_id",orderIds) : { data: [] };
@@ -76,7 +79,10 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
     if (firm) { const f=await supabase.from("firms").select("upi_id,upi_payee_name").eq("id",firm).maybeSingle(); setUpi(f.data ? {id:f.data.upi_id ?? "",payee:f.data.upi_payee_name}:null); }
     setLoading(false);
   };
-  useLiveRefresh(load,[{table:"trips",filter:`id=eq.${tripId}`},... ["trip_stops","gate_passes","trip_loading","trip_alerts","cash_handovers","trip_collections","trip_expenses"].map(table=>({table,filter:`trip_id=eq.${tripId}`})),...stops.flatMap(s=>s.orders ? [{table:"orders",filter:`id=eq.${s.orders.id}`}]:[])],tripId);
+  useLiveRefresh(load,[{table:"trips",filter:`id=eq.${tripId}`},... ["trip_stops","gate_passes","trip_loading","trip_alerts","cash_handovers","trip_collections","trip_expenses"].map(table=>({table,filter:`trip_id=eq.${tripId}`})),...stops.flatMap(s=>s.orders ? [{table:"orders",filter:`id=eq.${s.orders.id}`}]:[])],tripId,(table,row)=>{
+    if(table==="trips"&&row['id']===tripId) setTrip(current=>current?{...current,...row}:current);
+    if(table==="trip_stops"&&typeof row['id']==="string") setStops(current=>current.map(s=>s.id===row['id']?{...s,...row}:s));
+  });
   useEffect(()=>{
     if (!trip?.driver_started_at || trip.ended_at || !settings.location_tracking_enabled) return;
     let closed=false; let cleanup: (()=>void)|null=null;
@@ -91,7 +97,7 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
     catch { setError(t("c.error")); return {ok:false,data:null,queued:false}; } finally {setBusy(false);}
   };
   const update=(id:string,value:Partial<Draft>)=>setDrafts(all=>({...all,[id]:{...(all[id] ?? emptyDraft()),...value}}));
-  return <Context.Provider value={{tripId,trip,stops,lines,settings,token,upi,cash,cashiers,pendingCash,products,loading,error,busy,drafts,update,load,write}}>{children}</Context.Provider>;
+  return <Context.Provider value={{tripId,trip,stops,lines,settings,token,upi,cash,cashiers,pendingCash,form,setForm,products,loading,error,busy,drafts,update,load,write}}>{children}</Context.Provider>;
 }
 
 const titleKeys: Record<string,string> = {home:"dr.title",pass:"dr.gatePass",start:"dr.startTrip",next:"dr.nextStop",goods:"dr.allAsOrdered",counts:"dr.somethingDifferent",proof:"dr.deliveryOtp",photo:"dr.proofPhoto",signature:"dr.signature",payment:"dr.toCollect",cash:"dr.modeCash",upi:"dr.modeUpi",bank:"dr.reference",cheque:"dr.modeCheque",split:"dr.modeSplit",udhaar:"dr.udhaar",office:"dr.askOffice",done:"dr.stopDone",stops:"dr.allStopsLeft",end:"dr.endTrip",handover:"dr.handedToCashier",expense:"dr.expenses",pickup:"dr.pickup",spot:"dr.spotSale",customer:"dr.customer",sos:"dr.sos",failed:"dr.markFailed",selfie:"dr.selfie",check:"dr.vehicleCheck"};
@@ -108,11 +114,11 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
   const due=Math.max(0,keptValue(orderLines,l=>stop?.status==="pending" ? goods.find(g=>g.order_line_id===l.id)?.delivered ?? l.qty:l.kept ?? l.qty)-Number(stop?.orders?.amount_paid ?? 0));
   const [localError,setLocalError]=useState<string|null>(null);
   const [menu,setMenu]=useState(false);
-  const [odo,setOdo]=useState("");const [odoPhoto,setOdoPhoto]=useState<string|null>(null);
-  const [selfie,setSelfie]=useState<string|null>(null);const [checkPhoto,setCheckPhoto]=useState<string|null>(null);const [checks,setChecks]=useState<string[]>([]);
+  const {odo,odoPhoto,selfie,checkPhoto,checks}=w.form;
+  const setOdo=(odo:string)=>w.setForm({odo});const setOdoPhoto=(odoPhoto:string|null)=>w.setForm({odoPhoto});const setSelfie=(selfie:string|null)=>w.setForm({selfie});const setCheckPhoto=(checkPhoto:string|null)=>w.setForm({checkPhoto});const setChecks=(fn:(v:string[])=>string[])=>w.setForm({checks:fn(checks)});
   const [cashier,setCashier]=useState("");const [handoverAmt,setHandoverAmt]=useState("");
   const [reason,setReason]=useState("");const [note,setNote]=useState("");const [photo,setPhoto]=useState<string|null>(null);
-  const [product,setProduct]=useState("");const [qty,setQty]=useState("");const [customer,setCustomer]=useState("");const [paid,setPaid]=useState(true);const [expenseType,setExpenseType]=useState("");
+  const [product,setProduct]=useState("");const [qty,setQty]=useState("");const customer=w.form.customer;const setCustomer=(customer:string)=>w.setForm({customer});const [paid,setPaid]=useState(true);const [expenseType,setExpenseType]=useState("");
   const [phone,setPhone]=useState<string|null>(null);const [udhaar,setUdhaar]=useState(false);const [remaining,setRemaining]=useState<number|null>(null);
   const [q,setQ]=useState("");const [found,setFound]=useState<{id:string;name:string}[]>([]);
   const go=(next:string,id=stop?.id)=>navigate({to:"/driver/$tripId/$step",params:{tripId,step:next},search:id ? {stopId:id}:{}});
@@ -212,7 +218,9 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
   if(step==="customer")return shell(<><input aria-label={t("dx.searchHint")} placeholder={t("dx.searchHint")} className={taskInput} value={q} onChange={e=>setQ(e.target.value)}/>{found.map(c=><Button key={c.id} variant="outline" className="h-14 text-lg" onClick={()=>{setCustomer(c.id);void go("spot");}}>{c.name}</Button>)}</>);
   if(step==="done")return shell(<div role="status" className="flex flex-col items-center gap-6 py-24"><CheckCircle2 className="h-24 w-24 text-primary"/><p className="text-3xl font-bold">{t("dr.stopDone")}</p></div>);
   if(!stop)return shell(<p>{t("c.none")}</p>);
-  if(step==="next")return shell(<><h2 className="text-2xl font-bold">{stop.orders?.business_name||stop.orders?.customer_name}</h2><p className="text-lg">{stop.orders?.delivery_address_text}</p><p className="text-lg">{orderLines.map(l=>`${l.product_name} × ${l.qty}`).join(", ")}</p><p className="text-3xl font-bold">₹{needsPayment(stop.orders?.payment_mode,due)?due:0}</p><div className="grid grid-cols-2 gap-3"><Button variant="outline" className="h-14 text-lg" onClick={()=>{const o=stop.orders;void openExternal(o?.delivery_latitude!=null&&o.delivery_longitude!=null?`https://www.google.com/maps/dir/?api=1&destination=${o.delivery_latitude},${o.delivery_longitude}`:`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o?.delivery_address_text ?? "")}`);}}><MapPin/>{t("dr.map")}</Button><Button asChild variant="outline" className="h-14 text-lg" disabled={!phone}><a href={phone?`tel:${phone}`:undefined}><Phone/>{t("dr.call")}</a></Button></div>{stop.status==="pending"&&<div className="flex justify-between">{small("failed",t("dr.markFailed"))}<Button variant="link" className="text-base" onClick={()=>{void write("set_stop_later",{p_stop_id:stop.id,p_later:true}).then(r=>{if(r.ok){const next=pending.find(s=>s.id!==stop.id);if(next)void go("next",next.id);else void home();}});}}>{t("dr.doLater")}</Button></div>}</>,stop.status==="pending"?main(t("dr.reached"),()=>{void write("mark_arrived",{p_stop_id:stop.id}).then(r=>{if(r.ok)void go("goods");});}):needsPayment(stop.orders?.payment_mode,due)?main(t("dr.toCollect"),()=>void go("payment")):undefined);
+  if(step==="next")return shell(<><h2 className="text-2xl font-bold">{stop.orders?.business_name||stop.orders?.customer_name}</h2><p className="text-lg">{stop.orders?.delivery_address_text||[stop.orders?.business_name,t("dr.customer")].filter(Boolean).join(" · ")}</p><p className="text-lg">{orderLines.map(l=>`${l.product_name} × ${l.qty}`).join(", ")}</p><p className="text-3xl font-bold">₹{needsPayment(stop.orders?.payment_mode,due)?due:0}</p><div className="grid grid-cols-2 gap-3"><Button variant="outline" className="h-14 text-lg" onClick={()=>{const o=stop.orders;void openExternal(o?.delivery_latitude!=null&&o.delivery_longitude!=null?`https://www.google.com/maps/dir/?api=1&destination=${o.delivery_latitude},${o.delivery_longitude}`:`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o?.delivery_address_text ?? "")}`);}}><MapPin/>{t("dr.map")}</Button><Button asChild variant="outline" className="h-14 text-lg" disabled={!phone}><a href={phone?`tel:${phone}`:undefined}><Phone/>{t("dr.call")}</a></Button></div>{stop.status==="pending"&&<div className="flex justify-between">{small("failed",t("dr.markFailed"))}<Button variant="link" className="text-base" onClick={()=>{void write("set_stop_later",{p_stop_id:stop.id,p_later:true}).then(r=>{if(r.ok){const next=pending.find(s=>s.id!==stop.id);if(next)void go("next",next.id);else void home();}});}}>{t("dr.doLater")}</Button></div>}</>,stop.status==="pending"?main(t("dr.reached"),()=>{void write("mark_arrived",{p_stop_id:stop.id}).then(r=>{if(r.ok)void go("goods");});}):needsPayment(stop.orders?.payment_mode,due)?main(t("dr.toCollect"),()=>void go("payment")):undefined);
+  if(["goods","counts","proof","photo","signature"].includes(step)&&stop.status!=="pending")return shell(<p className="text-2xl">{t("dr.stopDone")}</p>);
+  if(["payment","cash","upi","bank","cheque","split","udhaar","office"].includes(step)&&!needsPayment(stop.orders?.payment_mode,due))return shell(<p className="text-2xl">{t("dr.stopDone")}</p>);
   if(step==="goods")return shell(<>{orderLines.map(l=><div key={l.id} className="flex justify-between gap-3 border-b border-border py-3 text-xl"><span>{l.product_name}</span><strong>{goods.find(g=>g.order_line_id===l.id)?.delivered ?? l.qty}</strong></div>)}{settings.allow_partial_delivery&&small("counts",t("dr.somethingDifferent"))}</>,main(copy("allGiven"),afterGoods));
   if(step==="counts")return shell(<>{orderLines.map(l=>{const g=goods.find(x=>x.order_line_id===l.id);if(!g)return null;return <div key={l.id} className="grid gap-3"><p className="text-xl font-bold">{l.product_name}</p>{(["delivered","damaged","refused","empties"] as const).map(k=><label key={k} className="flex items-center justify-between gap-3 text-base">{t(k==="delivered"?"dr.deliveredQty":`dr.${k}`)}<Stepper value={g[k]} max={k==="empties"?9999:l.qty} onChange={value=>{const changed=goods.map(x=>x.order_line_id===l.id?{...x,[k]:value}:x).map(x=>({...x,short:Math.max(0,(orderLines.find(y=>y.id===x.order_line_id)?.qty ?? 0)-x.delivered-x.damaged-x.refused)}));update(stop.id,{goods:changed});}}/></label>)}</div>;})}</>,main(copy("continue"),()=>{if(goods.some(g=>g.delivered+g.damaged+g.refused>(orderLines.find(l=>l.id===g.order_line_id)?.qty ?? 0)))setLocalError(t("dr.qtyOverflow"));else afterGoods();}));
   if(step==="proof")return shell(<><p className="text-lg">{t("dr.deliveryOtp")}</p><OtpInput value={draft.otp} onChange={otp=>update(stop.id,{otp})}/>{settings.proof_photo_enabled&&small("photo",copy("noOtp"))}</>,main(copy("verify"),()=>afterProof({otp:draft.otp}),draft.otp.length!==4));

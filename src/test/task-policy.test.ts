@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { driverHomeAction, optionalDriverTasks, needsPayment, REFRESH_FALLBACK_MS, STOP_DONE_MS } from "@/lib/task-policy";
+import { DEFAULT_SETTINGS } from "@/components/team/driver-parts";
 const trip = { status: "in_progress", gate_out_at: "2026-11-17", driver_started_at: null, ended_at: null };
 describe("one-task workflow rules", () => {
   it("switches from pass to start after the guard gates out", () => {
@@ -17,4 +18,5 @@ describe("one-task workflow rules", () => {
   it("credit skips payment even with an unpaid balance", () => { expect(needsPayment("credit", 200)).toBe(false); expect(needsPayment("cod", 200)).toBe(true); });
   it("uses a 15 second recovery refresh", () => expect(REFRESH_FALLBACK_MS).toBe(15000));
   it("advances done after one second", () => expect(STOP_DONE_MS).toBe(1000));
+  it("signature defaults off", () => expect(DEFAULT_SETTINGS.proof_signature_enabled).toBe(false));
 });
