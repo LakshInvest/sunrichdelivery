@@ -33,6 +33,7 @@ const W: Record<string, [string, string, string]> = {
   vType: ["Type", "प्रकार", "प्रकार"], supplier: ["Supplier", "सप्लायर", "पुरवठादार"], transporter: ["Transporter", "ट्रांसपोर्टर", "ट्रान्सपोर्टर"], other: ["Other", "अन्य", "इतर"],
   vehicleNo: ["Vehicle number", "गाड़ी नंबर", "गाडी नंबर"], driverMobile: ["Driver mobile", "ड्राइवर मोबाइल", "ड्रायव्हर मोबाइल"], driverName: ["Driver name", "ड्राइवर का नाम", "ड्रायव्हरचे नाव"],
   driverPhoto: ["Driver photo", "ड्राइवर फोटो", "ड्रायव्हर फोटो"], supplierName: ["Supplier name", "सप्लायर का नाम", "पुरवठादाराचे नाव"], challan: ["Challan photo", "चालान फोटो", "चलन फोटो"],
+  courierMobile: ["Delivery person's mobile", "डिलीवरी वाले का मोबाइल", "डिलिव्हरी करणाऱ्याचा मोबाइल"], needMobile: ["Enter the 10-digit mobile", "10 अंकों का मोबाइल लिखें", "10 अंकी मोबाइल लिहा"],
   courier: ["Courier", "कूरियर", "कुरिअर"], parcelPhoto: ["Parcel photo", "पार्सल फोटो", "पार्सल फोटो"], kept: ["Kept it", "रख लिया", "ठेवले"], count: ["Parcels", "पार्सल गिनती", "पार्सल संख्या"],
   p_meeting: ["Meeting", "मीटिंग", "मीटिंग"], p_delivery: ["Deliver goods", "माल देना", "माल देणे"], p_interview: ["Interview", "इंटरव्यू", "मुलाखत"], p_service: ["Service", "सर्विस", "सर्व्हिस"], p_other: ["Other", "अन्य", "इतर"],
   needName: ["Enter the name", "नाम लिखें", "नाव लिहा"], needPhoto: ["Take the photo", "फोटो लें", "फोटो घ्या"], needHost: ["Pick a person", "व्यक्ति चुनें", "व्यक्ती निवडा"], needVehicle: ["Enter vehicle number like MH24AB1234", "गाड़ी नंबर MH24AB1234 जैसा लिखें", "गाडी नंबर MH24AB1234 असा लिहा"],
@@ -181,9 +182,10 @@ export function GateEntry({ step, draft, update, photoRule, refresh }: { step: s
 
   if (step === "e-parcel") return shell(w("parcel"), <>
     <div><p className="mb-2 text-lg font-semibold">{w("courier")}</p>{couriers.length > 0 && <div className="mb-2 flex flex-wrap gap-2">{couriers.map((c) => <button key={c} type="button" className={chip(draft.courier_name === c)} onClick={() => update({ courier_name: c })}>{c}</button>)}</div>}<input aria-label={w("courier")} className={taskInput} value={draft.courier_name} onChange={(e) => update({ courier_name: e.target.value })} /></div>
+    {mobileField(w("courierMobile"))}
     <label className="grid gap-2 text-lg font-semibold">{w("count")}<input aria-label={w("count")} inputMode="numeric" className={taskInput} value={draft.parcel_count} onChange={(e) => update({ parcel_count: Math.max(1, Number(e.target.value.replace(/\D/g, "")) || 1) })} /></label>
     <PhotoInput userId={staff?.id ?? ""} kind="gate-parcel" label={w("parcelPhoto")} value={draft.photo_path || null} onChange={(p) => update({ photo_path: p ?? "" })} />
-  </>, main(w("next"), () => { if (!draft.courier_name.trim()) return setErr(w("needName")); void go("e-host"); }));
+  </>, main(w("next"), () => { if (!draft.courier_name.trim()) return setErr(w("needName")); if (draft.mobile.length !== 10) return setErr(w("needMobile")); void go("e-host"); }));
 
   if (step === "e-host") {
     const list = dir.filter((s) => `${s.full_name} ${s.mobile ?? ""} ${s.role_code ?? ""}`.toLowerCase().includes(q.toLowerCase()));
