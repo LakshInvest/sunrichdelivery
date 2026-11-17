@@ -7636,8 +7636,27 @@ export type Database = {
         Args: { p_details: Json; p_host_id?: string }
         Returns: string
       }
+      gate_request_recipients: {
+        Args: { p_request_id: string }
+        Returns: {
+          full_name: string
+          id: string
+          is_host: boolean
+          mobile: string
+        }[]
+      }
       gate_request_status: { Args: { p_request_id: string }; Returns: Json }
       gate_scan_lookup: { Args: { p_token: string }; Returns: Json }
+      gate_staff_directory: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+          mobile: string
+          photo_url: string
+          role_code: string
+        }[]
+      }
       gate_staff_list: {
         Args: never
         Returns: {
