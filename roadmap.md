@@ -1,7 +1,7 @@
 # Roadmap — Sunrich Delivery
 
 ## Prompt-20 follow-ups
-- [ ] Follow-up sweep: check all payment paths and live subscriptions, fix stale role-home counts without increasing polling, then verify phone/desktop and both themes; preserve existing records/settings/permissions.
+- [x] Follow-up sweep: read driver/loader/guard/cashier/list subscriptions, role counts, offline replay, payment/receipt/settlement/proof functions and photo job. All subscribed tables published; role counts now use realtime with their original 30-second fallback. 108 phone/desktop light/dark page checks, no runtime/subscription errors; completed payment stops correctly show done, not a second save. External office/customer UI and physical APK not exercised. 34 tests passed; no records/settings/permissions changed in sweep.
 - [x] QA Loader has Dispatch/Loader/Security; missing Dispatch/Security restored and verified.
 - [x] Previous delay was fallback: trip_expenses missing from publication rejected the combined subscription. Enabled it; two-browser gate-to-driver update 0.513s, event source realtime; fallback unchanged at 15s.
 - [x] Cheque ₹160/photo/number, Bank ₹160/reference, guard mobile/PIN/selfie, and start selfie/six vehicle checks/photo saved through screens and read back. Bank tc_mode constraint widened to include bank. Selfie/check switches restored OFF; temporary QA Driver Security role removed.
