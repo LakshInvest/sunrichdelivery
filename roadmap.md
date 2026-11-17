@@ -125,7 +125,7 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 
 ## Prompt-25/31 items
 - [x] 3 Guard Exit: list with photo, name/vehicle, type chip, in time, search; full card with details, "दे दिया" for parcels. Optional exit-goods photo saved (gate_out_goods, 30 days).
-- [ ] 4 Register timeline + filters + date
+- [x] 4 Register timeline + filters + date (gate_register_timeline)
 - [ ] 5 Vehicles out incl. gate-out-missing trips
 - [ ] 6 Loader rework
 - [ ] 7 Shared photo tile / chips everywhere

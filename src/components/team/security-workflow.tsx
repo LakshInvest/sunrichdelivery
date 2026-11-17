@@ -12,6 +12,7 @@ import {istDisplay} from "@/lib/ist";
 import {TaskScreen,MainAction,BackIcon,taskInput} from "@/components/team/task-screen";
 import {Button} from "@/components/ui/button";
 import {PhotoInput,PhotoImg,Spinner} from "@/components/team/ui";
+import {RegisterTimeline} from "@/components/team/register-timeline";
 import {GateEntry,blankGate,type GateDraft} from "@/components/team/gate-entry-flow";
 type Hit={kind:string;trip_id?:string;trip_no?:string;reg_no?:string;driver?:string;packs?:number;party?:string;items?:string;pass_no?:string;order?:string;otp?:string};
 type Entry={id:string;name:string;mobile:string;entry_type:string;person_type:string|null;parcel_count:number|null;handed_at:string|null;in_at:string;photo_path:string|null;vehicle_no:string|null;from_place:string|null;meet_user_id:string|null;courier_name:string|null;purpose:string|null};
@@ -55,12 +56,7 @@ export function SecurityTaskPage({step="home",entryId,tripId}:{step?:string;entr
  const entry=async()=>{if(!w.draft.name.trim())return w.setError(t("sec.err.name_required"));if(w.photoRule==="required"&&!w.draft.photo_path){void go("photo");return;}if(w.draft.entry_type==="supplier"&&!w.draft.vehicle_no)return w.setError(t("sec.err.vehicle_required"));if(await w.write("gate_entry_in",{p:{...w.draft,photo_path:w.draft.photo_path,challan_photo_path:w.draft.challan_photo_path}})){w.update(blank);void home();}};
  if(w.allowed===null)return step==="home"?<HomeScreen role={t("sec.title")}><Spinner/></HomeScreen>:shell(<Spinner/>);if(!w.allowed)return step==="home"?<HomeScreen role={t("sec.title")}><p className="text-lg">{t("sec.noGatePerm")}</p></HomeScreen>:shell(<p>{t("sec.noGatePerm")}</p>);
  if(step==="entry"||step.startsWith("e-"))return <GateEntry step={step} draft={w.gate} update={w.setGate} photoRule={w.photoRule} refresh={w.load}/>;
- if(step==="register")return <HomeScreen role={t("sec.title")} tabs={{role:"security",active:"register"}} stats={<><StatCard icon={Truck} value={w.vehicles.length} label={t("sec.vehiclesOut")} to="/security/$step" step="vehicles"/><StatCard icon={Users} value={w.entries.length} label={t("sec.peopleInside")} to="/security/$step" step="exit"/></>}>
-  <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("sec.vehiclesOut")}</h2>
-  {w.vehicles.length?w.vehicles.map(v=><Link key={v.trip_id} to="/security/$step" params={{step:"vehicles"}} className="home-card flex min-h-14 items-center justify-between gap-3 px-4 py-3"><span className="min-w-0 truncate text-lg font-bold">{v.reg_no}</span>{v.gate_out_at&&<span className="chip bg-secondary/15 text-primary">{new Date(v.gate_out_at).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Kolkata"})}</span>}</Link>):<EmptyState icon={Truck} text={t("sec.noVehiclesOut")}/>}
-  <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("sec.peopleIn")}</h2>
-  {w.entries.length?w.entries.map(e=><Link key={e.id} to="/security/$step" params={{step:"out"}} search={{entryId:e.id}} className="home-card flex min-h-14 items-center justify-between gap-3 px-4 py-3"><span className="min-w-0 truncate text-lg font-bold">{e.name}</span><span className="chip bg-muted text-muted-foreground">{t(`sec.type.${e.entry_type}`)}</span></Link>):<EmptyState icon={Users} text={t("sec.nobodyInside")}/>}
- </HomeScreen>;
+ if(step==="register")return <HomeScreen role={t("tab.register")} tabs={{role:"security",active:"register"}}><RegisterTimeline insideIds={w.entries.map(e=>e.id)}/></HomeScreen>;
  if(step==="home")return <HomeScreen role={t("sec.title")} tabs={{role:"security",active:"gate"}} stats={<><StatCard icon={Truck} value={w.vehicles.length} label={t("sec.vehiclesOut")} to="/security/$step" step="vehicles"/><StatCard icon={Users} value={w.entries.length} label={t("sec.peopleInside")} to="/security/$step" step="exit"/></>}>
   {w.error&&<p role="alert" className="break-words text-lg font-semibold text-destructive">{w.error}</p>}
   <button type="button" onClick={()=>void scan()} disabled={preparing||w.busy} className="flex min-h-40 w-full flex-col items-center justify-center gap-3 rounded-3xl bg-primary p-6 text-center text-primary-foreground shadow-soft active:scale-[0.99] disabled:opacity-80" data-testid="scan-card">

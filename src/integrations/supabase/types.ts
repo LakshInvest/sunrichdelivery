@@ -7634,6 +7634,20 @@ export type Database = {
           title: string
         }[]
       }
+      gate_register_timeline: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          at: string
+          by_name: string
+          detail: string
+          entry_id: string
+          entry_type: string
+          kind: string
+          photo_path: string
+          title: string
+          vehicle_no: string
+        }[]
+      }
       gate_report_problem: {
         Args: { p_note: string; p_photo?: string; p_type: string }
         Returns: string
