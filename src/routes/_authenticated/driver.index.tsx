@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { useLiveRefresh } from "@/lib/use-live-refresh";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,6 +56,7 @@ function DriverHome() {
 
   useLiveRefresh(load, [{table:"trips"}, {table:"trip_stops"}, {table:"trip_loading"}, {table:"gate_passes"}], "driver-home");
 
+  if (rows?.length === 1 && rows[0]) return <Navigate to="/driver/$tripId" params={{tripId:rows[0].id}} replace />;
   return (
     <Screen title={t("dr.title")} right={<div className="flex items-center gap-2"><SyncBadge /><AvatarLink /></div>}>
       {rows === null && !error ? (
