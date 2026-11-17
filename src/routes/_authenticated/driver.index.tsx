@@ -57,8 +57,15 @@ function DriverHome() {
   const todays = (rows ?? []).filter((r) => isTodayTrip(r, today));
   const older = (rows ?? []).filter((r) => !isTodayTrip(r, today));
   const list = filter === "today" ? todays : older;
-  if (!view && rows && rows.length === 1 && rows[0]) return <Navigate to="/driver/$tripId" params={{ tripId: rows[0].id }} replace />;
-  if (!view && todays.length === 1 && todays[0]) return <Navigate to="/driver/$tripId" params={{ tripId: todays[0].id }} replace />;
+  // Today tab = only the current trip (opens its big card + one next-step button); Trips tab = the list.
+  const current = rows ? (rows.find((r) => r.status === "in_progress") ?? todays[0] ?? rows.find((r) => r.status !== "returned") ?? rows[0]) : undefined;
+  if (!view && current) return <Navigate to="/driver/$tripId" params={{ tripId: current.id }} replace />;
+  if (!view && rows) return (
+    <HomeScreen role={t("dr.title")} menu={<SyncBadge />} tabs={{ role: "driver", active: "today" }}>
+      {error && <ErrorCard message={error} onRetry={() => void load()} />}
+      <EmptyState icon={Truck} text={t("dr.noTrips")} />
+    </HomeScreen>
+  );
   const stopsLeft = todays.reduce((a, r) => a + (r.trip_stops ?? []).filter((s) => s.status !== "delivered").length, 0);
   return (
     <HomeScreen role={t("dr.title")} menu={<SyncBadge />} tabs={{ role: "driver", active: view === "trips" ? "trips" : "today" }}>
