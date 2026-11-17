@@ -1,3 +1,5 @@
+import { EmptyState } from "@/components/team/role-home";
+import { SearchX } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
@@ -97,7 +99,7 @@ export function RegisterPanel() {
       <input aria-label={t("sec.search")} placeholder={t("sec.search")} value={q} onChange={(e) => setQ(e.target.value)} className={inputCls} />
       {error && <ErrorCard message={error} />}
       {rows === null && <Spinner label={t("c.loading")} />}
-      {rows && shown.length === 0 && <p className="py-2 text-sm text-muted-foreground">{t("c.none")}</p>}
+      {rows && shown.length === 0 && <EmptyState icon={SearchX} text={t("empty.found")} />}
       {shown.map((r, i) => (
         <div key={i} className="rounded-xl border border-border bg-card p-3 text-sm shadow-card" data-testid="reg-row">
           <div className="flex items-center justify-between gap-2">

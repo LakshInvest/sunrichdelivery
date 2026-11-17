@@ -9,6 +9,11 @@ export const publicLoginAppearance = createServerFn({ method: "GET" }).handler(a
     console.error("[publicLoginAppearance] appearance read failed", error.message);
     return null;
   }
-  if (!data) return null;
-  return { login_image_url: data.login_image_url, app_logo_url: data.app_logo_url, login_show_logo: data.login_show_logo };
+  // Delivery "App ka look" from Command Center; only whitelisted public branding fields leave the server.
+  const { cleanLook } = await import("@/lib/delivery-look");
+  const look = await supabaseAdmin.from("app_appearance").select("settings").eq("app", "delivery").limit(1).maybeSingle();
+  if (look.error) console.error("[publicLoginAppearance] delivery look read failed", look.error.message);
+  const cleaned = cleanLook(look.data?.settings);
+  if (!data) return { login_image_url: null, app_logo_url: null, login_show_logo: true, look: cleaned };
+  return { login_image_url: data.login_image_url, app_logo_url: data.app_logo_url, login_show_logo: data.login_show_logo, look: cleaned };
 });

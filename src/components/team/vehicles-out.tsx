@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/team/role-home";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
@@ -41,7 +42,7 @@ export function VehiclesOutList({ refreshKey, onArrived }: { refreshKey: number;
       <p className="mb-2 flex items-center gap-2 text-sm font-bold text-foreground">
         <Truck className="h-4 w-4" aria-hidden /> {t("sec.vehiclesOut")}
       </p>
-      {rows.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
+      {rows.length === 0 && <EmptyState icon={Truck} text={t("sec.noTrips")} />}
       <div className="grid gap-2">
         {rows.map((r) => (
           <div key={r.trip_id} className="rounded-lg bg-muted p-3">

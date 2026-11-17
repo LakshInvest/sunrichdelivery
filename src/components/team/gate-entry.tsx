@@ -1,3 +1,5 @@
+import { EmptyState } from "@/components/team/role-home";
+import { UsersRound } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
@@ -298,7 +300,7 @@ export function GateExitPanel({ onChange }: { onChange: () => void }) {
       {msg && <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700">{msg}</p>}
       {error && <ErrorCard message={error} />}
       {inside === null && <Spinner label={t("c.loading")} />}
-      {inside && inside.length === 0 && <p className="py-2 text-sm text-muted-foreground">{t("c.none")}</p>}
+      {inside && inside.length === 0 && <EmptyState icon={UsersRound} text={t("empty.inside")} />}
       {inside && inside.length > 0 && (
         <input aria-label={t("sec.search")} placeholder={t("sec.search")} value={q} onChange={(e) => setQ(e.target.value)} className={inputCls} />
       )}

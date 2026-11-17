@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
 import logoWhite from "@/assets/sunrich-logo-white.png.asset.json";
+import { lookText, useDeliveryLook } from "@/lib/delivery-look";
+import { useLang } from "@/lib/l10n";
 
 /** Full-screen launch like the customer LaunchScreen. /launch-delivery.webp covers the gradient once supplied. */
 export function LaunchScreen() {
-  const [photo, setPhoto] = useState(false);
+  const look = useDeliveryLook();
+  const { lang } = useLang();
+  const src = look.launch_image_url || "/launch-delivery.webp";
+  const [photo, setPhoto] = useState<string | null>(null);
   useEffect(() => {
     const img = new Image();
-    img.onload = () => setPhoto(true);
-    img.src = "/launch-delivery.webp";
-  }, []);
+    img.onload = () => setPhoto(src);
+    img.src = src;
+  }, [src]);
   return (
     <div className="launch-screen" role="status" aria-label="Sunrich Delivery" data-testid="launch-screen">
-      {photo && <div className="launch-photo" />}
+      {photo && <div className="launch-photo" style={{ backgroundImage: `url("${photo}")` }} />}
       <div className="launch-shade" />
       {!photo && (
         <svg className="launch-wave" viewBox="0 0 1440 320" preserveAspectRatio="none" aria-hidden>
@@ -20,9 +25,9 @@ export function LaunchScreen() {
         </svg>
       )}
       <div className="absolute inset-x-0 top-[calc(env(safe-area-inset-top)+12vh)] flex flex-col items-center gap-1.5 drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]">
-        <img src={logoWhite.url} alt="Sunrich" className="h-14 w-auto max-w-[240px] object-contain" />
-        <span className="launch-gold font-display text-sm font-extrabold tracking-[0.3em]">DELIVERY</span>
-        <span className="mt-2 font-deva text-base font-semibold tracking-wide">शुद्ध पियो, खूब जियो</span>
+        {look.launch_show_logo !== false && <img src={look.logo_url || logoWhite.url} alt="Sunrich" className="h-14 w-auto max-w-[240px] object-contain" onError={(e) => { e.currentTarget.src = logoWhite.url; }} />}
+        {look.launch_show_tagline !== false && <span className="launch-gold font-display text-sm font-extrabold tracking-[0.3em]">{lookText(look, "login_tagline", lang, "DELIVERY")}</span>}
+        <span className="mt-2 font-deva text-base font-semibold tracking-wide">{lookText(look, "launch_text", lang, "शुद्ध पियो, खूब जियो")}</span>
       </div>
       <div className="absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+10vh)] flex justify-center"><span className="app-loader-ring" /></div>
     </div>

@@ -11,6 +11,7 @@ import { WaterLoader } from "@/components/team/ui";
 import { Button } from "@/components/ui/button";
 import { loginErrorKey } from "@/lib/staff-otp-policy";
 import { useLoginAppearance, phoneLoginLanguage } from "@/lib/login-appearance";
+import { useDeliveryLook, lookText } from "@/lib/delivery-look";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -129,6 +130,7 @@ function Login() {
   const [lang, setLoginLang] = useState<Lang>("hi");
   const t = (key: string, vars?: Record<string, string | number>) => translate(lang, key, vars);
   const appearance = useLoginAppearance();
+  const look = useDeliveryLook();
   const viewport = useRef<HTMLElement>(null);
   useEffect(() => {
     setLoginLang(phoneLoginLanguage(navigator.languages ?? [navigator.language]));
@@ -482,7 +484,7 @@ function Login() {
         {appearance.showLogo && <div className="login-photo-brand">
           <img src={appearance.logo} alt="Sunrich" className="login-wordmark"
             onError={(event) => { if (event.currentTarget.getAttribute("src") !== appearance.fallbackLogo) event.currentTarget.src = appearance.fallbackLogo; }} />
-          <p className="login-delivery-label">DELIVERY</p>
+          {look.login_show_tagline !== false && <p className="login-delivery-label">{lookText(look, "login_tagline", lang, "DELIVERY")}</p>}
         </div>}
       </div>
       <section className="login-sheet" aria-label="Sign in">
@@ -537,7 +539,7 @@ function Login() {
 
           {step === "pin" && (
             <div key="pin" className="text-center">
-              <h1 className="font-display text-2xl font-bold text-foreground">{t("login.pinHint")}</h1>
+              <h1 className="font-display text-2xl font-bold text-foreground">{lookText(look, "pin_title", lang, t("login.pinHint"))}</h1>
               <p className="mt-1 text-sm text-muted-foreground">{name ? `👋 ${name}` : maskedMobile}</p>
               <form
                 onSubmit={(e) => {
@@ -589,7 +591,7 @@ function Login() {
 
           {step === "otp" && (
             <div key="otp" className="text-center">
-              <h1 className="font-display text-2xl font-bold text-foreground">{t("login.otpTitle")}</h1>
+              <h1 className="font-display text-2xl font-bold text-foreground">{lookText(look, "otp_title", lang, t("login.otpTitle"))}</h1>
               <p className="mt-1 text-sm text-muted-foreground">{t(otpSent ? "login.otpSent" : "login.otpHint", { mobile: maskedMobile })}</p>
               <form
                 onSubmit={(e) => {

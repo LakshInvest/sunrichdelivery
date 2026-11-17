@@ -1,3 +1,5 @@
+import { EmptyState } from "@/components/team/role-home";
+import { SearchX, Store } from "lucide-react";
 // Driver extras: hand a stop to another vehicle, spot-sale customer picker, trip alerts list.
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -165,7 +167,7 @@ export function SpotCustomerPicker({
           </div>
           {tab === "trip" && (
             <div className="grid gap-1">
-              {tripCustomers.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
+              {tripCustomers.length === 0 && <EmptyState icon={Store} text={t("empty.tripCustomers")} />}
               {tripCustomers.map((c) => (
                 <button key={c.id} type="button" onClick={() => onChange(c)} className="rounded-lg border border-input bg-background px-3 py-3 text-left text-sm font-semibold text-foreground">{c.name}</button>
               ))}
@@ -175,7 +177,7 @@ export function SpotCustomerPicker({
             <div className="grid gap-1">
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("dx.searchHint")} className={input} />
               {searching && q.trim().length >= 3 && <p className="text-xs text-muted-foreground">{t("c.loading")}</p>}
-              {!searching && q.trim().length >= 3 && found.length === 0 && <p className="text-sm text-muted-foreground">{t("c.none")}</p>}
+              {!searching && q.trim().length >= 3 && found.length === 0 && <EmptyState icon={SearchX} text={t("empty.noMatch")} />}
               {found.map((f) => {
                 const id = f.customer_id ?? f.id ?? "";
                 const name = f.business_name || f.contact_name || f.name || f.customer_name || "";

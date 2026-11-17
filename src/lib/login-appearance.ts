@@ -52,11 +52,12 @@ export function useLoginAppearance() {
     } catch { void display(initial); }
     void publicLoginAppearance().then((data) => {
       if (!data || !active) return;
-      const source = data.login_image_url?.trim();
+      try { localStorage.setItem("sunrich_delivery_look_v1", JSON.stringify(data.look ?? {})); } catch { /* optional */ }
+      const source = (data.look?.login_image_url || data.login_image_url)?.trim();
       const value: Appearance = {
         photo: !source || source === DEFAULT_LOGIN_PHOTO_URL ? defaultPhoto.url : source === currentSource ? currentPhoto.url : source,
-        logo: data.app_logo_url?.trim() || whiteLogo.url,
-        showLogo: data.login_show_logo !== false,
+        logo: data.look?.logo_url || data.app_logo_url?.trim() || whiteLogo.url,
+        showLogo: (data.look?.login_show_logo ?? data.login_show_logo) !== false,
       };
       try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(value)); } catch { /* Optional cache. */ }
       void display(value);

@@ -271,6 +271,8 @@ export function PhotoInput({
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [failed, setFailed] = useState<File | null>(null);
+  const [tech, setTech] = useState<string | null>(null);
+  const [showTech, setShowTech] = useState(false);
   const retryTimer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -292,7 +294,8 @@ export function PhotoInput({
       const path = await uploadPhoto(file, userId, kind);
       onChange(path);
       void haptic("success");
-    } catch {
+    } catch (e) {
+      setTech(`${kind} · ${file.type || "image"} · ${Math.round(file.size / 1024)} KB · try ${attempt + 1}/4 · ${e instanceof Error ? e.message : String(e)}`);
       setFailed(file);
       if (attempt < 3) retryTimer.current = window.setTimeout(() => void pick(file, attempt + 1), 3000 * (attempt + 1));
     } finally {
@@ -323,6 +326,9 @@ export function PhotoInput({
       {busy && <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-muted-foreground"><WaterLoader className="h-4 w-4" />{t("c.photoUploading")}</p>}
       {!busy && failed && <button type="button" onClick={() => void pick(failed)} className="mt-1 text-sm font-semibold text-destructive underline">{t("c.photoFailed")}</button>}
       {!busy && !failed && value && <p className="mt-1 text-sm font-semibold text-success">✓ {t("c.photoTaken")}</p>}
+      {!busy && (preview || value) && <button type="button" onClick={() => { if (retryTimer.current) window.clearTimeout(retryTimer.current); setFailed(null); setPreview(null); setTech(null); onChange(null); }} className="mt-1 mr-4 text-sm font-semibold text-destructive underline">{t("c.removePhoto")}</button>}
+      {tech && <button type="button" onClick={() => setShowTech((v) => !v)} className="mt-1 text-xs font-semibold text-secondary">ℹ {t("c.techDetails")}</button>}
+      {tech && showTech && <div className="mt-1 flex items-start gap-2 rounded-lg bg-muted p-2"><code className="min-w-0 flex-1 break-all text-xs">{tech}</code><button type="button" onClick={() => void navigator.clipboard?.writeText(tech)} className="shrink-0 text-xs font-semibold text-secondary underline">{t("c.copy")}</button></div>}
     </div>
   );
 }
