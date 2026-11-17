@@ -207,7 +207,7 @@ export function GateEntry({ step, draft, update, photoRule, refresh }: { step: s
     return shell(w("askApproval"), <>{card}
       <div className="home-card grid gap-2 p-5 text-center" role="status"><Spinner /><p className="text-xl font-bold">{w("asking", hostName)}</p><p className="text-lg text-muted-foreground">{w("waitLeft", `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`)}</p></div>
       <div className="grid grid-cols-2 gap-2">
-        <button type="button" disabled={!hostMobile} onClick={() => hostMobile && void openExternal(`tel:${hostMobile}`)} className="home-card flex min-h-14 items-center justify-center gap-2 text-lg font-semibold text-primary disabled:opacity-50"><Phone className="h-5 w-5" aria-hidden />{w("call")}</button>
+        <button type="button" disabled={!hostMobile} onClick={() => hostMobile && void openExternal(`tel:${hostMobile}`)} className="home-card flex min-h-14 items-center justify-center gap-2 text-lg font-semibold text-primary disabled:opacity-50"><Phone className="h-5 w-5" aria-hidden />{w("call").replace("📞 ", "")}</button>
         <Link to="/security/$step" params={{ step: "e-phone" }} className="home-card flex min-h-14 items-center justify-center text-center text-lg font-semibold text-primary">{w("phoneYes")}</Link>
       </div></>);
   }
