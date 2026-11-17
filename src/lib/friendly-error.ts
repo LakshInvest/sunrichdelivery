@@ -7,6 +7,10 @@ const MAP: [RegExp, string][] = [
   [/cannot leave the gate/i, "err.cannot_leave"],
   [/gate out not done/i, "err.gate_out_not_done"],
   [/trip already started/i, "err.trip_already_started"],
+  [/less than start reading/i, "err.end_less_start"],
+  [/photo of the odometer/i, "err.odo_photo"],
+  [/enter the odometer/i, "dr.needOdo"],
+  [/finish or mark all stops/i, "err.stops_pending"],
 ];
 
 export function friendlyKey(raw: string): string | null {
