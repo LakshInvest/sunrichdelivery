@@ -9,7 +9,7 @@ import { useLang } from "@/lib/l10n";
 import { ErrorCard, Spinner, StatusBadge, SyncBadge } from "@/components/team/ui";
 
 export const Route = createFileRoute("/_authenticated/loader/")({
-  validateSearch: (s: Record<string, unknown>): { view?: "returns" } => (s.view === "returns" ? { view: "returns" } : {}),
+  validateSearch: (s: Record<string, unknown>): { view?: "returns" } => (s["view"] === "returns" ? { view: "returns" } : {}),
   head: () => ({
     meta: [
       { title: "Loading bay · Sunrich Delivery" },

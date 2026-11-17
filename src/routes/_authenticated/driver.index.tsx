@@ -10,7 +10,7 @@ import { useTeamAuth } from "@/lib/team-auth";
 import { ErrorCard, Spinner, StatusBadge, SyncBadge } from "@/components/team/ui";
 
 export const Route = createFileRoute("/_authenticated/driver/")({
-  validateSearch: (s: Record<string, unknown>): { view?: "trips" } => (s.view === "trips" ? { view: "trips" } : {}),
+  validateSearch: (s: Record<string, unknown>): { view?: "trips" } => (s["view"] === "trips" ? { view: "trips" } : {}),
   head: () => ({
     meta: [
       { title: "My trips · Sunrich Delivery" },
