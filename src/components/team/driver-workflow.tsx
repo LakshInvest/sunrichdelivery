@@ -207,7 +207,7 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
   const homeShell=(body:ReactNode,action?:ReactNode)=> <HomeScreen role={t("dr.title")} action={action} menu={<Button variant="ghost" size="icon" aria-label={t("sec.menu")} className="h-12 w-12 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" onClick={()=>setMenu(v=>!v)}><MoreHorizontal /></Button>}>{body}{(localError||error)&&<p role="alert" className="break-words text-lg font-semibold text-destructive">{localError||error}</p>}</HomeScreen>;
   const main=(label:string,fn:()=>void,disabled=false)=> <MainAction onClick={fn} disabled={busy||disabled}>{busy?t("c.loading"):label}</MainAction>;
   const small=(next:string,label:string)=> <Button asChild variant="link" className="justify-start px-0 text-base"><Link to="/driver/$tripId/$step" params={{tripId,step:next}} search={stop?{stopId:stop.id}:{}}>{label}</Link></Button>;
-  if(w.loading)return shell(<Spinner />);if(!trip)return shell(<p>{t("c.error")}</p>);
+  if(w.loading)return (step==="home"?homeShell:shell)(<Spinner />);if(!trip)return (step==="home"?homeShell:shell)(<p>{t("c.error")}</p>);
   if(!titleKeys[step])return shell(<p>{t("c.none")}</p>);
   if(["expense","pickup","spot","sos"].includes(step)&&!optionalDriverTasks(settings).includes(step))return shell(<p>{t("c.none")}</p>);
   if(step==="home"){
