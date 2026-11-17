@@ -1,0 +1,1 @@
+update public.trips set status='loaded',gate_out_at=null where id='5ef5a8ec-842d-4f2e-8ed7-07a47f963741' and trip_no='QA-TEST/261117/PROMPT20-TIMING';
