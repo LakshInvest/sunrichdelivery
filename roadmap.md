@@ -1,19 +1,20 @@
 # Roadmap — Sunrich Delivery
 
 ## Prompt-20 follow-ups
-- [ ] Confirm QA Loader Dispatch/Loader/Security membership and restore Security if missing.
-- [ ] Trace gate-to-driver refresh source; verify realtime under five seconds without heavier polling.
-- [ ] Exercise cheque/photo/number, bank, guard mobile/PIN/selfie and start selfie/vehicle-check saves; restore optional flags OFF.
-- [ ] Report a short results table; leave publishing to the user.
+- [x] QA Loader has Dispatch/Loader/Security; missing Dispatch/Security restored and verified.
+- [x] Previous delay was fallback: trip_expenses missing from publication rejected the combined subscription. Enabled it; two-browser gate-to-driver update 0.513s, event source realtime; fallback unchanged at 15s.
+- [x] Cheque ₹160/photo/number, Bank ₹160/reference, guard mobile/PIN/selfie, and start selfie/six vehicle checks/photo saved through screens and read back. Bank tc_mode constraint widened to include bank. Selfie/check switches restored OFF; temporary QA Driver Security role removed.
+- [x] Short results table prepared; no publishing performed.
+- QA cleanup: payment trip f2000000-0000-4000-8000-000000000003 ended, gate-in and returns recorded (cashier settlement pending); empty timing trip 5ef5a8ec-842d-4f2e-8ed7-07a47f963741 gate-out recorded, not started. QA Loader is the latest guard after handover. Real trip untouched.
 
 ## Nov 17 one-task screens
 - [x] Driver: separate routed home, gate pass, start, next stop, goods/counts, proof/photo/signature, payment modes/office, done, stops, end, handover and enabled extras.
 - [x] Loader: separate loading/counts and returns/counts; Guard: separate scan/result, entry, exit and menu tasks.
 - [x] Scoped realtime updates, immediate action refresh, foreground/network recovery and 15-second fallback; native foreground dispatches focus.
 - [x] Hindi 360×780 full two-stop trip, credit skip, cash handover/settlement; extra trip split payment, office approval, expense/SOS/pickup/spot saves; QA trips settled and real trip untouched. 31 tests passed.
-- [ ] Guard-to-driver strict two-second timing: automatic update verified, latest gate tap-to-display was 6.4s; external Supabase round-trip/event latency needs measurement on deployed devices.
+- [x] Guard-to-driver timing corrected in Prompt-20: 0.513s via realtime in two browsers at Hindi 360×780; previous delay was fallback recovery.
 - [x] UPI QR rendered in split-payment QA; ₹60 cash + ₹100 UPI saved. Temporary QA Loader Security membership removed after gate tests; visitor/parcel exit and problem save passed.
-- [ ] Physical native scanning/device checks require Android hardware. Cheque/bank and optional selfie/check saves were not exercised; layouts checked.
+- [ ] Physical native scanning/device checks require Android hardware. Cheque/bank and optional selfie/check saves passed browser QA in Prompt-20.
 
 ## Customer-style login (Nov 16, no SQL)
 - [x] Photo and appearance settings with cached images; white content-height card for every login step. Anonymous app_settings returns no rows; narrow publicLoginAppearance exposes only the three branding fields, no SQL.
