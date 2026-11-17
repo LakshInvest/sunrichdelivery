@@ -4745,6 +4745,7 @@ export type Database = {
           pack_label: string | null
           pack_label_hi: string | null
           pack_label_mr: string | null
+          packs_per_crate: number | null
           reorder_level: number | null
           sell_unit: Database["public"]["Enums"]["sell_unit"]
           sell_unit_id: string | null
@@ -4794,6 +4795,7 @@ export type Database = {
           pack_label?: string | null
           pack_label_hi?: string | null
           pack_label_mr?: string | null
+          packs_per_crate?: number | null
           reorder_level?: number | null
           sell_unit?: Database["public"]["Enums"]["sell_unit"]
           sell_unit_id?: string | null
@@ -4843,6 +4845,7 @@ export type Database = {
           pack_label?: string | null
           pack_label_hi?: string | null
           pack_label_mr?: string | null
+          packs_per_crate?: number | null
           reorder_level?: number | null
           sell_unit?: Database["public"]["Enums"]["sell_unit"]
           sell_unit_id?: string | null
@@ -6044,6 +6047,12 @@ export type Database = {
           cash_expected: number
           cash_received: number | null
           company_id: string
+          crates_load_reason: string | null
+          crates_loaded: number | null
+          crates_planned: number | null
+          crates_planned_manual: boolean
+          crates_return_reason: string | null
+          crates_returned: number | null
           created_at: string
           customer_vehicle_no: string | null
           driver_started_at: string | null
@@ -6092,6 +6101,12 @@ export type Database = {
           cash_expected?: number
           cash_received?: number | null
           company_id: string
+          crates_load_reason?: string | null
+          crates_loaded?: number | null
+          crates_planned?: number | null
+          crates_planned_manual?: boolean
+          crates_return_reason?: string | null
+          crates_returned?: number | null
           created_at?: string
           customer_vehicle_no?: string | null
           driver_started_at?: string | null
@@ -6140,6 +6155,12 @@ export type Database = {
           cash_expected?: number
           cash_received?: number | null
           company_id?: string
+          crates_load_reason?: string | null
+          crates_loaded?: number | null
+          crates_planned?: number | null
+          crates_planned_manual?: boolean
+          crates_return_reason?: string | null
+          crates_returned?: number | null
           created_at?: string
           customer_vehicle_no?: string | null
           driver_started_at?: string | null
@@ -7390,6 +7411,10 @@ export type Database = {
       }
       close_query: { Args: { p_query_id: string }; Returns: undefined }
       confirm_cash_handover: { Args: { p_id: string }; Returns: undefined }
+      confirm_trip_crates_loaded: {
+        Args: { p_crates: number; p_reason?: string; p_trip_id: string }
+        Returns: undefined
+      }
       create_credit_debit_note: {
         Args: {
           p_gst_rate: number
@@ -8373,6 +8398,10 @@ export type Database = {
         Args: { p_later: boolean; p_stop_id: string }
         Returns: undefined
       }
+      set_trip_crates_planned: {
+        Args: { p_crates: number; p_trip_id: string }
+        Returns: undefined
+      }
       set_user_active: {
         Args: { p_active: boolean; p_user_id: string }
         Returns: undefined
@@ -8508,6 +8537,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      trip_crates_plan: { Args: { p_trip_id: string }; Returns: number }
       trip_return_expected: {
         Args: { p_trip_id: string }
         Returns: {
