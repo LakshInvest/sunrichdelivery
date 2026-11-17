@@ -210,6 +210,7 @@ export type Database = {
           login_title_hi: string | null
           login_title_mr: string | null
           maintenance_message: string | null
+          max_devices_per_user: number
           min_app_version: string
           min_order_value: number
           multiple_addresses: boolean
@@ -284,6 +285,7 @@ export type Database = {
           login_title_hi?: string | null
           login_title_mr?: string | null
           maintenance_message?: string | null
+          max_devices_per_user?: number
           min_app_version?: string
           min_order_value?: number
           multiple_addresses?: boolean
@@ -358,6 +360,7 @@ export type Database = {
           login_title_hi?: string | null
           login_title_mr?: string | null
           maintenance_message?: string | null
+          max_devices_per_user?: number
           min_app_version?: string
           min_order_value?: number
           multiple_addresses?: boolean
@@ -6214,6 +6217,7 @@ export type Database = {
       }
       user_sessions: {
         Row: {
+          device_id: string | null
           ip_address: string | null
           last_seen_at: string
           login_method: string | null
@@ -6227,6 +6231,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          device_id?: string | null
           ip_address?: string | null
           last_seen_at?: string
           login_method?: string | null
@@ -6240,6 +6245,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          device_id?: string | null
           ip_address?: string | null
           last_seen_at?: string
           login_method?: string | null
@@ -6828,9 +6834,18 @@ export type Database = {
           user_id: string
         }[]
       }
+      cc_logout_session: { Args: { p_session_id: string }; Returns: boolean }
       cc_move_stops: {
         Args: { p_stop_ids: string[]; p_to_trip_id: string }
         Returns: number
+      }
+      cc_register_staff_session: {
+        Args: {
+          p_device_id: string
+          p_login_method?: string
+          p_user_agent?: string
+        }
+        Returns: Json
       }
       cc_reject_credit_note: {
         Args: { p_note_id: string; p_reason: string }
