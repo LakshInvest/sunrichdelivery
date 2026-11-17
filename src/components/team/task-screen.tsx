@@ -17,7 +17,10 @@ export function TaskScreen({ title, back, children, action, error, menu }: { tit
 }
 export function BackIcon() { return <ArrowLeft aria-hidden className="h-6 w-6" />; }
 export function MainAction({ children, onClick, disabled, danger }: { children: ReactNode; onClick?: () => void; disabled?: boolean; danger?: boolean }) {
-  return <Button className="h-16 w-full whitespace-normal text-xl font-bold" variant={danger ? "destructive" : "default"} onClick={onClick} disabled={disabled}>{children}</Button>;
+  // Every page's main action waits while a photo is still uploading.
+  const uploading = usePhotoUploading();
+  const { t } = useLang();
+  return <Button className="h-16 w-full whitespace-normal text-xl font-bold" variant={danger ? "destructive" : "default"} onClick={onClick} disabled={disabled || uploading}>{uploading ? t("c.photoUploading") : children}</Button>;
 }
 export function taskHead(title: string, description: string) {
   return { meta: [{ title: `${title} · Sunrich Delivery` }, { name: "description", content: description }, { property: "og:title", content: `${title} · Sunrich Delivery` }, { property: "og:description", content: description }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] };
