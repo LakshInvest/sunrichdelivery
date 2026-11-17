@@ -38,3 +38,4 @@
 - Login appearance exposes only three public branding fields through a server function because anonymous table reads return no rows; images cache without a service worker and visualViewport sizes the keyboard sheet.
 - Every QR scan goes through `scanCode()` in src/lib/native.ts (isSupported → permission → Google module install → scan) and is called directly from the tap — no intermediate page — so the camera opens at once; browsers get only the type-code box.
 - Role homes (driver trip home, loader list, guard home) use `HomeScreen` from role-home.tsx: navy header with avatar → Profile and no back arrow; inner pages keep TaskScreen with back.
+- Staff read the overdue-hours limit only via `gate_overdue_hours()` (one value for the caller's company) — the settings table stays closed to staff.
