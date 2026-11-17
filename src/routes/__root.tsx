@@ -8,7 +8,7 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -16,6 +16,7 @@ import { TeamAuthProvider, useTeamAuth } from "../lib/team-auth";
 import { LanguageProvider, type Lang } from "../lib/l10n";
 import { supabase } from "../integrations/supabase/client";
 import { initNative, registerPush } from "../lib/native";
+import { LaunchScreen, useLaunchGate } from "../components/team/launch-screen";
 
 function NotFoundComponent() {
   return (
@@ -161,6 +162,16 @@ function NativeBridge() {
   return null;
 }
 
+/** Customer-style launch overlay while the staff session is restored (not on the public login page). */
+function LaunchOverlay() {
+  const { ready } = useTeamAuth();
+  const show = useLaunchGate(ready);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted || !show || location.pathname.startsWith("/login")) return null;
+  return <LaunchScreen />;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -169,6 +180,7 @@ function RootComponent() {
       <TeamAuthProvider>
         <TeamLocale>
           <NativeBridge />
+          <LaunchOverlay />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </TeamLocale>
