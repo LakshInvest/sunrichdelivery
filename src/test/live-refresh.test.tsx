@@ -24,4 +24,15 @@ describe("live task refresh", () => {
     await act(async () => { vi.advanceTimersByTime(14999); }); expect(load).toHaveBeenCalledTimes(1);
     await act(async () => { vi.advanceTimersByTime(1); }); expect(load).toHaveBeenCalledTimes(2);
   });
+  it("keeps role-home recovery at its existing thirty seconds while applying realtime immediately", async () => {
+    vi.useFakeTimers(); const load = vi.fn(async () => {});
+    renderHook(() => useLiveRefresh(load, [{ table: "trips" }], "role-counts", undefined, 30000));
+    await act(async () => {});
+    await act(async () => { vi.advanceTimersByTime(15000); });
+    expect(load).toHaveBeenCalledTimes(1);
+    await act(async () => { mock.handlers[0]?.({ new: { id: "qa-trip", status: "loaded" } }); });
+    expect(load).toHaveBeenCalledTimes(2);
+    await act(async () => { vi.advanceTimersByTime(15000); });
+    expect(load).toHaveBeenCalledTimes(3);
+  });
 });

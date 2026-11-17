@@ -1,15 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { istToday } from "@/lib/ist";
 import { useLang } from "@/lib/l10n";
 import type { Staff } from "@/lib/team-auth";
+import { useLiveRefresh } from "@/lib/use-live-refresh";
 
 export function useRoleCounts(staff: Staff | null) {
   const [counts, setCounts] = useState<Record<string, { n: number; stops?: number }>>({});
-  useEffect(() => {
+  const load = async () => {
     if (!staff) return;
-    let alive = true;
-    const load = async () => {
       const values: Record<string, { n: number; stops?: number }> = {};
       await Promise.all(staff.roles.map(async (code) => {
         if (code === "SECURITY") {
@@ -23,13 +22,10 @@ export function useRoleCounts(staff: Staff | null) {
           if (!r.error) values[code] = { n: r.data?.length ?? 0, stops: (r.data ?? []).reduce((sum, row) => sum + (row.trip_stops?.[0]?.count ?? 0), 0) };
         }
       }));
-      if (alive) setCounts(values);
-    };
-    void load();
-    const timer = window.setInterval(() => void load(), 30000);
-    window.addEventListener("focus", load);
-    return () => { alive = false; clearInterval(timer); window.removeEventListener("focus", load); };
-  }, [staff]);
+      setCounts(values);
+  };
+  // Preserve the existing 30-second recovery rate; remote changes use realtime.
+  useLiveRefresh(load, [{ table: "trips" }, { table: "trip_stops" }], `role-counts:${staff?.id ?? "none"}`, undefined, 30000);
   return counts;
 }
 

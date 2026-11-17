@@ -9,7 +9,7 @@ function trace(scope: string, source: RefreshSource, table?: string, status?: st
   window.dispatchEvent(new CustomEvent("sunrich:live-refresh", { detail: { scope, source, table, status, at: performance.now() } }));
 }
 /** One scoped channel per mounted screen; foreground/network and polling also recover missed events. */
-export function useLiveRefresh(load: () => void | Promise<void>, tables: LiveTable[], scope: string, onChange?: (table: string, row: Record<string, unknown>) => void) {
+export function useLiveRefresh(load: () => void | Promise<void>, tables: LiveTable[], scope: string, onChange?: (table: string, row: Record<string, unknown>) => void, recoveryMs = REFRESH_FALLBACK_MS) {
   const callback = useRef(load);
   callback.current = load;
   const change = useRef(onChange);
@@ -43,7 +43,7 @@ export function useLiveRefresh(load: () => void | Promise<void>, tables: LiveTab
     const online = () => recover("online");
     trace(scope, "initial");
     void refresh();
-    const timer = window.setInterval(() => recover("fallback"), REFRESH_FALLBACK_MS);
+    const timer = window.setInterval(() => recover("fallback"), recoveryMs);
     window.addEventListener("focus", focus);
     window.addEventListener("online", online);
     document.addEventListener("visibilitychange", foreground);
@@ -55,5 +55,5 @@ export function useLiveRefresh(load: () => void | Promise<void>, tables: LiveTab
       document.removeEventListener("visibilitychange", foreground);
       void supabase.removeChannel(channel);
     };
-  }, [key, scope]);
+  }, [key, scope, recoveryMs]);
 }
