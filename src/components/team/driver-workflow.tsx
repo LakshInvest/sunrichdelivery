@@ -43,7 +43,7 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   
   const load = async () => {
-    const [tr, st, se, gp, cc, ex, ca, ch, pr, ld, extra, spots] = await Promise.all([
+    const [tr, st, se, gp, cc, ex, ca, ch, pr, extra, spots] = await Promise.all([
       supabase.from("trips").select("id,trip_no,status,gate_out_at,driver_started_at,ended_at,gate_in_at,unit_id,vehicles(reg_no)").eq("id",tripId).single(),
       supabase.from("trip_stops").select("id,seq,status,fail_reason,arrived_at,do_later_at,orders(id,customer_id,order_no,business_name,customer_name,delivery_address_text,grand_total,amount_paid,payment_mode,payment_method,customer_mobile,delivery_latitude,delivery_longitude,firm_id)").eq("trip_id",tripId).order("seq"),
       supabase.rpc("my_delivery_settings"),
@@ -53,7 +53,6 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
       supabase.rpc("cashier_list"),
       supabase.from("cash_handovers").select("to_user_id,confirmed_at").eq("trip_id",tripId).is("confirmed_at",null).limit(1).maybeSingle(),
       supabase.from("products").select("id,name,name_hi,name_mr,is_returnable").eq("is_active",true),
-      supabase.from("trip_loading").select("product_id,loaded_qty").eq("trip_id",tripId),
       supabase.from("trip_extra_load").select("product_id,qty").eq("trip_id",tripId),
       supabase.from("trip_stops").select("orders(order_lines(product_id,qty))").eq("trip_id",tripId).eq("is_spot_sale",true),
     ]);
@@ -65,12 +64,12 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
     const dl = list.length ? await supabase.from("delivery_lines").select("order_line_id,delivered_qty").in("stop_id",list.map(s=>s.id)) : { data: [] };
     const delivered = new Map((dl.data ?? []).map(d=>[d.order_line_id,Number(d.delivered_qty)]));
     const map: Record<string,LineRow[]> = {};
-    const sold: Record<string,number> = {};
     for (const l of lr.data ?? []) {
       (map[l.order_id] ??= []).push({ id:l.id,product_name:l.product_name,pack_label:l.pack_label,qty:Number(l.qty),value:Number(l.line_total)+Number(l.deposit_total),...(delivered.has(l.id)?{kept:delivered.get(l.id) ?? 0}:{}) });
-      sold[l.product_id] = (sold[l.product_id] ?? 0) + (delivered.get(l.id) ?? 0);
     }
     setTrip(tr.data as unknown as Trip); setStops(list); setLines(map);
+    const approvals=await supabase.from("trip_alerts").select("id,stop_id,resolution").eq("trip_id",tripId).eq("alert_type","ask_office");
+    setDrafts(current=>{const next={...current};for(const a of approvals.data ?? []){if(a.stop_id&&a.resolution)next[a.stop_id]={...(next[a.stop_id] ?? emptyDraft()),alertId:a.id,resolution:a.resolution};}return next;});
     setSettings({...DEFAULT_SETTINGS,...(se.data as unknown as Settings ?? {})});
     setToken(gp.data?.qr_token ?? null);
     setCash(Math.max(0,(cc.data ?? []).filter(x=>x.mode==="cash").reduce((a,x)=>a+Number(x.amount),0)-(ex.data ?? []).filter(x=>x.approved!==false).reduce((a,x)=>a+Number(x.amount),0)));
@@ -145,7 +144,8 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
   },[step]);
   useEffect(()=>{if(step==="pass"&&trip?.gate_out_at&&!trip.driver_started_at)void home();},[step,trip?.gate_out_at,trip?.driver_started_at]);
   const officeLoad=async()=>{
-    if(step!=="office"||!draft.alertId||draft.resolution||!stop)return;
+    if(step!=="office"||!stop||draft.resolution)return;
+    if(!draft.alertId){const existing=await supabase.from("trip_alerts").select("id,resolution").eq("trip_id",tripId).eq("stop_id",stop.id).eq("alert_type","ask_office").order("raised_at",{ascending:false}).limit(1).maybeSingle();if(existing.data)update(stop.id,{alertId:existing.data.id,...(existing.data.resolution?{resolution:existing.data.resolution}:{})});return;}
     const r=await supabase.rpc("ask_office_status",{p_alert_id:draft.alertId});
     if(r.error)return setLocalError(t("c.error"));
     const d=r.data as {resolution:string|null;deadline:string;now:string}|null;
@@ -196,7 +196,7 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
     if(step==="pickup"){if(!customer||!product||!(Number(qty)>0)){setLocalError(t("c.required"));return;}rpc="record_pickup";args={p_trip_id:tripId,p_customer_id:customer,p_product_id:product,p_qty:Number(qty),p_photo_url:photo,...gps};}
     if(step==="spot"){if(!customer||!product||!(Number(qty)>0)||Number(qty)>(w.products.find(p=>p.id===product)?.left ?? 0)){setLocalError(t("c.required"));return;}rpc="spot_sale";args={p_trip_id:tripId,p_customer_id:customer,p_lines:[{product_id:product,qty:Number(qty)}],p_paid_now:paid,...gps};}
     if(step==="sos"){rpc="raise_trip_alert";args={p_trip_id:tripId,p_type:"sos",p_note:note||null,...gps};}
-    if(rpc){const r=await write(rpc,args);if(r.ok)void home();}
+    if(rpc){const r=await write(rpc,args);if(r.ok){if(step==="spot"&&Array.isArray(r.data)){const item=r.data[0] as {order_id?:string}|undefined;if(item?.order_id){const saved=await supabase.from("trip_stops").select("id").eq("trip_id",tripId).eq("order_id",item.order_id).maybeSingle();if(saved.data){void go("payment",saved.data.id);return;}}}void home();}}
   };
   const back=<Link to={step==="home"?"/driver":"/driver/$tripId"} params={step==="home"?{}:{tripId}}><BackIcon /></Link>;
   const title=step==="stops"?copy("stops"):step==="bank"?copy("bank"):t(titleKeys[step] ?? "dr.title",{n:stops.length});
@@ -208,7 +208,7 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
   if(["expense","pickup","spot","sos"].includes(step)&&!optionalDriverTasks(settings).includes(step))return shell(<p>{t("c.none")}</p>);
   if(step==="home"){
     const action=driverHomeAction(trip,actionable.length);const keys:Record<string,string>={loading:"dr.loadingNotDone",pass:"dr.showGatePass",start:"dr.startTrip",next:"dr.nextStop",end:"dr.endTrip",handover:"dr.handedToCashier",settled:"dr.settled"};
-    return shell(<><div className="border-b border-border pb-5"><p className="text-2xl font-bold">{trip.vehicles?.reg_no}</p><p className="mt-3 text-lg">{t("ld.stops",{n:stops.length})}</p><p className="mt-3 text-3xl font-bold">₹{stops.reduce((a,s)=>a+(s.orders?.payment_mode==="credit"?0:Math.max(0,Number(s.orders?.grand_total)-Number(s.orders?.amount_paid))),0)}</p></div>{menu&&<nav className="grid gap-1" role="menu">{optionalDriverTasks(settings).map(s=><Button asChild key={s} variant="ghost" role="menuitem" className="h-12 justify-start text-lg"><Link to="/driver/$tripId/$step" params={{tripId,step:s}}>{s==="stops"?copy("stops"):t(titleKeys[s] ?? "dr.title",{n:stops.length})}</Link></Button>)}</nav>}</>,main(action==="loading"?copy("loading"):t(keys[action] ?? "dr.title"),()=>void go(action),["loading","settled"].includes(action)||action==="pass"&&!token));
+    return shell(<><div className="border-b border-border pb-5"><p className="text-2xl font-bold">{trip.vehicles?.reg_no}</p><p className="mt-3 text-lg">{t("ld.stops",{n:stops.length})}</p><p className="mt-3 text-3xl font-bold">₹{stops.reduce((a,s)=>a+(s.orders?.payment_mode==="credit"||w.drafts[s.id]?.resolution?0:Math.max(0,keptValue(lines[s.orders?.id ?? ""] ?? [],l=>l.kept ?? l.qty)-Number(s.orders?.amount_paid))),0)}</p></div>{menu&&<nav className="grid gap-1" role="menu">{optionalDriverTasks(settings).map(s=><Button asChild key={s} variant="ghost" role="menuitem" className="h-12 justify-start text-lg"><Link to="/driver/$tripId/$step" params={{tripId,step:s}}>{s==="stops"?copy("stops"):t(titleKeys[s] ?? "dr.title",{n:stops.length})}</Link></Button>)}</nav>}</>,main(action==="loading"?copy("loading"):t(keys[action] ?? "dr.title"),()=>void go(action),["loading","settled"].includes(action)||action==="pass"&&!token));
   }
   if(step==="pass")return shell(token?<div className="mx-auto mt-12 bg-card p-2"><QRCode value={token} size={264} /></div>:<p>{t("dr.waitGateOut")}</p>);
   if(["start","end"].includes(step))return shell(<><label className="grid gap-2 text-lg">{t("dr.odometer")}<input className={taskInput} inputMode="numeric" value={odo} onChange={e=>setOdo(e.target.value.replace(/\D/g,""))}/></label><PhotoInput userId={staff?.id ?? ""} kind={`odo-${step}`} label={t("dr.odometerPhoto")} value={odoPhoto} onChange={setOdoPhoto}/></>,main(t(step==="start"?"dr.startTrip":"dr.endTrip"),()=>void (step==="start"?start():end())));

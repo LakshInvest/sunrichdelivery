@@ -1,10 +1,12 @@
 # Roadmap — Sunrich Delivery
 
 ## Nov 17 one-task screens
-- [ ] Driver: separate routed home, gate pass, start, next stop, goods/counts, proof/photo/signature, payment modes/office, done, stops, end, handover and enabled extras.
-- [ ] Loader: separate loading/counts and returns/counts; Guard: separate scan/result, entry, exit and menu tasks.
-- [ ] Scoped realtime updates, immediate action refresh, foreground/network recovery and 15-second fallback.
-- [ ] Hindi 360×780 QA tap checks and two-browser gate-to-driver update; report page table and contents.
+- [x] Driver: separate routed home, gate pass, start, next stop, goods/counts, proof/photo/signature, payment modes/office, done, stops, end, handover and enabled extras.
+- [x] Loader: separate loading/counts and returns/counts; Guard: separate scan/result, entry, exit and menu tasks.
+- [x] Scoped realtime updates, immediate action refresh, foreground/network recovery and 15-second fallback; native foreground dispatches focus.
+- [x] Hindi 360×780 full two-stop trip, credit skip, cash handover/settlement; extra trip split payment, office approval, expense/SOS/pickup/spot saves; QA trips settled and real trip untouched. 31 tests passed.
+- [ ] Guard-to-driver strict two-second timing: automatic update verified, latest gate tap-to-display was 6.4s; external Supabase round-trip/event latency needs measurement on deployed devices.
+- [ ] UPI QR and native scanning/device checks: QA firm's UPI ID is absent; physical Android device needed. Cheque and bank page layouts checked, saving not exercised.
 
 ## Customer-style login (Nov 16, no SQL)
 - [x] Photo and appearance settings with cached images; white content-height card for every login step. Anonymous app_settings returns no rows; narrow publicLoginAppearance exposes only the three branding fields, no SQL.
