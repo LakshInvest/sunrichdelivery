@@ -63,7 +63,7 @@ function DriverHome() {
       {rows === null && !error ? <Spinner label={t("c.loading")} /> : (
         <>
           {error && <ErrorCard message={error} onRetry={() => void load()} />}
-          <SummaryCard title={t("sum.today")} items={[{ label: t("sum.open"), value: todays.length }, { label: t("tab.trips"), value: stopsLeft }]} />
+          <SummaryCard title={t("sum.today")} items={[{ label: t("sum.open"), value: todays.length }, { label: t("sum.stopsLeft"), value: stopsLeft }]} />
           <ListFilter value={filter} onChange={setFilter} />
           <div className="grid gap-3">
             {list.length > 0 ? list.map((r) => {
