@@ -10,7 +10,7 @@ import { setLoginStatusBar, haptic } from "@/lib/native";
 import { WaterLoader } from "@/components/team/ui";
 import { Button } from "@/components/ui/button";
 import { loginErrorKey } from "@/lib/staff-otp-policy";
-import { useLoginAppearance, phoneLoginLanguage } from "@/lib/login-appearance";
+import { useLoginAppearance } from "@/lib/login-appearance";
 import { useDeliveryLook, lookText } from "@/lib/delivery-look";
 
 export const Route = createFileRoute("/login")({
@@ -133,7 +133,8 @@ function Login() {
   const look = useDeliveryLook();
   const viewport = useRef<HTMLElement>(null);
   useEffect(() => {
-    setLoginLang(phoneLoginLanguage(navigator.languages ?? [navigator.language]));
+    // One app language for every role: the language last chosen on this device, else Hindi.
+    try { const saved = localStorage.getItem("sunrich_lang"); if (saved === "en" || saved === "hi" || saved === "mr") setLoginLang(saved); } catch { /* Hindi */ }
     document.body.classList.add("delivery-login-body");
     void setLoginStatusBar(true);
     const resize = () => {
@@ -540,7 +541,7 @@ function Login() {
           {step === "pin" && (
             <div key="pin" className="text-center">
               <h1 className="font-display text-2xl font-bold text-foreground">{lookText(look, "pin_title", lang, t("login.pinHint"))}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{name ? `👋 ${name}` : maskedMobile}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{name ? t("home.greeting", { name }) : maskedMobile}</p>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
