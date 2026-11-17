@@ -43,7 +43,7 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   
   const load = async () => {
-    const [tr, st, se, gp, cc, ex, ca, ch, pr, ld] = await Promise.all([
+    const [tr, st, se, gp, cc, ex, ca, ch, pr, ld, extra, spots] = await Promise.all([
       supabase.from("trips").select("id,trip_no,status,gate_out_at,driver_started_at,ended_at,gate_in_at,unit_id,vehicles(reg_no)").eq("id",tripId).single(),
       supabase.from("trip_stops").select("id,seq,status,fail_reason,arrived_at,do_later_at,orders(id,customer_id,order_no,business_name,customer_name,delivery_address_text,grand_total,amount_paid,payment_mode,payment_method,customer_mobile,delivery_latitude,delivery_longitude,firm_id)").eq("trip_id",tripId).order("seq"),
       supabase.rpc("my_delivery_settings"),
@@ -54,6 +54,8 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
       supabase.from("cash_handovers").select("to_user_id,confirmed_at").eq("trip_id",tripId).is("confirmed_at",null).limit(1).maybeSingle(),
       supabase.from("products").select("id,name,name_hi,name_mr,is_returnable").eq("is_active",true),
       supabase.from("trip_loading").select("product_id,loaded_qty").eq("trip_id",tripId),
+      supabase.from("trip_extra_load").select("product_id,qty").eq("trip_id",tripId),
+      supabase.from("trip_stops").select("orders(order_lines(product_id,qty))").eq("trip_id",tripId).eq("is_spot_sale",true),
     ]);
     if (tr.error || st.error) { setError(t("c.error")); setLoading(false); return; }
     setTrip(tr.data as unknown as Trip);
@@ -74,7 +76,7 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
     setCash(Math.max(0,(cc.data ?? []).filter(x=>x.mode==="cash").reduce((a,x)=>a+Number(x.amount),0)-(ex.data ?? []).filter(x=>x.approved!==false).reduce((a,x)=>a+Number(x.amount),0)));
     const cashList = (ca.data ?? []) as {id:string;full_name:string}[];
     const pendingTo=ch.data?.to_user_id; setCashiers(cashList); setPendingCash(pendingTo ? cashList.find(x=>x.id===pendingTo)?.full_name ?? "—" : null);
-    setProducts((pr.data ?? []).map(p=>({id:p.id,name:(lang==="hi" ? p.name_hi : lang==="mr" ? p.name_mr : p.name)||p.name,returnable:p.is_returnable,left:Math.max(0,Number(ld.data?.find(x=>x.product_id===p.id)?.loaded_qty ?? 0)-(sold[p.id] ?? 0))})));
+    setProducts((pr.data ?? []).map(p=>({id:p.id,name:(lang==="hi" ? p.name_hi : lang==="mr" ? p.name_mr : p.name)||p.name,returnable:p.is_returnable,left:Math.max(0,Number(extra.data?.find(x=>x.product_id===p.id)?.qty ?? 0)-(spots.data ?? []).flatMap(s=>s.orders?.order_lines ?? []).filter(l=>l.product_id===p.id).reduce((a,l)=>a+Number(l.qty),0))})));
     const firm = list.find(s=>s.orders?.firm_id)?.orders?.firm_id;
     if (firm) { const f=await supabase.from("firms").select("upi_id,upi_payee_name").eq("id",firm).maybeSingle(); setUpi(f.data ? {id:f.data.upi_id ?? "",payee:f.data.upi_payee_name}:null); }
     setLoading(false);
