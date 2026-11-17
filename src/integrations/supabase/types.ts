@@ -740,6 +740,13 @@ export type Database = {
             foreignKeyName: "cash_handovers_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_handovers_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
             referencedRelation: "trips"
             referencedColumns: ["id"]
           },
@@ -1113,7 +1120,21 @@ export type Database = {
             foreignKeyName: "credit_debit_notes_invoice_id_fkey"
             columns: ["invoice_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
             referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_orders"
             referencedColumns: ["id"]
           },
           {
@@ -1127,7 +1148,21 @@ export type Database = {
             foreignKeyName: "credit_debit_notes_stop_id_fkey"
             columns: ["stop_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
             referencedRelation: "trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
             referencedColumns: ["id"]
           },
           {
@@ -1922,7 +1957,21 @@ export type Database = {
             foreignKeyName: "delivery_lines_order_line_id_fkey"
             columns: ["order_line_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_order_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_lines_order_line_id_fkey"
+            columns: ["order_line_id"]
+            isOneToOne: false
             referencedRelation: "order_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_lines_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trip_stops"
             referencedColumns: ["id"]
           },
           {
@@ -2837,6 +2886,13 @@ export type Database = {
             foreignKeyName: "gate_passes_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: true
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gate_passes_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: true
             referencedRelation: "trips"
             referencedColumns: ["id"]
           },
@@ -3567,7 +3623,21 @@ export type Database = {
             foreignKeyName: "invoice_lines_invoice_id_fkey"
             columns: ["invoice_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
             referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_order_line_id_fkey"
+            columns: ["order_line_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_order_lines"
             referencedColumns: ["id"]
           },
           {
@@ -3712,7 +3782,21 @@ export type Database = {
             foreignKeyName: "invoices_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: true
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
             referencedColumns: ["id"]
           },
           {
@@ -3827,6 +3911,13 @@ export type Database = {
             foreignKeyName: "order_feedback_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: true
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_feedback_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -3901,6 +3992,13 @@ export type Database = {
             foreignKeyName: "order_lines_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_lines_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -3942,6 +4040,13 @@ export type Database = {
           to_status?: Database["public"]["Enums"]["order_status"]
         }
         Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "order_status_history_order_id_fkey"
             columns: ["order_id"]
@@ -4381,6 +4486,13 @@ export type Database = {
             columns: ["firm_id"]
             isOneToOne: false
             referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_proofs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_orders"
             referencedColumns: ["id"]
           },
           {
@@ -5020,6 +5132,13 @@ export type Database = {
             foreignKeyName: "receipt_allocation_history_invoice_id_fkey"
             columns: ["invoice_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_allocation_history_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
             referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
@@ -5028,6 +5147,13 @@ export type Database = {
             columns: ["opening_id"]
             isOneToOne: false
             referencedRelation: "customer_opening_balances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_allocation_history_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_receipts"
             referencedColumns: ["id"]
           },
           {
@@ -5072,6 +5198,13 @@ export type Database = {
             foreignKeyName: "receipt_allocation_log_receipt_id_fkey"
             columns: ["receipt_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_allocation_log_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
             referencedRelation: "receipts"
             referencedColumns: ["id"]
           },
@@ -5107,6 +5240,13 @@ export type Database = {
             foreignKeyName: "receipt_allocations_invoice_id_fkey"
             columns: ["invoice_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_allocations_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
             referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
@@ -5115,6 +5255,13 @@ export type Database = {
             columns: ["opening_id"]
             isOneToOne: false
             referencedRelation: "customer_opening_balances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_allocations_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_receipts"
             referencedColumns: ["id"]
           },
           {
@@ -5244,6 +5391,13 @@ export type Database = {
             foreignKeyName: "receipts_bounce_charge_note_id_fkey"
             columns: ["bounce_charge_note_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_credit_debit_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_bounce_charge_note_id_fkey"
+            columns: ["bounce_charge_note_id"]
+            isOneToOne: false
             referencedRelation: "credit_debit_notes"
             referencedColumns: ["id"]
           },
@@ -5273,6 +5427,13 @@ export type Database = {
             columns: ["firm_id"]
             isOneToOne: false
             referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_trip_collection_id_fkey"
+            columns: ["trip_collection_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trip_collections"
             referencedColumns: ["id"]
           },
           {
@@ -5609,7 +5770,21 @@ export type Database = {
             foreignKeyName: "trip_alerts_stop_id_fkey"
             columns: ["stop_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_alerts_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
             referencedRelation: "trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_alerts_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
             referencedColumns: ["id"]
           },
           {
@@ -5679,6 +5854,13 @@ export type Database = {
             foreignKeyName: "trip_collections_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_collections_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -5686,7 +5868,21 @@ export type Database = {
             foreignKeyName: "trip_collections_stop_id_fkey"
             columns: ["stop_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_collections_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
             referencedRelation: "trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_collections_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
             referencedColumns: ["id"]
           },
           {
@@ -5740,6 +5936,13 @@ export type Database = {
             foreignKeyName: "trip_expenses_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_expenses_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
             referencedRelation: "trips"
             referencedColumns: ["id"]
           },
@@ -5767,6 +5970,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_extra_load_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
             referencedColumns: ["id"]
           },
           {
@@ -5821,6 +6031,13 @@ export type Database = {
             foreignKeyName: "trip_loading_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_loading_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
             referencedRelation: "trips"
             referencedColumns: ["id"]
           },
@@ -5864,6 +6081,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "trip_locations_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "trip_locations_trip_id_fkey"
             columns: ["trip_id"]
@@ -5929,6 +6153,13 @@ export type Database = {
             foreignKeyName: "trip_pickups_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_pickups_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
             referencedRelation: "trips"
             referencedColumns: ["id"]
           },
@@ -5974,6 +6205,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_returns_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
             referencedColumns: ["id"]
           },
           {
@@ -6045,7 +6283,21 @@ export type Database = {
             foreignKeyName: "trip_stops_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_stops_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_stops_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
             referencedColumns: ["id"]
           },
           {
@@ -6086,6 +6338,13 @@ export type Database = {
           trip_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "trip_vehicle_checks_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "trip_vehicle_checks_trip_id_fkey"
             columns: ["trip_id"]
@@ -6834,6 +7093,1889 @@ export type Database = {
       }
     }
     Views: {
+      cc70_report_cash_handovers: {
+        Row: {
+          amount: number | null
+          company_id: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          from_user_id: string | null
+          handover_date: string | null
+          id: string | null
+          mismatch_at: string | null
+          mismatch_reason: string | null
+          note: string | null
+          received_amount: number | null
+          to_user_id: string | null
+          trip_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          company_id?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          from_user_id?: string | null
+          handover_date?: string | null
+          id?: string | null
+          mismatch_at?: string | null
+          mismatch_reason?: string | null
+          note?: string | null
+          received_amount?: number | null
+          to_user_id?: string | null
+          trip_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          company_id?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          from_user_id?: string | null
+          handover_date?: string | null
+          id?: string | null
+          mismatch_at?: string | null
+          mismatch_reason?: string | null
+          note?: string | null
+          received_amount?: number | null
+          to_user_id?: string | null
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_handovers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_handovers_from_user_id_fkey"
+            columns: ["from_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_handovers_to_user_id_fkey"
+            columns: ["to_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_handovers_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_handovers_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_container_movements: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_id: string | null
+          id: number | null
+          note: string | null
+          product_id: string | null
+          qty_in: number | null
+          qty_out: number | null
+          ref_id: string | null
+          ref_type: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          id?: number | null
+          note?: string | null
+          product_id?: string | null
+          qty_in?: number | null
+          qty_out?: number | null
+          ref_id?: string | null
+          ref_type?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          id?: number | null
+          note?: string | null
+          product_id?: string | null
+          qty_in?: number | null
+          qty_out?: number | null
+          ref_id?: string | null
+          ref_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "container_movements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "container_movements_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "container_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_credit_debit_notes: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_id: string | null
+          firm_id: string | null
+          gst_rate: number | null
+          id: string | null
+          invoice_id: string | null
+          note_date: string | null
+          note_no: string | null
+          note_type: string | null
+          order_id: string | null
+          reason: string | null
+          reject_reason: string | null
+          status: string | null
+          stop_id: string | null
+          tax_amount: number | null
+          taxable_value: number | null
+          total: number | null
+          trip_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          firm_id?: string | null
+          gst_rate?: number | null
+          id?: string | null
+          invoice_id?: string | null
+          note_date?: string | null
+          note_no?: string | null
+          note_type?: string | null
+          order_id?: string | null
+          reason?: string | null
+          reject_reason?: string | null
+          status?: string | null
+          stop_id?: string | null
+          tax_amount?: number | null
+          taxable_value?: number | null
+          total?: number | null
+          trip_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          firm_id?: string | null
+          gst_rate?: number | null
+          id?: string | null
+          invoice_id?: string | null
+          note_date?: string | null
+          note_no?: string | null
+          note_type?: string | null
+          order_id?: string | null
+          reason?: string | null
+          reject_reason?: string | null
+          status?: string | null
+          stop_id?: string | null
+          tax_amount?: number | null
+          taxable_value?: number | null
+          total?: number | null
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_debit_notes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_invoice_lines: {
+        Row: {
+          cgst: number | null
+          description: string | null
+          gst_rate: number | null
+          hsn_code: string | null
+          id: string | null
+          igst: number | null
+          invoice_id: string | null
+          line_total: number | null
+          order_line_id: string | null
+          product_id: string | null
+          qty: number | null
+          sgst: number | null
+          sort_order: number | null
+          taxable_value: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          cgst?: number | null
+          description?: string | null
+          gst_rate?: number | null
+          hsn_code?: string | null
+          id?: string | null
+          igst?: number | null
+          invoice_id?: string | null
+          line_total?: number | null
+          order_line_id?: string | null
+          product_id?: string | null
+          qty?: number | null
+          sgst?: number | null
+          sort_order?: number | null
+          taxable_value?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          cgst?: number | null
+          description?: string | null
+          gst_rate?: number | null
+          hsn_code?: string | null
+          id?: string | null
+          igst?: number | null
+          invoice_id?: string | null
+          line_total?: number | null
+          order_line_id?: string | null
+          product_id?: string | null
+          qty?: number | null
+          sgst?: number | null
+          sort_order?: number | null
+          taxable_value?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_order_line_id_fkey"
+            columns: ["order_line_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_order_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_order_line_id_fkey"
+            columns: ["order_line_id"]
+            isOneToOne: false
+            referencedRelation: "order_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_invoices: {
+        Row: {
+          ack_date: string | null
+          ack_no: string | null
+          amount_paid: number | null
+          billing_address: string | null
+          business_name: string | null
+          cgst: number | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_gstin: string | null
+          customer_id: string | null
+          customer_name: string | null
+          deposit_total: number | null
+          due_date: string | null
+          eway_bill_no: string | null
+          firm_id: string | null
+          grand_total: number | null
+          id: string | null
+          igst: number | null
+          invoice_date: string | null
+          invoice_no: string | null
+          irn: string | null
+          is_interstate: boolean | null
+          order_id: string | null
+          payment_status: string | null
+          place_of_supply: string | null
+          round_off: number | null
+          sgst: number | null
+          status: string | null
+          taxable_value: number | null
+          trip_id: string | null
+        }
+        Insert: {
+          ack_date?: string | null
+          ack_no?: string | null
+          amount_paid?: number | null
+          billing_address?: string | null
+          business_name?: string | null
+          cgst?: number | null
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_gstin?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          deposit_total?: number | null
+          due_date?: string | null
+          eway_bill_no?: string | null
+          firm_id?: string | null
+          grand_total?: number | null
+          id?: string | null
+          igst?: number | null
+          invoice_date?: string | null
+          invoice_no?: string | null
+          irn?: string | null
+          is_interstate?: boolean | null
+          order_id?: string | null
+          payment_status?: string | null
+          place_of_supply?: string | null
+          round_off?: number | null
+          sgst?: number | null
+          status?: string | null
+          taxable_value?: number | null
+          trip_id?: string | null
+        }
+        Update: {
+          ack_date?: string | null
+          ack_no?: string | null
+          amount_paid?: number | null
+          billing_address?: string | null
+          business_name?: string | null
+          cgst?: number | null
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_gstin?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          deposit_total?: number | null
+          due_date?: string | null
+          eway_bill_no?: string | null
+          firm_id?: string | null
+          grand_total?: number | null
+          id?: string | null
+          igst?: number | null
+          invoice_date?: string | null
+          invoice_no?: string | null
+          irn?: string | null
+          is_interstate?: boolean | null
+          order_id?: string | null
+          payment_status?: string | null
+          place_of_supply?: string | null
+          round_off?: number | null
+          sgst?: number | null
+          status?: string | null
+          taxable_value?: number | null
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_order_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          customer_id: string | null
+          order_id: string | null
+          rating: number | null
+          tags: string[] | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          order_id?: string | null
+          rating?: number | null
+          tags?: string[] | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          order_id?: string | null
+          rating?: number | null
+          tags?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_feedback_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_feedback_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_feedback_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_order_lines: {
+        Row: {
+          delivery_charge_per_pack: number | null
+          deposit_per_unit: number | null
+          deposit_total: number | null
+          gst_rate: number | null
+          hsn_code: string | null
+          id: string | null
+          line_total: number | null
+          mrp: number | null
+          new_containers: number | null
+          order_id: string | null
+          pack_label: string | null
+          product_code: string | null
+          product_id: string | null
+          product_name: string | null
+          qty: number | null
+          sort_order: number | null
+          tax_amount: number | null
+          taxable_value: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          delivery_charge_per_pack?: number | null
+          deposit_per_unit?: number | null
+          deposit_total?: number | null
+          gst_rate?: number | null
+          hsn_code?: string | null
+          id?: string | null
+          line_total?: number | null
+          mrp?: number | null
+          new_containers?: number | null
+          order_id?: string | null
+          pack_label?: string | null
+          product_code?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          qty?: number | null
+          sort_order?: number | null
+          tax_amount?: number | null
+          taxable_value?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          delivery_charge_per_pack?: number | null
+          deposit_per_unit?: number | null
+          deposit_total?: number | null
+          gst_rate?: number | null
+          hsn_code?: string | null
+          id?: string | null
+          line_total?: number | null
+          mrp?: number | null
+          new_containers?: number | null
+          order_id?: string | null
+          pack_label?: string | null
+          product_code?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          qty?: number | null
+          sort_order?: number | null
+          tax_amount?: number | null
+          taxable_value?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_lines_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_lines_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_orders: {
+        Row: {
+          amount_paid: number | null
+          approved_at: string | null
+          approved_by: string | null
+          area_id: string | null
+          business_name: string | null
+          cancel_reason: string | null
+          cancelled_by: string | null
+          company_id: string | null
+          created_at: string | null
+          credit_limit_snapshot: number | null
+          customer_id: string | null
+          customer_mobile: string | null
+          customer_name: string | null
+          customer_type_code: string | null
+          delivery_address_id: string | null
+          delivery_address_line1: string | null
+          delivery_address_line2: string | null
+          delivery_address_text: string | null
+          delivery_charge: number | null
+          delivery_city: string | null
+          delivery_date: string | null
+          delivery_landmark: string | null
+          delivery_lat: number | null
+          delivery_latitude: number | null
+          delivery_lng: number | null
+          delivery_longitude: number | null
+          delivery_mode: string | null
+          delivery_otp: string | null
+          delivery_pincode: string | null
+          delivery_slot: string | null
+          deposit_total: number | null
+          distributor_assigned_at: string | null
+          distributor_note: string | null
+          distributor_responded_at: string | null
+          distributor_status: string | null
+          due_date: string | null
+          firm_id: string | null
+          fulfiller_customer_id: string | null
+          grand_total: number | null
+          hold_reason: string | null
+          id: string | null
+          is_express: boolean | null
+          items_total: number | null
+          notes: string | null
+          order_group_id: string | null
+          order_no: string | null
+          order_type: string | null
+          outstanding_snapshot: number | null
+          payment_method: string | null
+          payment_mode: string | null
+          payment_status: string | null
+          pickup_vehicle_no: string | null
+          placed_by: string | null
+          price_plan_id: string | null
+          redeliver_at: string | null
+          redeliver_reason: string | null
+          release_batch_at: string | null
+          released_at: string | null
+          round_off: number | null
+          route_id: string | null
+          source: string | null
+          status: Database["public"]["Enums"]["order_status"] | null
+          tax_total: number | null
+          taxable_value: number | null
+          updated_at: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          amount_paid?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          area_id?: string | null
+          business_name?: string | null
+          cancel_reason?: string | null
+          cancelled_by?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          credit_limit_snapshot?: number | null
+          customer_id?: string | null
+          customer_mobile?: string | null
+          customer_name?: string | null
+          customer_type_code?: string | null
+          delivery_address_id?: string | null
+          delivery_address_line1?: string | null
+          delivery_address_line2?: string | null
+          delivery_address_text?: string | null
+          delivery_charge?: number | null
+          delivery_city?: string | null
+          delivery_date?: string | null
+          delivery_landmark?: string | null
+          delivery_lat?: number | null
+          delivery_latitude?: number | null
+          delivery_lng?: number | null
+          delivery_longitude?: number | null
+          delivery_mode?: string | null
+          delivery_otp?: string | null
+          delivery_pincode?: string | null
+          delivery_slot?: string | null
+          deposit_total?: number | null
+          distributor_assigned_at?: string | null
+          distributor_note?: string | null
+          distributor_responded_at?: string | null
+          distributor_status?: string | null
+          due_date?: string | null
+          firm_id?: string | null
+          fulfiller_customer_id?: string | null
+          grand_total?: number | null
+          hold_reason?: string | null
+          id?: string | null
+          is_express?: boolean | null
+          items_total?: number | null
+          notes?: string | null
+          order_group_id?: string | null
+          order_no?: string | null
+          order_type?: string | null
+          outstanding_snapshot?: number | null
+          payment_method?: string | null
+          payment_mode?: string | null
+          payment_status?: string | null
+          pickup_vehicle_no?: string | null
+          placed_by?: string | null
+          price_plan_id?: string | null
+          redeliver_at?: string | null
+          redeliver_reason?: string | null
+          release_batch_at?: string | null
+          released_at?: string | null
+          round_off?: number | null
+          route_id?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          tax_total?: number | null
+          taxable_value?: number | null
+          updated_at?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          amount_paid?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          area_id?: string | null
+          business_name?: string | null
+          cancel_reason?: string | null
+          cancelled_by?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          credit_limit_snapshot?: number | null
+          customer_id?: string | null
+          customer_mobile?: string | null
+          customer_name?: string | null
+          customer_type_code?: string | null
+          delivery_address_id?: string | null
+          delivery_address_line1?: string | null
+          delivery_address_line2?: string | null
+          delivery_address_text?: string | null
+          delivery_charge?: number | null
+          delivery_city?: string | null
+          delivery_date?: string | null
+          delivery_landmark?: string | null
+          delivery_lat?: number | null
+          delivery_latitude?: number | null
+          delivery_lng?: number | null
+          delivery_longitude?: number | null
+          delivery_mode?: string | null
+          delivery_otp?: string | null
+          delivery_pincode?: string | null
+          delivery_slot?: string | null
+          deposit_total?: number | null
+          distributor_assigned_at?: string | null
+          distributor_note?: string | null
+          distributor_responded_at?: string | null
+          distributor_status?: string | null
+          due_date?: string | null
+          firm_id?: string | null
+          fulfiller_customer_id?: string | null
+          grand_total?: number | null
+          hold_reason?: string | null
+          id?: string | null
+          is_express?: boolean | null
+          items_total?: number | null
+          notes?: string | null
+          order_group_id?: string | null
+          order_no?: string | null
+          order_type?: string | null
+          outstanding_snapshot?: number | null
+          payment_method?: string | null
+          payment_mode?: string | null
+          payment_status?: string | null
+          pickup_vehicle_no?: string | null
+          placed_by?: string | null
+          price_plan_id?: string | null
+          redeliver_at?: string | null
+          redeliver_reason?: string | null
+          release_batch_at?: string | null
+          released_at?: string | null
+          round_off?: number | null
+          route_id?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          tax_total?: number | null
+          taxable_value?: number | null
+          updated_at?: string | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "geo_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_delivery_address_id_fkey"
+            columns: ["delivery_address_id"]
+            isOneToOne: false
+            referencedRelation: "customer_addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_fulfiller_customer_id_fkey"
+            columns: ["fulfiller_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_price_plan_id_fkey"
+            columns: ["price_plan_id"]
+            isOneToOne: false
+            referencedRelation: "price_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "geo_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "geo_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_payment_proofs: {
+        Row: {
+          amount: number | null
+          balance_after: number | null
+          cash_paid_to: string | null
+          cash_paid_to_name: string | null
+          cheque_bank: string | null
+          cheque_date: string | null
+          cheque_no: string | null
+          collected_by: string | null
+          company_id: string | null
+          created_at: string | null
+          customer_id: string | null
+          firm_id: string | null
+          id: string | null
+          method: string | null
+          order_id: string | null
+          paid_on: string | null
+          receipt_id: string | null
+          reference: string | null
+          reject_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          screenshot_path: string | null
+          source: string | null
+          status: string | null
+          submitted_by: string | null
+          upi_response: Json | null
+        }
+        Insert: {
+          amount?: number | null
+          balance_after?: number | null
+          cash_paid_to?: string | null
+          cash_paid_to_name?: string | null
+          cheque_bank?: string | null
+          cheque_date?: string | null
+          cheque_no?: string | null
+          collected_by?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          firm_id?: string | null
+          id?: string | null
+          method?: string | null
+          order_id?: string | null
+          paid_on?: string | null
+          receipt_id?: string | null
+          reference?: string | null
+          reject_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_path?: string | null
+          source?: string | null
+          status?: string | null
+          submitted_by?: string | null
+          upi_response?: Json | null
+        }
+        Update: {
+          amount?: number | null
+          balance_after?: number | null
+          cash_paid_to?: string | null
+          cash_paid_to_name?: string | null
+          cheque_bank?: string | null
+          cheque_date?: string | null
+          cheque_no?: string | null
+          collected_by?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          firm_id?: string | null
+          id?: string | null
+          method?: string | null
+          order_id?: string | null
+          paid_on?: string | null
+          receipt_id?: string | null
+          reference?: string | null
+          reject_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_path?: string | null
+          source?: string | null
+          status?: string | null
+          submitted_by?: string | null
+          upi_response?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_proofs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_proofs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_proofs_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_proofs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_proofs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_receipt_allocations: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          id: string | null
+          invoice_id: string | null
+          opening_id: string | null
+          receipt_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          id?: string | null
+          invoice_id?: string | null
+          opening_id?: string | null
+          receipt_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          id?: string | null
+          invoice_id?: string | null
+          opening_id?: string | null
+          receipt_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipt_allocations_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_allocations_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_allocations_opening_id_fkey"
+            columns: ["opening_id"]
+            isOneToOne: false
+            referencedRelation: "customer_opening_balances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_allocations_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_allocations_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_receipts: {
+        Row: {
+          amount: number | null
+          bank_account_id: string | null
+          bank_charges: number | null
+          bounce_charge_note_id: string | null
+          bounce_reason: string | null
+          bounced_on: string | null
+          cancel_reason: string | null
+          cheque_bank: string | null
+          cheque_date: string | null
+          cheque_no: string | null
+          cheque_photo_url: string | null
+          cheque_status: string | null
+          cleared_on: string | null
+          collected_by: string | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_id: string | null
+          deposit_bank_account_id: string | null
+          deposit_slip_path: string | null
+          deposited_on: string | null
+          firm_id: string | null
+          id: string | null
+          mode: string | null
+          notes: string | null
+          proof_name: string | null
+          proof_path: string | null
+          receipt_date: string | null
+          receipt_no: string | null
+          reference: string | null
+          source: string | null
+          status: string | null
+          trip_collection_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          bank_account_id?: string | null
+          bank_charges?: number | null
+          bounce_charge_note_id?: string | null
+          bounce_reason?: string | null
+          bounced_on?: string | null
+          cancel_reason?: string | null
+          cheque_bank?: string | null
+          cheque_date?: string | null
+          cheque_no?: string | null
+          cheque_photo_url?: string | null
+          cheque_status?: string | null
+          cleared_on?: string | null
+          collected_by?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          deposit_bank_account_id?: string | null
+          deposit_slip_path?: string | null
+          deposited_on?: string | null
+          firm_id?: string | null
+          id?: string | null
+          mode?: string | null
+          notes?: string | null
+          proof_name?: string | null
+          proof_path?: string | null
+          receipt_date?: string | null
+          receipt_no?: string | null
+          reference?: string | null
+          source?: string | null
+          status?: string | null
+          trip_collection_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          bank_account_id?: string | null
+          bank_charges?: number | null
+          bounce_charge_note_id?: string | null
+          bounce_reason?: string | null
+          bounced_on?: string | null
+          cancel_reason?: string | null
+          cheque_bank?: string | null
+          cheque_date?: string | null
+          cheque_no?: string | null
+          cheque_photo_url?: string | null
+          cheque_status?: string | null
+          cleared_on?: string | null
+          collected_by?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          deposit_bank_account_id?: string | null
+          deposit_slip_path?: string | null
+          deposited_on?: string | null
+          firm_id?: string | null
+          id?: string | null
+          mode?: string | null
+          notes?: string | null
+          proof_name?: string | null
+          proof_path?: string | null
+          receipt_date?: string | null
+          receipt_no?: string | null
+          reference?: string | null
+          source?: string | null
+          status?: string | null
+          trip_collection_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "firm_bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_bounce_charge_note_id_fkey"
+            columns: ["bounce_charge_note_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_credit_debit_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_bounce_charge_note_id_fkey"
+            columns: ["bounce_charge_note_id"]
+            isOneToOne: false
+            referencedRelation: "credit_debit_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_deposit_bank_account_id_fkey"
+            columns: ["deposit_bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "firm_bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_trip_collection_id_fkey"
+            columns: ["trip_collection_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trip_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_trip_collection_id_fkey"
+            columns: ["trip_collection_id"]
+            isOneToOne: false
+            referencedRelation: "trip_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_trip_alerts: {
+        Row: {
+          alert_type: string | null
+          id: string | null
+          latitude: number | null
+          longitude: number | null
+          note: string | null
+          raised_at: string | null
+          raised_by: string | null
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          stop_id: string | null
+          trip_id: string | null
+        }
+        Insert: {
+          alert_type?: string | null
+          id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          note?: string | null
+          raised_at?: string | null
+          raised_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          stop_id?: string | null
+          trip_id?: string | null
+        }
+        Update: {
+          alert_type?: string | null
+          id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          note?: string | null
+          raised_at?: string | null
+          raised_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          stop_id?: string | null
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_alerts_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_alerts_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_alerts_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_alerts_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_trip_collections: {
+        Row: {
+          against_old_dues: boolean | null
+          amount: number | null
+          collected_at: string | null
+          collected_by: string | null
+          confirmed: boolean | null
+          customer_id: string | null
+          id: string | null
+          mode: string | null
+          order_id: string | null
+          photo_url: string | null
+          reference: string | null
+          stop_id: string | null
+          trip_id: string | null
+        }
+        Insert: {
+          against_old_dues?: boolean | null
+          amount?: number | null
+          collected_at?: string | null
+          collected_by?: string | null
+          confirmed?: boolean | null
+          customer_id?: string | null
+          id?: string | null
+          mode?: string | null
+          order_id?: string | null
+          photo_url?: string | null
+          reference?: string | null
+          stop_id?: string | null
+          trip_id?: string | null
+        }
+        Update: {
+          against_old_dues?: boolean | null
+          amount?: number | null
+          collected_at?: string | null
+          collected_by?: string | null
+          confirmed?: boolean | null
+          customer_id?: string | null
+          id?: string | null
+          mode?: string | null
+          order_id?: string | null
+          photo_url?: string | null
+          reference?: string | null
+          stop_id?: string | null
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_collections_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_collections_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_collections_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_collections_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_collections_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_collections_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_collections_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_trip_expenses: {
+        Row: {
+          amount: number | null
+          approved: boolean | null
+          bill_photo_url: string | null
+          created_at: string | null
+          created_by: string | null
+          expense_type: string | null
+          id: string | null
+          note: string | null
+          paid_from_cash: boolean | null
+          trip_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          approved?: boolean | null
+          bill_photo_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          expense_type?: string | null
+          id?: string | null
+          note?: string | null
+          paid_from_cash?: boolean | null
+          trip_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          approved?: boolean | null
+          bill_photo_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          expense_type?: string | null
+          id?: string | null
+          note?: string | null
+          paid_from_cash?: boolean | null
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_expenses_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_expenses_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_trip_returns: {
+        Row: {
+          actual_qty: number | null
+          expected_qty: number | null
+          id: string | null
+          kind: string | null
+          note: string | null
+          product_id: string | null
+          received_at: string | null
+          received_by: string | null
+          trip_id: string | null
+        }
+        Insert: {
+          actual_qty?: number | null
+          expected_qty?: number | null
+          id?: string | null
+          kind?: string | null
+          note?: string | null
+          product_id?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          trip_id?: string | null
+        }
+        Update: {
+          actual_qty?: number | null
+          expected_qty?: number | null
+          id?: string | null
+          kind?: string | null
+          note?: string | null
+          product_id?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_returns_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_returns_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_returns_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_trip_stops: {
+        Row: {
+          arrived_at: string | null
+          delivered_at: string | null
+          do_later_at: string | null
+          fail_reason: string | null
+          id: string | null
+          is_spot_sale: boolean | null
+          latitude: number | null
+          longitude: number | null
+          order_id: string | null
+          otp_verified: boolean | null
+          photo_url: string | null
+          seq: number | null
+          signature_url: string | null
+          signed_copy_received: boolean | null
+          status: string | null
+          trip_id: string | null
+        }
+        Insert: {
+          arrived_at?: string | null
+          delivered_at?: string | null
+          do_later_at?: string | null
+          fail_reason?: string | null
+          id?: string | null
+          is_spot_sale?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          order_id?: string | null
+          otp_verified?: boolean | null
+          photo_url?: string | null
+          seq?: number | null
+          signature_url?: string | null
+          signed_copy_received?: boolean | null
+          status?: string | null
+          trip_id?: string | null
+        }
+        Update: {
+          arrived_at?: string | null
+          delivered_at?: string | null
+          do_later_at?: string | null
+          fail_reason?: string | null
+          id?: string | null
+          is_spot_sale?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          order_id?: string | null
+          otp_verified?: boolean | null
+          photo_url?: string | null
+          seq?: number | null
+          signature_url?: string | null
+          signed_copy_received?: boolean | null
+          status?: string | null
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_stops_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_stops_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_stops_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_stops_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cc70_report_trips: {
+        Row: {
+          cancel_reason: string | null
+          cash_expected: number | null
+          cash_received: number | null
+          company_id: string | null
+          crates_load_reason: string | null
+          crates_loaded: number | null
+          crates_planned: number | null
+          crates_planned_manual: boolean | null
+          crates_return_reason: string | null
+          crates_returned: number | null
+          created_at: string | null
+          customer_vehicle_no: string | null
+          driver_started_at: string | null
+          driver_user_id: string | null
+          end_odometer: number | null
+          end_odometer_photo_url: string | null
+          ended_at: string | null
+          est_km: number | null
+          est_minutes: number | null
+          fuel_amount: number | null
+          fuel_litres: number | null
+          gate_in_at: string | null
+          gate_in_by: string | null
+          gate_in_manual: boolean | null
+          gate_out_at: string | null
+          gate_out_by: string | null
+          gate_out_manual: boolean | null
+          gate_return_note: string | null
+          helper_user_ids: string[] | null
+          hired_driver_mobile: string | null
+          hired_driver_name: string | null
+          id: string | null
+          loaded_at: string | null
+          loaded_by: string | null
+          planned_by: string | null
+          returns_received_at: string | null
+          route_id: string | null
+          route_method: string | null
+          route_optimised_at: string | null
+          settle_note: string | null
+          settled_at: string | null
+          settled_by: string | null
+          start_odometer: number | null
+          start_odometer_photo_url: string | null
+          start_selfie_url: string | null
+          status: Database["public"]["Enums"]["trip_status"] | null
+          trip_date: string | null
+          trip_no: string | null
+          trip_type: string | null
+          unit_id: string | null
+          updated_at: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          cancel_reason?: string | null
+          cash_expected?: number | null
+          cash_received?: number | null
+          company_id?: string | null
+          crates_load_reason?: string | null
+          crates_loaded?: number | null
+          crates_planned?: number | null
+          crates_planned_manual?: boolean | null
+          crates_return_reason?: string | null
+          crates_returned?: number | null
+          created_at?: string | null
+          customer_vehicle_no?: string | null
+          driver_started_at?: string | null
+          driver_user_id?: string | null
+          end_odometer?: number | null
+          end_odometer_photo_url?: string | null
+          ended_at?: string | null
+          est_km?: number | null
+          est_minutes?: number | null
+          fuel_amount?: number | null
+          fuel_litres?: number | null
+          gate_in_at?: string | null
+          gate_in_by?: string | null
+          gate_in_manual?: boolean | null
+          gate_out_at?: string | null
+          gate_out_by?: string | null
+          gate_out_manual?: boolean | null
+          gate_return_note?: string | null
+          helper_user_ids?: string[] | null
+          hired_driver_mobile?: string | null
+          hired_driver_name?: string | null
+          id?: string | null
+          loaded_at?: string | null
+          loaded_by?: string | null
+          planned_by?: string | null
+          returns_received_at?: string | null
+          route_id?: string | null
+          route_method?: string | null
+          route_optimised_at?: string | null
+          settle_note?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
+          start_odometer?: number | null
+          start_odometer_photo_url?: string | null
+          start_selfie_url?: string | null
+          status?: Database["public"]["Enums"]["trip_status"] | null
+          trip_date?: string | null
+          trip_no?: string | null
+          trip_type?: string | null
+          unit_id?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          cancel_reason?: string | null
+          cash_expected?: number | null
+          cash_received?: number | null
+          company_id?: string | null
+          crates_load_reason?: string | null
+          crates_loaded?: number | null
+          crates_planned?: number | null
+          crates_planned_manual?: boolean | null
+          crates_return_reason?: string | null
+          crates_returned?: number | null
+          created_at?: string | null
+          customer_vehicle_no?: string | null
+          driver_started_at?: string | null
+          driver_user_id?: string | null
+          end_odometer?: number | null
+          end_odometer_photo_url?: string | null
+          ended_at?: string | null
+          est_km?: number | null
+          est_minutes?: number | null
+          fuel_amount?: number | null
+          fuel_litres?: number | null
+          gate_in_at?: string | null
+          gate_in_by?: string | null
+          gate_in_manual?: boolean | null
+          gate_out_at?: string | null
+          gate_out_by?: string | null
+          gate_out_manual?: boolean | null
+          gate_return_note?: string | null
+          helper_user_ids?: string[] | null
+          hired_driver_mobile?: string | null
+          hired_driver_name?: string | null
+          id?: string | null
+          loaded_at?: string | null
+          loaded_by?: string | null
+          planned_by?: string | null
+          returns_received_at?: string | null
+          route_id?: string | null
+          route_method?: string | null
+          route_optimised_at?: string | null
+          settle_note?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
+          start_odometer?: number | null
+          start_odometer_photo_url?: string | null
+          start_selfie_url?: string | null
+          status?: Database["public"]["Enums"]["trip_status"] | null
+          trip_date?: string | null
+          trip_no?: string | null
+          trip_type?: string | null
+          unit_id?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trips_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_driver_user_id_fkey"
+            columns: ["driver_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "geo_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       container_balances: {
         Row: {
           balance: number | null
@@ -7467,6 +9609,28 @@ export type Database = {
       cc69_return_trip: {
         Args: { p_note?: string; p_trip_id: string }
         Returns: undefined
+      }
+      cc70_close_old_qa: { Args: never; Returns: number }
+      cc70_include_qa: { Args: never; Returns: boolean }
+      cc70_is_admin: { Args: never; Returns: boolean }
+      cc70_qa_invoice: { Args: { p_id: string }; Returns: boolean }
+      cc70_qa_order: { Args: { p_id: string }; Returns: boolean }
+      cc70_qa_receipt: { Args: { p_id: string }; Returns: boolean }
+      cc70_row_visible: {
+        Args: { p_row: Json; p_table: string }
+        Returns: boolean
+      }
+      cc70_set_planned_crates: {
+        Args: { p_crates: number; p_trip_id: string }
+        Returns: undefined
+      }
+      cc70_vehicle_qr: {
+        Args: { p_replace?: boolean; p_vehicle_id: string }
+        Returns: {
+          code: string
+          reg_no: string
+          vehicle_id: string
+        }[]
       }
       check_pin: {
         Args: {
