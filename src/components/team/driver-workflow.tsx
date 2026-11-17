@@ -71,6 +71,8 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
       sold[l.product_id] = (sold[l.product_id] ?? 0) + (delivered.get(l.id) ?? 0);
     }
     setTrip(tr.data as unknown as Trip); setStops(list); setLines(map);
+    const approvals=await supabase.from("trip_alerts").select("id,stop_id,resolution").eq("trip_id",tripId).eq("alert_type","ask_office");
+    setDrafts(current=>{const next={...current};for(const a of approvals.data ?? []){if(a.stop_id&&a.resolution)next[a.stop_id]={...(next[a.stop_id] ?? emptyDraft()),alertId:a.id,resolution:a.resolution};}return next;});
     setSettings({...DEFAULT_SETTINGS,...(se.data as unknown as Settings ?? {})});
     setToken(gp.data?.qr_token ?? null);
     setCash(Math.max(0,(cc.data ?? []).filter(x=>x.mode==="cash").reduce((a,x)=>a+Number(x.amount),0)-(ex.data ?? []).filter(x=>x.approved!==false).reduce((a,x)=>a+Number(x.amount),0)));
@@ -145,7 +147,8 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
   },[step]);
   useEffect(()=>{if(step==="pass"&&trip?.gate_out_at&&!trip.driver_started_at)void home();},[step,trip?.gate_out_at,trip?.driver_started_at]);
   const officeLoad=async()=>{
-    if(step!=="office"||!draft.alertId||draft.resolution||!stop)return;
+    if(step!=="office"||!stop||draft.resolution)return;
+    if(!draft.alertId){const existing=await supabase.from("trip_alerts").select("id,resolution").eq("trip_id",tripId).eq("stop_id",stop.id).eq("alert_type","ask_office").order("raised_at",{ascending:false}).limit(1).maybeSingle();if(existing.data)update(stop.id,{alertId:existing.data.id,...(existing.data.resolution?{resolution:existing.data.resolution}:{})});return;}
     const r=await supabase.rpc("ask_office_status",{p_alert_id:draft.alertId});
     if(r.error)return setLocalError(t("c.error"));
     const d=r.data as {resolution:string|null;deadline:string;now:string}|null;
@@ -196,7 +199,7 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
     if(step==="pickup"){if(!customer||!product||!(Number(qty)>0)){setLocalError(t("c.required"));return;}rpc="record_pickup";args={p_trip_id:tripId,p_customer_id:customer,p_product_id:product,p_qty:Number(qty),p_photo_url:photo,...gps};}
     if(step==="spot"){if(!customer||!product||!(Number(qty)>0)||Number(qty)>(w.products.find(p=>p.id===product)?.left ?? 0)){setLocalError(t("c.required"));return;}rpc="spot_sale";args={p_trip_id:tripId,p_customer_id:customer,p_lines:[{product_id:product,qty:Number(qty)}],p_paid_now:paid,...gps};}
     if(step==="sos"){rpc="raise_trip_alert";args={p_trip_id:tripId,p_type:"sos",p_note:note||null,...gps};}
-    if(rpc){const r=await write(rpc,args);if(r.ok)void home();}
+    if(rpc){const r=await write(rpc,args);if(r.ok){if(step==="spot"&&Array.isArray(r.data)){const item=r.data[0] as {order_id?:string}|undefined;if(item?.order_id){const saved=await supabase.from("trip_stops").select("id").eq("trip_id",tripId).eq("order_id",item.order_id).maybeSingle();if(saved.data){void go("payment",saved.data.id);return;}}}void home();}}
   };
   const back=<Link to={step==="home"?"/driver":"/driver/$tripId"} params={step==="home"?{}:{tripId}}><BackIcon /></Link>;
   const title=step==="stops"?copy("stops"):step==="bank"?copy("bank"):t(titleKeys[step] ?? "dr.title",{n:stops.length});
