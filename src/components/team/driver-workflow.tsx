@@ -80,7 +80,7 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
     if (firm) { const f=await supabase.from("firms").select("upi_id,upi_payee_name").eq("id",firm).maybeSingle(); setUpi(f.data ? {id:f.data.upi_id ?? "",payee:f.data.upi_payee_name}:null); }
     setLoading(false);
   };
-  useLiveRefresh(load,[{table:"trips",filter:`id=eq.${tripId}`},... ["trip_stops","gate_passes","trip_loading","trip_alerts","cash_handovers","trip_collections","trip_expenses"].map(table=>({table,filter:`trip_id=eq.${tripId}`})),...stops.flatMap(s=>s.orders ? [{table:"orders",filter:`id=eq.${s.orders.id}`}]:[])],tripId,(table,row)=>{
+  useLiveRefresh(load,[{table:"trips",filter:`id=eq.${tripId}`},... ["trip_stops","gate_passes","trip_loading","trip_alerts","cash_handovers","trip_collections","trip_expenses"].map(table=>({table,filter:`trip_id=eq.${tripId}`})),{table:"orders"}],tripId,(table,row)=>{
     if(table==="trips"&&row['id']===tripId) setTrip(current=>current?{...current,...row}:current);
     if(table==="trip_stops"&&typeof row['id']==="string") setStops(current=>current.map(s=>s.id===row['id']?{...s,...row}:s));
   });
@@ -151,7 +151,9 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
     const d=r.data as {resolution:string|null;deadline:string;now:string}|null;
     if(d){setRemaining(Math.max(0,Math.round((Date.parse(d.deadline)-Date.parse(d.now))/1000)));if(d.resolution)update(stop.id,{resolution:d.resolution});}
   };
-  useLiveRefresh(officeLoad,[{table:"trip_alerts",filter:`trip_id=eq.${tripId}`}],`office:${tripId}:${draft.alertId ?? "none"}`);
+  // The provider owns the alert subscription; overlapping channels can unregister
+  // identical server bindings when the task changes. Refresh this read on provider loads.
+  useEffect(()=>{void officeLoad();},[step,draft.alertId,draft.resolution,w.stops]);
   useEffect(()=>{
     if(step!=="customer"||q.trim().length<3){setFound([]);return;}
     let active=true;const timer=window.setTimeout(()=>{void supabase.rpc("driver_find_customers",{p_trip_id:tripId,p_q:q.trim()}).then(r=>{if(!active)return; if(r.error)setLocalError(t("c.error"));setFound((r.data ?? []).map(c=>({id:c.id,name:c.business_name||c.contact_name||"—"})));});},300);

@@ -1,0 +1,1 @@
+alter table public.trip_collections drop constraint tc_mode; alter table public.trip_collections add constraint tc_mode check (mode in ('cash','upi','cheque','bank'));
