@@ -1,5 +1,11 @@
 # Roadmap — Sunrich Delivery
 
+## Nov 17 one-task screens
+- [ ] Driver: separate routed home, gate pass, start, next stop, goods/counts, proof/photo/signature, payment modes/office, done, stops, end, handover and enabled extras.
+- [ ] Loader: separate loading/counts and returns/counts; Guard: separate scan/result, entry, exit and menu tasks.
+- [ ] Scoped realtime updates, immediate action refresh, foreground/network recovery and 15-second fallback.
+- [ ] Hindi 360×780 QA tap checks and two-browser gate-to-driver update; report page table and contents.
+
 ## Customer-style login (Nov 16, no SQL)
 - [x] Photo and appearance settings with cached images; white content-height card for every login step. Anonymous app_settings returns no rows; narrow publicLoginAppearance exposes only the three branding fields, no SQL.
 - [x] Phone-language login, no language switch; transparent native status bar code on login.
