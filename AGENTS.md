@@ -39,3 +39,5 @@
 - Every QR scan goes through `scanCode()` in src/lib/native.ts (isSupported → permission → Google module install → scan) and is called directly from the tap — no intermediate page — so the camera opens at once; browsers get only the type-code box.
 - Role homes (driver trip home, loader list, guard home) use `HomeScreen` from role-home.tsx: navy header with avatar → Profile and no back arrow; inner pages keep TaskScreen with back.
 - Staff read the overdue-hours limit only via `gate_overdue_hours()` (one value for the caller's company) — the settings table stays closed to staff.
+- Role home tabs come from `roleTabs()`/`BottomNav` in role-home.tsx and render only via `HomeScreen tabs` or Profile; task pages (TaskScreen) never show the tab bar, so one-task screens keep a single bottom action.
+- The launch overlay renders from the root (SSR included) until team auth is ready, so the first paint is the brand screen, never white; `/launch-delivery.webp` is optional and the gradient is the fallback.
