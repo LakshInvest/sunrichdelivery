@@ -98,17 +98,18 @@ export function SyncBadge() {
 
 export function StatusBadge({ status }: { status: string }) {
   const { t } = useLang();
-  const key = `st.${status}`;
-  const label = t(key);
+  const label = t(`st.${status}`);
   const tone =
     status === "in_progress"
-      ? "bg-aqua/15 text-navy dark:text-aqua"
+      ? "bg-secondary/15 text-primary"
       : status === "delivered" || status === "settled" || status === "loaded" || status === "partial"
-        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+        ? "bg-success/15 text-success"
         : status === "failed" || status === "cancelled"
-          ? "bg-red-500/15 text-red-700 dark:text-red-300"
-          : "bg-muted text-muted-foreground";
-  return <span className={`rounded-full px-3 py-1 text-xs font-semibold ${tone}`}>{label}</span>;
+          ? "bg-destructive/10 text-destructive"
+          : status === "returned"
+            ? "bg-warning/15 text-warning-foreground"
+            : "bg-muted text-muted-foreground";
+  return <span className={`chip ${tone}`}>{label}</span>;
 }
 
 /** Standard screen shell: full phone height (no page scroll — content scrolls inside), safe-area aware. */
@@ -126,11 +127,12 @@ export function Screen({ title, children, right }: { title: string; children: Re
   );
 }
 
+/** Customer-app loader: aqua ring in a white tile; the label is for screen readers only. */
 export function Spinner({ label }: { label?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted-foreground">
-      <WaterLoader />
-      {label && <span className="text-sm font-medium">{label}</span>}
+    <div className="flex items-center justify-center py-20" role="status" aria-busy="true">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-card shadow-lg"><span className="app-loader-ring" /></div>
+      {label && <span className="sr-only">{label}</span>}
     </div>
   );
 }
