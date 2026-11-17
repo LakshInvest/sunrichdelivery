@@ -12,7 +12,7 @@ import {istDisplay} from "@/lib/ist";
 import {TaskScreen,MainAction,BackIcon,taskInput} from "@/components/team/task-screen";
 import {Button} from "@/components/ui/button";
 import {PhotoInput,Spinner} from "@/components/team/ui";
-import {GateEntry,blankGate,type GateDraft} from "@/components/team/gate-entry";
+import {GateEntry,blankGate,type GateDraft} from "@/components/team/gate-entry-flow";
 type Hit={kind:string;trip_id?:string;trip_no?:string;reg_no?:string;driver?:string;packs?:number;party?:string;items?:string;pass_no?:string;order?:string;otp?:string};
 type Entry={id:string;name:string;mobile:string;entry_type:string;parcel_count:number|null;handed_at:string|null};
 type Vehicle={trip_id:string;reg_no:string|null;driver:string|null;gate_out_at?:string|null};
