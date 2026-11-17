@@ -2938,6 +2938,60 @@ export type Database = {
         }
         Relationships: []
       }
+      gate_qr_secret: {
+        Row: {
+          company_id: string
+          created_at: string
+          secret: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          secret?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          secret?: string
+        }
+        Relationships: []
+      }
+      gate_scan_log: {
+        Row: {
+          company_id: string
+          created_at: string
+          guard_id: string | null
+          guard_name: string | null
+          id: string
+          kind: string
+          label: string | null
+          mode: string
+          ref_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          guard_id?: string | null
+          guard_name?: string | null
+          id?: string
+          kind: string
+          label?: string | null
+          mode: string
+          ref_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          guard_id?: string | null
+          guard_name?: string | null
+          id?: string
+          kind?: string
+          label?: string | null
+          mode?: string
+          ref_id?: string | null
+        }
+        Relationships: []
+      }
       geo_areas: {
         Row: {
           backup_distributor_id: string | null
@@ -6632,6 +6686,50 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_qr_codes: {
+        Row: {
+          active: boolean
+          code: string
+          company_id: string
+          created_at: string
+          id: string
+          revoked_at: string | null
+          revoked_by: string | null
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          active?: boolean
+          code?: string
+          company_id: string
+          created_at?: string
+          id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_qr_codes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicles: {
         Row: {
           capacity_boxes: number | null
@@ -6904,6 +7002,13 @@ export type Database = {
         Returns: string
       }
       _fifo_allocate: { Args: { p_receipt_id: string }; Returns: number }
+      _gate_log: {
+        Args: { p_kind: string; p_label: string; p_mode: string; p_ref: string }
+        Returns: undefined
+      }
+      _gate_secret: { Args: never; Returns: string }
+      _gate_staff_hit: { Args: { p_id: string }; Returns: Json }
+      _gate_vehicle_hit: { Args: { p_vehicle: string }; Returns: Json }
       _generate_invoice: {
         Args: { p_order_id: string; p_trip_id: string }
         Returns: string
@@ -7629,6 +7734,11 @@ export type Database = {
       }
       gate_manage_block: { Args: { p: Json }; Returns: string }
       gate_manage_invite: { Args: { p: Json }; Returns: string }
+      gate_manual_confirm: {
+        Args: { p_id: string; p_kind: string }
+        Returns: Json
+      }
+      gate_manual_search: { Args: { p_q: string }; Returns: Json }
       gate_mark_phone_approved: {
         Args: {
           p_approved_by_user_id: string
@@ -7945,6 +8055,7 @@ export type Database = {
       }
       my_product: { Args: { p_id: string }; Returns: Json }
       my_session_is_valid: { Args: never; Returns: boolean }
+      my_staff_qr: { Args: never; Returns: string }
       my_staff_session_verified: { Args: never; Returns: boolean }
       next_document_number: {
         Args: {
