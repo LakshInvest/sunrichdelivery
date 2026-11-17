@@ -2733,6 +2733,7 @@ export type Database = {
           name: string
           out_at: string | null
           out_by: string | null
+          out_photo_path: string | null
           parcel_count: number | null
           people_count: number
           person_type: string
@@ -2763,6 +2764,7 @@ export type Database = {
           name: string
           out_at?: string | null
           out_by?: string | null
+          out_photo_path?: string | null
           parcel_count?: number | null
           people_count?: number
           person_type?: string
@@ -2793,6 +2795,7 @@ export type Database = {
           name?: string
           out_at?: string | null
           out_by?: string | null
+          out_photo_path?: string | null
           parcel_count?: number | null
           people_count?: number
           person_type?: string
@@ -7582,7 +7585,10 @@ export type Database = {
         Returns: Json
       }
       gate_entry_in: { Args: { p: Json }; Returns: string }
-      gate_entry_out: { Args: { p_entry_id: string }; Returns: undefined }
+      gate_entry_out: {
+        Args: { p_entry_id: string; p_out_photo?: string }
+        Returns: undefined
+      }
       gate_find_person: { Args: { p_mobile: string }; Returns: Json }
       gate_in: {
         Args: {
