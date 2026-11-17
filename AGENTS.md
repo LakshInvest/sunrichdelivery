@@ -26,7 +26,7 @@
 - The driver screen shows its spinner only on first load — unmounting the live Google map on refresh throws IntersectionObserver errors.
 - Role tasks use routed leaves under a workflow context layout; shared drafts survive step navigation, while one TaskScreen owns the single bottom action so forms never open off-screen.
 - Task screens use a scoped realtime subscription with immediate trip/status patches, action refetch, foreground/network recovery and a 15-second fallback so remote work appears without navigation.
-- Live refresh emits credential-free `sunrich:live-refresh` timing events identifying realtime versus recovery refreshes, so QA measures the actual update source without increasing polling.
+- `sunrich:live-refresh` events tag realtime vs recovery refreshes so QA can time updates.
 - A trip workflow owns one stable subscription; task pages reuse it instead of registering overlapping filters, preventing channel teardown from removing shared server bindings.
 - Every table in a combined postgres_changes channel must belong to the realtime publication; one missing table rejects all bindings, so verify system acknowledgements as well as joined status.
 - Role-home counts use the shared realtime hook with their existing 30-second recovery interval; task screens keep 15 seconds, so live counts do not increase polling frequency.
@@ -39,5 +39,4 @@
 - Every QR scan goes through `scanCode()` in src/lib/native.ts (isSupported → permission → Google module install → scan) and is called directly from the tap — no intermediate page — so the camera opens at once; browsers get only the type-code box.
 - Role homes (driver trip home, loader list, guard home) use `HomeScreen` from role-home.tsx: navy header with avatar → Profile and no back arrow; inner pages keep TaskScreen with back.
 - Staff read the overdue-hours limit only via `gate_overdue_hours()` (one value for the caller's company) — the settings table stays closed to staff.
-- Role home tabs come from `roleTabs()`/`BottomNav` in role-home.tsx and render only via `HomeScreen tabs` or Profile; task pages (TaskScreen) never show the tab bar, so one-task screens keep a single bottom action.
-- The launch overlay renders from the root (SSR included) until team auth is ready, so the first paint is the brand screen, never white; `/launch-delivery.webp` is optional and the gradient is the fallback.
+- Tab bar (`BottomNav`) shows only on role homes/Profile, never on TaskScreen, keeping one bottom action. Root launch overlay renders (SSR too) until auth is ready, so first paint is never white.
