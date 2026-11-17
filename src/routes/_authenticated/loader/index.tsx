@@ -79,7 +79,7 @@ function LoaderHome() {
           {error && <ErrorCard message={error} onRetry={() => void load()} />}
           <SummaryCard title={t("sum.today")} items={[
             { label: t("sum.open"), value: (open ?? []).filter((r) => isTodayTrip(r, today)).length },
-            { label: t("sum.done"), value: done.length },
+            { label: t("sum.done"), value: done.filter((r) => isTodayTrip(r, today)).length },
             { label: t("sum.returns"), value: back.length },
           ]} />
           <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t(view === "returns" ? "ld.returns" : "ld.toLoad")}</h2>
@@ -87,9 +87,9 @@ function LoaderHome() {
           <div className="grid gap-3">
             {list.length > 0 ? list.map(card) : view === "returns" ? <EmptyState icon={Undo2} text={t("ld.noReturns")} /> : <EmptyState icon={Boxes} text={t("c.none")} />}
           </div>
-          {view !== "returns" && filter === "today" && done.length > 0 && <>
+          {view !== "returns" && done.some((r) => (filter === "today") === isTodayTrip(r, today)) && <>
             <h2 className="mt-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("ld.loadedToday")}</h2>
-            <div className="grid gap-3">{done.map(card)}</div>
+            <div className="grid gap-3">{done.filter((r) => (filter === "today") === isTodayTrip(r, today)).map(card)}</div>
           </>}
         </>
       )}
