@@ -1,5 +1,11 @@
 # Roadmap — Sunrich Delivery
 
+## Prompt-20 follow-ups
+- [ ] Confirm QA Loader Dispatch/Loader/Security membership and restore Security if missing.
+- [ ] Trace gate-to-driver refresh source; verify realtime under five seconds without heavier polling.
+- [ ] Exercise cheque/photo/number, bank, guard mobile/PIN/selfie and start selfie/vehicle-check saves; restore optional flags OFF.
+- [ ] Report a short results table; leave publishing to the user.
+
 ## Nov 17 one-task screens
 - [x] Driver: separate routed home, gate pass, start, next stop, goods/counts, proof/photo/signature, payment modes/office, done, stops, end, handover and enabled extras.
 - [x] Loader: separate loading/counts and returns/counts; Guard: separate scan/result, entry, exit and menu tasks.
