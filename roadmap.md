@@ -115,3 +115,10 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 - [x] Bottom tabs on role homes; guard Register; loader Returns; driver Trips
 - [x] Today / Purane filters, summary cards
 - [ ] Delivery brand photo (waiting on user)
+
+## Prompt-25/30 guard rework
+- [x] Entry: person, supplier vehicle + new driver + challan, parcel (now asks courier mobile), pre-invited — tested 360/412 Hindi.
+- [ ] Blocked screen — not tested: QA staff lack permission to create a block; needs an admin to add one in Command Center.
+- [x] Old guard pages re-checked (scan unknown code, vehicles out, problem, change guard, register, exit); QA visitors marked out.
+- [ ] Scan gate out/in, pickup, material pass with real codes — need an active QA trip/pickup/material pass.
+- [ ] Items 3–9 (exit card, register timeline, gate-out-missing, loader rework, shared photo/forms, CC appearance, leftovers).
