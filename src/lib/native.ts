@@ -62,6 +62,9 @@ export async function initNative(navigate: (path: string) => void) {
       else void App.minimizeApp();
     });
     void App.addListener("appUrlOpen", ({ url }) => go(routeFromUrl(url)));
+    void App.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) window.dispatchEvent(new Event("focus"));
+    });
 
     await LocalNotifications.createChannel({ id: "trips", name: "Trips", importance: 4, visibility: 1 }).catch(() => {});
     await LocalNotifications.createChannel({ id: "alerts", name: "Alerts", importance: 5, visibility: 1, vibration: true }).catch(() => {});

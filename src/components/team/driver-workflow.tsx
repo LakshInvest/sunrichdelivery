@@ -54,6 +54,7 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
       supabase.from("trip_loading").select("product_id,loaded_qty").eq("trip_id",tripId),
     ]);
     if (tr.error || st.error) { setError(t("c.error")); setLoading(false); return; }
+    setTrip(tr.data as unknown as Trip);
     const list = ((st.data ?? []) as unknown as StopRow[]).map(s=>({...s,orders:s.orders?{...s.orders,amount_paid:Math.max(Number(s.orders.amount_paid ?? 0),(cc.data ?? []).filter(c=>c.stop_id===s.id).reduce((a,c)=>a+Number(c.amount),0))}:null}));
     const orderIds = list.flatMap(s => s.orders ? [s.orders.id] : []);
     const lr = orderIds.length ? await supabase.from("order_lines").select("id,order_id,product_id,product_name,pack_label,qty,line_total,deposit_total").in("order_id",orderIds) : { data: [] };
@@ -76,7 +77,10 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
     if (firm) { const f=await supabase.from("firms").select("upi_id,upi_payee_name").eq("id",firm).maybeSingle(); setUpi(f.data ? {id:f.data.upi_id ?? "",payee:f.data.upi_payee_name}:null); }
     setLoading(false);
   };
-  useLiveRefresh(load,[{table:"trips",filter:`id=eq.${tripId}`},... ["trip_stops","gate_passes","trip_loading","trip_alerts","cash_handovers","trip_collections","trip_expenses"].map(table=>({table,filter:`trip_id=eq.${tripId}`})),...stops.flatMap(s=>s.orders ? [{table:"orders",filter:`id=eq.${s.orders.id}`}]:[])],tripId);
+  useLiveRefresh(load,[{table:"trips",filter:`id=eq.${tripId}`},... ["trip_stops","gate_passes","trip_loading","trip_alerts","cash_handovers","trip_collections","trip_expenses"].map(table=>({table,filter:`trip_id=eq.${tripId}`})),...stops.flatMap(s=>s.orders ? [{table:"orders",filter:`id=eq.${s.orders.id}`}]:[])],tripId,(table,row)=>{
+    if(table==="trips"&&row['id']===tripId) setTrip(current=>current?{...current,...row}:current);
+    if(table==="trip_stops"&&typeof row['id']==="string") setStops(current=>current.map(s=>s.id===row['id']?{...s,...row}:s));
+  });
   useEffect(()=>{
     if (!trip?.driver_started_at || trip.ended_at || !settings.location_tracking_enabled) return;
     let closed=false; let cleanup: (()=>void)|null=null;
