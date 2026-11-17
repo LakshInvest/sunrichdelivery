@@ -1,3 +1,4 @@
+import { friendlyError, friendlyKey } from "@/lib/friendly-error";
 import { createContext, useContext, useState, useRef, useEffect, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import QRCode from "react-qr-code";
@@ -21,7 +22,7 @@ type Trip = { id: string; trip_no: string; status: string; gate_out_at: string |
 type Goods = { order_line_id: string; delivered: number; short: number; damaged: number; refused: number; empties: number };
 type Draft = { goods: Goods[]; otp: string; photo: string | null; signature: string | null; amount: string; reference: string; payPhoto: string | null; splitCash: string; alertId?: string; resolution?: string; collectionDone?: boolean };
 const emptyDraft = (): Draft => ({ goods: [], otp: "", photo: null, signature: null, amount: "", reference: "", payPhoto: null, splitCash: "" });
-type Workflow = { tripId: string; trip: Trip | null; stops: StopRow[]; lines: Record<string, LineRow[]>; settings: Settings; token: string | null; upi: { id: string; payee: string | null } | null; cash: number; cashiers: { id: string; full_name: string }[]; pendingCash: string | null; form: {odo:string;odoPhoto:string|null;selfie:string|null;checkPhoto:string|null;checks:string[];customer:string}; setForm:(patch:Partial<Workflow["form"]>)=>void; products: { id: string; name: string; left: number; returnable: boolean }[]; loading: boolean; error: string | null; busy: boolean; drafts: Record<string, Draft>; update: (id: string, value: Partial<Draft>) => void; load: () => Promise<void>; write: (rpc: string, args: Record<string, unknown>) => Promise<{ ok: boolean; data: unknown; queued: boolean }>; };
+type Workflow = { tripId: string; trip: Trip | null; stops: StopRow[]; lines: Record<string, LineRow[]>; settings: Settings; token: string | null; upi: { id: string; payee: string | null } | null; cash: number; cashiers: { id: string; full_name: string }[]; pendingCash: string | null; form: {odo:string;odoPhoto:string|null;endOdo:string;endOdoPhoto:string|null;selfie:string|null;checkPhoto:string|null;checks:string[];customer:string}; setForm:(patch:Partial<Workflow["form"]>)=>void; products: { id: string; name: string; left: number; returnable: boolean }[]; loading: boolean; error: string | null; busy: boolean; drafts: Record<string, Draft>; update: (id: string, value: Partial<Draft>) => void; load: () => Promise<void>; write: (rpc: string, args: Record<string, unknown>) => Promise<{ ok: boolean; data: unknown; queued: boolean }>; };
 const Context = createContext<Workflow | null>(null);
 function useWorkflow() { const v = useContext(Context); if (!v) throw new Error("Trip context unavailable"); return v; }
 export function DriverWorkflowProvider({ tripId, children }: { tripId: string; children: ReactNode }) {
@@ -39,7 +40,7 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [form,setFormState]=useState<Workflow["form"]>({odo:"",odoPhoto:null,selfie:null,checkPhoto:null,checks:[],customer:""});
+  const [form,setFormState]=useState<Workflow["form"]>({odo:"",odoPhoto:null,endOdo:"",endOdoPhoto:null,selfie:null,checkPhoto:null,checks:[],customer:""});
   const setForm=(patch:Partial<Workflow["form"]>)=>setFormState(v=>({...v,...patch}));
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   
@@ -95,7 +96,7 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
   },[trip?.driver_started_at,trip?.ended_at,settings.location_tracking_enabled,tripId]);
   const write: Workflow["write"] = async (rpc,args) => {
     setBusy(true);setError(null);
-    try { const r=await queueRpc(rpc,args); if(r.error && !r.queued) {setError(/wrong.*otp/i.test(r.error)?taskCopy(lang,"wrongOtp"):t("c.error"));return {ok:false,data:null,queued:false};} await load();return {ok:true,data:r.data,queued:!!r.queued}; }
+    try { const r=await queueRpc(rpc,args); if(r.error && !r.queued) {setError(/wrong.*otp/i.test(r.error)?taskCopy(lang,"wrongOtp"):friendlyKey(r.error)?friendlyError(r.error,t):t("c.error"));return {ok:false,data:null,queued:false};} await load();return {ok:true,data:r.data,queued:!!r.queued}; }
     catch { setError(t("c.error")); return {ok:false,data:null,queued:false}; } finally {setBusy(false);}
   };
   const update=(id:string,value:Partial<Draft>)=>setDrafts(all=>({...all,[id]:{...(all[id] ?? emptyDraft()),...value}}));
@@ -116,8 +117,8 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
   const due=Math.max(0,keptValue(orderLines,l=>stop?.status==="pending" ? goods.find(g=>g.order_line_id===l.id)?.delivered ?? l.qty:l.kept ?? l.qty)-Number(stop?.orders?.amount_paid ?? 0));
   const [localError,setLocalError]=useState<string|null>(null);
   const [menu,setMenu]=useState(false);
-  const {odo,odoPhoto,selfie,checkPhoto,checks}=w.form;
-  const setOdo=(odo:string)=>w.setForm({odo});const setOdoPhoto=(odoPhoto:string|null)=>w.setForm({odoPhoto});const setSelfie=(selfie:string|null)=>w.setForm({selfie});const setCheckPhoto=(checkPhoto:string|null)=>w.setForm({checkPhoto});const setChecks=(fn:(v:string[])=>string[])=>w.setForm({checks:fn(checks)});
+  const {selfie,checkPhoto,checks}=w.form;const isEnd=step==="end";const odo=isEnd?w.form.endOdo:w.form.odo;const odoPhoto=isEnd?w.form.endOdoPhoto:w.form.odoPhoto;
+  const setOdo=(v:string)=>{setLocalError(null);w.setForm(isEnd?{endOdo:v}:{odo:v});};const setOdoPhoto=(v:string|null)=>{setLocalError(null);w.setForm(isEnd?{endOdoPhoto:v}:{odoPhoto:v});};const setSelfie=(selfie:string|null)=>w.setForm({selfie});const setCheckPhoto=(checkPhoto:string|null)=>w.setForm({checkPhoto});const setChecks=(fn:(v:string[])=>string[])=>w.setForm({checks:fn(checks)});
   const [cashier,setCashier]=useState("");const [handoverAmt,setHandoverAmt]=useState("");
   const [reason,setReason]=useState("");const [note,setNote]=useState("");const [photo,setPhoto]=useState<string|null>(null);
   const [product,setProduct]=useState("");const [qty,setQty]=useState("");const customer=w.form.customer;const setCustomer=(customer:string)=>w.setForm({customer});const [paid,setPaid]=useState(true);const [expenseType,setExpenseType]=useState("");
@@ -187,12 +188,12 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
     }else{const r=await write("record_collection",{p_stop_id:stop.id,p_mode:mode,p_amount:amount,p_reference:draft.reference||null,p_photo_url:draft.payPhoto});if(!r.ok)return;}
     void go("done");
   };
-  const start=async()=>{
+  const start=async()=>{setLocalError(null);
     if(settings.require_start_odometer&&!odo){setLocalError(t("dr.needOdo"));return;}if(settings.require_start_odometer_photo&&!odoPhoto){setLocalError(t("dr.needPhoto"));return;}
     if(settings.require_start_selfie&&!selfie){void go("selfie");return;}if(settings.vehicle_check_enabled&&checks.length<settings.vehicle_check_items.length){void go("check");return;}
     const r=await write("start_trip",{p_trip_id:tripId,p_selfie_url:selfie,p_odometer:Number(odo),p_odometer_photo_url:odoPhoto,p_check_photo_url:checkPhoto,p_vehicle_check:settings.vehicle_check_enabled?settings.vehicle_check_items.map(item=>({item,ok:checks.includes(item)})):[]});if(r.ok)void home();
   };
-  const end=async()=>{if(actionable.length){setLocalError(t("c.error"));return;}if(settings.require_end_odometer&&!odo){setLocalError(t("dr.needOdo"));return;}if(settings.require_end_odometer_photo&&!odoPhoto){setLocalError(t("dr.needPhoto"));return;}const r=await write("end_trip",{p_trip_id:tripId,p_odometer:Number(odo),p_odometer_photo_url:odoPhoto});if(r.ok)void go("handover");};
+  const end=async()=>{setLocalError(null);if(actionable.length){setLocalError(t("err.stops_pending"));return;}if(settings.require_end_odometer&&!odo){setLocalError(t("dr.needOdo"));return;}if(settings.require_end_odometer_photo&&!odoPhoto){setLocalError(t("err.odo_photo"));return;}const r=await write("end_trip",{p_trip_id:tripId,p_odometer:Number(odo),p_odometer_photo_url:odoPhoto});if(r.ok)void go("handover");};
   const extraSave=async()=>{
     const c=await getCoords();const gps=c?{p_latitude:c.latitude,p_longitude:c.longitude}:{};let rpc="";let args:Record<string,unknown>={};
     if(step==="expense"){if(!(Number(qty)>0)||settings.expense_bill_photo_required&&!photo){setLocalError(t("c.required"));return;}rpc="add_trip_expense";args={p_trip_id:tripId,p_type:expenseType||settings.expense_types[0]||"other",p_amount:Number(qty),p_bill_photo_url:photo,p_note:note||null};}
