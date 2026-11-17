@@ -1,0 +1,4 @@
+-- Additive read-only helpers for the guard Entry flow (applied 2026-11-17).
+-- gate_staff_directory(): staff name/mobile/photo/role for "Kisse milna hai".
+-- gate_request_recipients(request_id): who an approval request went to, for Call / "Phone pe haan bola".
+-- Both require has_perm('gate','create') and stay inside the caller's company.
