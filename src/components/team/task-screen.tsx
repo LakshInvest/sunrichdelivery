@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLang } from "@/lib/l10n";
+import { usePhotoUploading } from "@/components/team/ui";
 
 export const taskInput = "w-full rounded-lg border border-input bg-background px-3 py-3 text-xl font-semibold outline-none focus:ring-2 focus:ring-ring";
 export function TaskScreen({ title, back, children, action, error, menu }: { title: string; back: ReactNode; children: ReactNode; action?: ReactNode; error?: string | null; menu?: ReactNode }) {
