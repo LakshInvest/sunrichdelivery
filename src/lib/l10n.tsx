@@ -11,6 +11,7 @@ export const LANGS: { code: Lang; label: string; short: string }[] = [
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "dr.tripOf": "Trip {i} of {n}",
   "sec.scanTitle": "Scan a pass",
   "sec.scanHint": "Gate pass, pickup or material pass",
   "sec.preparing": "Preparing scanner…",
@@ -508,6 +509,7 @@ const en: Dict = {
 };
 
 const hi: Dict = {
+  "dr.tripOf": "ट्रिप {i} / {n}",
   "sec.scanTitle": "स्कैन करो",
   "sec.scanHint": "गेट पास, पिकअप या माल पास",
   "sec.preparing": "स्कैनर तैयार हो रहा है…",
@@ -996,6 +998,7 @@ const hi: Dict = {
 };
 
 const mr: Dict = {
+  "dr.tripOf": "{n} पैकी ट्रिप {i}",
   "sec.scanTitle": "स्कॅन करा",
   "sec.scanHint": "गेट पास, पिकअप किंवा माल पास",
   "sec.preparing": "स्कॅनर तयार होत आहे…",

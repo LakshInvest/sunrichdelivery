@@ -14,7 +14,7 @@ import { buildUpiUri } from "@/components/team/upi-qr";
 import { PhotoInput, Spinner, StatusBadge, Stepper } from "@/components/team/ui";
 import { Button } from "@/components/ui/button";
 import { TaskScreen, BackIcon, MainAction, taskInput } from "@/components/team/task-screen";
-import { HomeScreen } from "@/components/team/role-home";
+import { HomeScreen, DriverTripPicker } from "@/components/team/role-home";
 import { openExternal, maxBrightness, startTripMode } from "@/lib/native";
 
 type Trip = { id: string; trip_no: string; status: string; gate_out_at: string | null; driver_started_at: string | null; ended_at: string | null; gate_in_at: string | null; unit_id: string; vehicles: { reg_no: string } | null };
@@ -204,7 +204,7 @@ export function DriverTaskPage({ step="home", stopId }: {step?:string;stopId?:st
   const back=<Link to={step==="home"?"/driver":"/driver/$tripId"} params={step==="home"?{}:{tripId}}><BackIcon /></Link>;
   const title=step==="stops"?copy("stops"):step==="bank"?copy("bank"):t(titleKeys[step] ?? "dr.title",{n:stops.length});
   const shell=(body:ReactNode,action?:ReactNode)=> <TaskScreen title={title} back={back} action={action} error={localError||error} menu={step==="home"?<Button variant="ghost" size="icon" aria-label={t("sec.menu")} onClick={()=>setMenu(v=>!v)}><MoreHorizontal /></Button>:undefined}>{body}</TaskScreen>;
-  const homeShell=(body:ReactNode,action?:ReactNode)=> <HomeScreen role={t("dr.title")} action={action} menu={<Button variant="ghost" size="icon" aria-label={t("sec.menu")} className="h-12 w-12 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" onClick={()=>setMenu(v=>!v)}><MoreHorizontal /></Button>}>{body}{(localError||error)&&<p role="alert" className="break-words text-lg font-semibold text-destructive">{localError||error}</p>}</HomeScreen>;
+  const homeShell=(body:ReactNode,action?:ReactNode)=> <HomeScreen role={t("dr.title")} action={action} menu={<Button variant="ghost" size="icon" aria-label={t("sec.menu")} className="h-12 w-12 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" onClick={()=>setMenu(v=>!v)}><MoreHorizontal /></Button>}><DriverTripPicker tripId={tripId} />{body}{(localError||error)&&<p role="alert" className="break-words text-lg font-semibold text-destructive">{localError||error}</p>}</HomeScreen>;
   const main=(label:string,fn:()=>void,disabled=false)=> <MainAction onClick={fn} disabled={busy||disabled}>{busy?t("c.loading"):label}</MainAction>;
   const small=(next:string,label:string)=> <Button asChild variant="link" className="justify-start px-0 text-base"><Link to="/driver/$tripId/$step" params={{tripId,step:next}} search={stop?{stopId:stop.id}:{}}>{label}</Link></Button>;
   if(w.loading)return (step==="home"?homeShell:shell)(<Spinner />);if(!trip)return (step==="home"?homeShell:shell)(<p>{t("c.error")}</p>);

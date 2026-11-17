@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { ChevronDown } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
@@ -64,5 +65,31 @@ export function EmptyState({ icon: Icon, text }: { icon: LucideIcon; text: strin
       <span className="grid h-14 w-14 place-items-center rounded-full bg-secondary text-navy"><Icon className="h-7 w-7" aria-hidden /></span>
       <p className="text-lg font-semibold text-muted-foreground">{text}</p>
     </div>
+  );
+}
+
+/** Driver home: "Trip 1 of 2 ▾" when the driver has more than one open trip; hidden with one. */
+export function DriverTripPicker({ tripId }: { tripId: string }) {
+  const { staff } = useTeamAuth();
+  const { t } = useLang();
+  const navigate = useNavigate();
+  const [trips, setTrips] = useState<{ id: string; trip_no: string; reg: string | null }[]>([]);
+  useEffect(() => {
+    if (!staff) return;
+    void supabase.from("trips").select("id,trip_no,vehicles(reg_no)").eq("driver_user_id", staff.id)
+      .in("status", ["planned", "loading", "loaded", "in_progress", "returned"]).order("trip_date").order("trip_no").limit(10)
+      .then(({ data }) => setTrips(((data ?? []) as unknown as { id: string; trip_no: string; vehicles: { reg_no: string } | null }[]).map((r) => ({ id: r.id, trip_no: r.trip_no, reg: r.vehicles?.reg_no ?? null }))));
+  }, [staff, tripId]);
+  if (trips.length < 2) return null;
+  const i = Math.max(0, trips.findIndex((r) => r.id === tripId));
+  return (
+    <label className="home-card relative flex min-h-14 items-center gap-2 px-4" data-testid="trip-picker">
+      <span className="flex-1 text-lg font-bold">{t("dr.tripOf", { i: i + 1, n: trips.length })}</span>
+      <ChevronDown className="h-5 w-5 text-navy" aria-hidden />
+      <select aria-label={t("dr.tripOf", { i: i + 1, n: trips.length })} className="absolute inset-0 opacity-0" value={tripId}
+        onChange={(e) => void navigate({ to: "/driver/$tripId", params: { tripId: e.target.value } })}>
+        {trips.map((r, k) => <option key={r.id} value={r.id}>{`${k + 1}. ${r.reg ?? ""} · ${r.trip_no}`}</option>)}
+      </select>
+    </label>
   );
 }

@@ -7294,6 +7294,7 @@ export type Database = {
         Args: { p_odometer?: number; p_qr_token: string }
         Returns: string
       }
+      gate_overdue_hours: { Args: never; Returns: number }
       gate_parcel_handover: {
         Args: { p_entry_id: string; p_received_by: string }
         Returns: undefined
