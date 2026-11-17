@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { useTeamAuth } from "@/lib/team-auth";
 import { TaskScreen, BackIcon } from "@/components/team/task-screen";
-import { Spinner } from "@/components/team/ui";
+import { Spinner, PhotoImg } from "@/components/team/ui";
 
 export const Route = createFileRoute("/_authenticated/my-qr")({
   head: () => ({ meta: [
@@ -31,6 +31,7 @@ function MyQr() {
   }, [t]);
   return <TaskScreen title={t("qr.mine")} back={<Link to="/profile"><BackIcon /></Link>} error={err}>
     <div className="home-card grid justify-items-center gap-4 p-6 text-center">
+      {staff?.photo && <div className="h-20 w-20 overflow-hidden rounded-full"><PhotoImg path={staff.photo} className="h-full w-full object-cover" /></div>}
       <p className="text-xl font-bold">{staff?.fullName ?? ""}</p>
       {code ? <div className="rounded-2xl bg-card p-3"><QRCode value={code} size={240} aria-label={t("qr.mine")} /></div> : <Spinner />}
       <p className="text-base font-semibold text-secondary">{t("qr.refresh", { n: left })}</p>

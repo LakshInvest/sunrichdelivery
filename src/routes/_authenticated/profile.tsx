@@ -4,6 +4,7 @@ import { ChevronRight, Info, Languages, LogOut, Repeat, Check, type LucideIcon ,
 import { useTeamAuth } from "@/lib/team-auth";
 import { LANGS, useLang } from "@/lib/l10n";
 import { BrandLogo, NoRoleScreen, Spinner } from "@/components/team/ui";
+import { ProfilePhoto } from "@/components/team/profile-photo";
 import { BottomNav, type TabRole } from "@/components/team/role-home";
 import { availableRoles, formatStaffMobile, readLastRole } from "@/lib/role-home";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
@@ -59,11 +60,12 @@ function Profile() {
           <section className="overflow-hidden rounded-2xl bg-card shadow-sm" data-testid="profile-card">
             <div className="bg-primary px-5 py-6">
               <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-primary-foreground/40 bg-primary-foreground/20 text-xl font-bold text-primary-foreground">{name.charAt(0).toUpperCase()}</div>
+                <ProfilePhoto name={name} />
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 break-words text-lg font-bold leading-tight text-primary-foreground">{name}</p>
                   <p className="text-sm text-primary-foreground/75">{formatStaffMobile(staff.mobile)}</p>
                   {currentRole && <p className="mt-1 text-sm font-semibold text-aqua">{t(`role.${currentRole.code}`)}</p>}
+                  <p className="mt-1 text-xs text-primary-foreground/70">{t("pf.nameNote")}</p>
                 </div>
               </div>
             </div>

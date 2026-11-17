@@ -388,11 +388,11 @@ export async function deleteOfflinePhoto(name: string) {
 }
 
 /** Take a photo with the native camera; returns a File, or null in a browser (use <input capture>). */
-export async function takeNativePhoto(): Promise<File | null> {
+export async function takeNativePhoto(front = false): Promise<File | null> {
   if (!isNative()) return null;
   try {
-    const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
-    const p = await Camera.getPhoto({ resultType: CameraResultType.DataUrl, source: CameraSource.Camera, quality: 70, width: 1280 });
+    const { Camera, CameraResultType, CameraSource, CameraDirection } = await import("@capacitor/camera");
+    const p = await Camera.getPhoto({ resultType: CameraResultType.DataUrl, source: CameraSource.Camera, quality: 70, width: 1280, ...(front ? { direction: CameraDirection.Front, allowEditing: false } : {}) });
     if (!p.dataUrl) return null;
     const blob = await (await fetch(p.dataUrl)).blob();
     return new File([blob], `photo-${Date.now()}.${p.format || "jpg"}`, { type: blob.type || "image/jpeg" });

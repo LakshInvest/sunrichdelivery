@@ -15,6 +15,7 @@ export type Staff = {
   lang: Lang;
   unitId: string | null;
   firmId: string | null;
+  photo: string | null;
 };
 
 export type SignInResult = { ok: true } | { ok: false; code: string; attemptsLeft?: number };
@@ -45,7 +46,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
     const [profileRes, permRes, roleCodes] = await Promise.all([
       supabase
         .from("user_profiles")
-        .select("id, full_name, mobile, email, preferred_language, unit_id, firm_id")
+        .select("id, full_name, mobile, email, preferred_language, unit_id, firm_id, photo_url")
         .eq("id", userId)
         .single(),
       supabase.rpc("my_permissions"),
@@ -68,6 +69,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
       lang,
       unitId: p.unit_id ?? null,
       firmId: p.firm_id ?? null,
+      photo: p.photo_url ?? null,
     };
   }, []);
 

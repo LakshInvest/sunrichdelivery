@@ -5637,6 +5637,44 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_photo_history: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          company_id: string
+          id: string
+          new_photo_path: string
+          old_photo_path: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          company_id: string
+          id?: string
+          new_photo_path: string
+          old_photo_path?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          company_id?: string
+          id?: string
+          new_photo_path?: string
+          old_photo_path?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_photo_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           company_id: string
@@ -10655,6 +10693,7 @@ export type Database = {
         Args: { p_address_id: string; p_order_ids: string[] }
         Returns: undefined
       }
+      set_my_photo: { Args: { p_path: string }; Returns: string }
       set_my_pin: {
         Args: { p_device_id: string; p_device_label?: string; p_pin: string }
         Returns: undefined
