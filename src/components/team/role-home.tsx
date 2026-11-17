@@ -21,7 +21,7 @@ export function HomeScreen({ role, menu, stats, children, action }: { role: stri
   return (
     <main className="home-screen">
       <div className="home-scroll">
-        <header className={`home-hero ${stats ? "pb-16" : "pb-7"}`}>
+        <header className={`home-hero ${stats ? "pb-20" : "pb-7"}`}>
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-aqua">{role}</p>
