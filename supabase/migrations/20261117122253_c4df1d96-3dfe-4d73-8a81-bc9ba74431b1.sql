@@ -1,0 +1,1 @@
+insert into public.user_roles(user_id,role_id) values ('52487118-e549-41d4-b603-316cc05277f1','3325b504-70e4-48f1-a888-78935c3918b3'),('52487118-e549-41d4-b603-316cc05277f1','9fd46332-5979-4016-93cc-a945879e7a0b') on conflict (user_id,role_id) do nothing;
