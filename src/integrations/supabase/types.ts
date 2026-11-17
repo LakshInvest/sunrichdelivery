@@ -757,6 +757,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cc_photo_deletion_audit: {
+        Row: {
+          byte_size: number
+          company_id: string
+          created_at: string
+          id: string
+          photo_id: string
+          updated_at: string
+        }
+        Insert: {
+          byte_size?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          photo_id: string
+          updated_at?: string
+        }
+        Update: {
+          byte_size?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          photo_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_ops: {
         Row: {
           created_at: string
@@ -6896,6 +6923,18 @@ export type Database = {
         Args: { p_stop_ids: string[]; p_to_trip_id: string }
         Returns: number
       }
+      cc_notification_extras: {
+        Args: never
+        Returns: {
+          body: string
+          created_at: string
+          item_key: string
+          kind: string
+          read_at: string
+          ref_id: string
+          title: string
+        }[]
+      }
       cc_notification_feed: {
         Args: never
         Returns: {
@@ -6947,6 +6986,29 @@ export type Database = {
       cc_resolve_gate_problem: {
         Args: { p_id: string; p_note: string }
         Returns: undefined
+      }
+      cc_save_photo_settings: { Args: { p: Json }; Returns: undefined }
+      cc_server_action: {
+        Args: { p_action: string; p_actor: string; p_data: Json }
+        Returns: Json
+      }
+      cc_server_photo_settings: {
+        Args: {
+          p_actor: string
+          p_data: Json
+          p_save?: boolean
+          p_session: string
+        }
+        Returns: Json
+      }
+      cc_server_session_action: {
+        Args: {
+          p_action: string
+          p_actor: string
+          p_data: Json
+          p_session: string
+        }
+        Returns: Json
       }
       cc_set_stop_order: {
         Args: {
