@@ -217,7 +217,7 @@ export async function scanCode(onPreparing?: (preparing: boolean) => void): Prom
         await new Promise<void>((resolve, reject) => {
           const timer = setTimeout(() => reject(new Error("scanner install timeout")), 60000);
           void BarcodeScanner.addListener("googleBarcodeScannerModuleInstallProgress", (e) => {
-            // 4 = COMPLETED, 3 = FAILED, 5 = CANCELED (GoogleBarcodeScannerModuleInstallState)
+            // GoogleBarcodeScannerModuleInstallState: 4 = COMPLETED, 3 = CANCELED, 5 = FAILED
             if (Number(e.state) === 4) { clearTimeout(timer); resolve(); }
             if (Number(e.state) === 3 || Number(e.state) === 5) { clearTimeout(timer); reject(new Error("scanner install failed")); }
           });
