@@ -34,7 +34,7 @@ const W: Record<string, [string, string, string]> = {
   vehicleNo: ["Vehicle number", "गाड़ी नंबर", "गाडी नंबर"], driverMobile: ["Driver mobile", "ड्राइवर मोबाइल", "ड्रायव्हर मोबाइल"], driverName: ["Driver name", "ड्राइवर का नाम", "ड्रायव्हरचे नाव"],
   driverPhoto: ["Driver photo", "ड्राइवर फोटो", "ड्रायव्हर फोटो"], supplierName: ["Supplier name", "सप्लायर का नाम", "पुरवठादाराचे नाव"], challan: ["Challan photo", "चालान फोटो", "चलन फोटो"],
   courierMobile: ["Delivery person's mobile", "डिलीवरी वाले का मोबाइल", "डिलिव्हरी करणाऱ्याचा मोबाइल"], needMobile: ["Enter the 10-digit mobile", "10 अंकों का मोबाइल लिखें", "10 अंकी मोबाइल लिहा"],
-  courier: ["Courier", "कूरियर", "कुरिअर"], parcelPhoto: ["Parcel photo", "पार्सल फोटो", "पार्सल फोटो"], kept: ["Kept it", "रख लिया", "ठेवले"], count: ["Parcels", "पार्सल गिनती", "पार्सल संख्या"],
+  courier: ["Courier", "कूरियर", "कुरिअर"], courierPick: ["Choose courier", "कूरियर चुनें", "कुरिअर निवडा"], courierOther: ["Other", "दूसरा (Other)", "दुसरा (Other)"], courierName: ["Courier name", "कूरियर का नाम", "कुरिअरचे नाव"], parcelPhoto: ["Parcel photo", "पार्सल फोटो", "पार्सल फोटो"], kept: ["Kept it", "रख लिया", "ठेवले"], count: ["Parcels", "पार्सल गिनती", "पार्सल संख्या"],
   p_meeting: ["Meeting", "मीटिंग", "मीटिंग"], p_delivery: ["Deliver goods", "माल देना", "माल देणे"], p_interview: ["Interview", "इंटरव्यू", "मुलाखत"], p_service: ["Service", "सर्विस", "सर्व्हिस"], p_other: ["Other", "अन्य", "इतर"],
   needName: ["Enter the name", "नाम लिखें", "नाव लिहा"], needPhoto: ["Take the photo", "फोटो लें", "फोटो घ्या"], needHost: ["Pick a person", "व्यक्ति चुनें", "व्यक्ती निवडा"], needVehicle: ["Enter vehicle number like MH24AB1234", "गाड़ी नंबर MH24AB1234 जैसा लिखें", "गाडी नंबर MH24AB1234 असा लिहा"],
   needChallan: ["Take the challan photo", "चालान फोटो लें", "चलन फोटो घ्या"], already: ["Already inside", "पहले से अंदर है", "आधीच आत आहे"], err: ["Something went wrong. Try again.", "कुछ गड़बड़ हुई। दोबारा करें।", "काहीतरी चुकले. पुन्हा करा."],
@@ -61,6 +61,7 @@ export function GateEntry({ step, draft, update, photoRule, refresh }: { step: s
   const [phoneBy, setPhoneBy] = useState("");
   const [phoneNote, setPhoneNote] = useState("");
   const [couriers, setCouriers] = useState<string[]>([]);
+  const [otherCourier, setOtherCourier] = useState(false);
   const [suppliers, setSuppliers] = useState<string[]>([]);
   const go = (s: string) => navigate({ to: "/security/$step", params: { step: s } });
   const home = () => navigate({ to: "/security" });
@@ -74,10 +75,11 @@ export function GateEntry({ step, draft, update, photoRule, refresh }: { step: s
   }, [step]);
   useEffect(() => {
     if (step !== "e-parcel" && step !== "e-vehicle") return;
-    void supabase.from("gate_entries").select("courier_name,from_place,entry_type").in("entry_type", ["parcel", "supplier"]).order("in_at", { ascending: false }).limit(200).then(({ data }) => {
-      const rows = (data ?? []) as { courier_name: string | null; from_place: string | null; entry_type: string }[];
-      setCouriers([...new Set(rows.filter((r) => r.entry_type === "parcel" && r.courier_name).map((r) => r.courier_name!))].slice(0, 8));
-      setSuppliers([...new Set(rows.filter((r) => r.entry_type === "supplier" && r.from_place).map((r) => r.from_place!))]);
+    void supabase.from("courier_companies" as never).select("name").eq("active", true).order("sort_order").order("name").then(({ data }) => {
+      setCouriers((((data ?? []) as unknown) as { name: string }[]).map((r) => r.name).filter((n) => !/^qa/i.test(n)));
+    });
+    void supabase.from("gate_entries").select("from_place").eq("entry_type", "supplier").order("in_at", { ascending: false }).limit(200).then(({ data }) => {
+      setSuppliers([...new Set(((data ?? []) as { from_place: string | null }[]).map((r) => r.from_place).filter((x): x is string => !!x))]);
     });
   }, [step]);
 
@@ -181,7 +183,7 @@ export function GateEntry({ step, draft, update, photoRule, refresh }: { step: s
   }
 
   if (step === "e-parcel") return shell(w("parcel"), <>
-    <div><p className="mb-2 text-lg font-semibold">{w("courier")}</p>{couriers.length > 0 && <div className="mb-2 flex flex-wrap gap-2">{couriers.map((c) => <button key={c} type="button" className={chip(draft.courier_name === c)} onClick={() => update({ courier_name: c })}>{c}</button>)}</div>}<input aria-label={w("courier")} className={taskInput} value={draft.courier_name} onChange={(e) => update({ courier_name: e.target.value })} /></div>
+    <div><p className="mb-2 text-lg font-semibold">{w("courier")}</p><select aria-label={w("courier")} className={taskInput} value={otherCourier ? "__other" : draft.courier_name} onChange={(e) => { if (e.target.value === "__other") { setOtherCourier(true); update({ courier_name: "" }); } else { setOtherCourier(false); update({ courier_name: e.target.value }); } }}><option value="">{w("courierPick")}</option>{couriers.map((c) => <option key={c} value={c}>{c}</option>)}<option value="__other">{w("courierOther")}</option></select>{otherCourier && <input aria-label={w("courierOther")} placeholder={w("courierName")} className={`${taskInput} mt-2`} value={draft.courier_name} onChange={(e) => update({ courier_name: e.target.value })} />}</div>
     {mobileField(w("courierMobile"))}
     <label className="grid gap-2 text-lg font-semibold">{w("count")}<input aria-label={w("count")} inputMode="numeric" className={taskInput} value={draft.parcel_count} onChange={(e) => update({ parcel_count: Math.max(1, Number(e.target.value.replace(/\D/g, "")) || 1) })} /></label>
     <PhotoInput userId={staff?.id ?? ""} kind="gate-parcel" label={w("parcelPhoto")} value={draft.photo_path || null} onChange={(p) => update({ photo_path: p ?? "" })} />

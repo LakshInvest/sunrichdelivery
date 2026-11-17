@@ -16,7 +16,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { TeamAuthProvider, useTeamAuth } from "../lib/team-auth";
 import { LanguageProvider, type Lang } from "../lib/l10n";
 import { supabase } from "../integrations/supabase/client";
-import { initNative, registerPush } from "../lib/native";
+import { capFontScale, initNative, registerPush } from "../lib/native";
 import { LaunchScreen, useLaunchGate } from "../components/team/launch-screen";
 
 function NotFoundComponent() {
@@ -155,6 +155,8 @@ function NativeBridge() {
   const router = useRouter();
   const { staff } = useTeamAuth();
   useEffect(() => {
+    capFontScale();
+    void document.fonts?.ready.then(() => capFontScale());
     void initNative((path) => void router.navigate({ to: path }));
   }, [router]);
   useEffect(() => {

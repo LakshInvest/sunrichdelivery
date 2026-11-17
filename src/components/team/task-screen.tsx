@@ -10,7 +10,7 @@ export function TaskScreen({ title, back, children, action, error, menu }: { tit
   return <main className="task-screen">
     <header className="flex h-20 shrink-0 items-center gap-3 border-b border-border px-4 pt-[env(safe-area-inset-top)]">
       <Button asChild variant="ghost" size="icon" className="h-12 w-12 shrink-0" aria-label={t("c.back")}>{back}</Button>
-      <h1 className="min-w-0 flex-1 break-words text-xl font-bold">{title}</h1>{menu}
+      <h1 className="min-w-0 flex-1 break-words text-lg font-bold leading-tight">{title}</h1>{menu}
     </header>
     <section className="task-content"><div className="grid gap-5">{children}{error && <p role="alert" className="break-words text-lg font-semibold text-destructive">{error}</p>}</div></section>
     {action && <footer className="task-action" data-testid="task-action">{action}</footer>}

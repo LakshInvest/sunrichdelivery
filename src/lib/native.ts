@@ -437,3 +437,24 @@ export async function maxBrightness(): Promise<() => void> {
     return () => {};
   }
 }
+
+/**
+ * Limit how much the phone's own font-size setting enlarges the app (max 115%).
+ * Measures rendered text against canvas text (canvas ignores the system zoom) and
+ * shrinks the root size so the effective scale stays at the cap. Browser-safe.
+ */
+export function capFontScale(max = 1.15) {
+  if (typeof document === "undefined") return;
+  const probe = document.createElement("span");
+  probe.textContent = "MMMMMMMMMM";
+  probe.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap;font:16px Inter,sans-serif;";
+  document.body.appendChild(probe);
+  const ctx = document.createElement("canvas").getContext("2d");
+  if (!ctx) { probe.remove(); return; }
+  ctx.font = "16px Inter,sans-serif";
+  const ratio = probe.getBoundingClientRect().width / ctx.measureText(probe.textContent).width;
+  probe.remove();
+  const root = document.documentElement;
+  if (ratio > max + 0.02) root.style.fontSize = `${(16 * max) / ratio}px`;
+  else root.style.removeProperty("font-size");
+}

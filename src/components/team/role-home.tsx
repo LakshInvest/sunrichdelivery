@@ -48,7 +48,7 @@ export function SummaryCard({ title, items }: { title: string; items: { label: s
     <section className="home-card p-4" data-testid="summary-card">
       <h2 className="text-sm font-bold text-muted-foreground">{title}</h2>
       <div className="mt-3 grid gap-2" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
-        {items.map((it) => { const body = <><p className="font-display text-2xl font-bold text-primary">{it.value}</p><p className="truncate text-xs font-semibold text-muted-foreground">{it.label}</p></>; return it.onClick ? <button key={it.label} type="button" onClick={it.onClick} className="min-w-0 rounded-xl bg-secondary/10 p-3 text-left active:scale-95">{body}</button> : <div key={it.label} className="min-w-0 rounded-xl bg-secondary/10 p-3">{body}</div>; })}
+        {items.map((it) => { const body = <><p className="font-display text-2xl font-bold text-primary">{it.value}</p><p className="line-clamp-2 text-xs font-semibold leading-tight text-muted-foreground [overflow-wrap:anywhere]">{it.label}</p></>; return it.onClick ? <button key={it.label} type="button" onClick={it.onClick} className="min-w-0 rounded-xl bg-secondary/10 p-3 text-left active:scale-95">{body}</button> : <div key={it.label} className="min-w-0 rounded-xl bg-secondary/10 p-3">{body}</div>; })}
       </div>
     </section>
   );
@@ -87,7 +87,7 @@ export function HomeScreen({ role, menu, stats, children, action, tabs }: { role
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-aqua">{role}</p>
-              <h1 className="mt-1 break-words font-display text-2xl font-bold">{t("home.greeting", { name: staff?.fullName?.split(" ")[0] ?? "" })}</h1>
+              <h1 className="mt-1 break-words font-display text-xl font-bold leading-tight">{t("home.greeting", { name: staff?.fullName?.split(" ")[0] ?? "" })}</h1>
               <p className="mt-1 break-words text-sm opacity-80">{[unit, date].filter(Boolean).join(" · ")}</p>
             </div>
             <div className="flex shrink-0 items-center gap-1">{menu}</div>
@@ -105,7 +105,7 @@ export function HomeScreen({ role, menu, stats, children, action, tabs }: { role
 export function StatCard({ icon: Icon, value, label, to, step }: { icon: LucideIcon; value: number; label: string; to: "/security/$step"; step: string }) {
   return (
     <Link to={to} params={{ step }} className="home-card flex min-h-24 flex-col justify-between gap-2 p-4 active:scale-[0.98]">
-      <span className="flex items-center justify-between gap-2"><span className="font-display text-3xl font-bold text-primary">{value}</span><span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary/10 text-secondary"><Icon className="h-5 w-5" aria-hidden /></span></span>
+      <span className="flex items-center justify-between gap-2"><span className="font-display text-2xl font-bold text-primary">{value}</span><span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary/10 text-secondary"><Icon className="h-5 w-5" aria-hidden /></span></span>
       <span className="break-words text-sm font-semibold text-muted-foreground">{label}</span>
     </Link>
   );

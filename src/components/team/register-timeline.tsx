@@ -19,6 +19,9 @@ export function rowGroup(r: Pick<Row, "entry_type" | "vehicle_no">): Exclude<Reg
   return "person";
 }
 
+/** "TRP/261117/0002" → "Trip 2". */
+export function shortTrip(no: string) { const n = Number((no.split("/").pop() ?? "").replace(/\D/g, "")); return n ? `Trip ${n}` : (no.split("/").pop() ?? no); }
+
 export function RegisterTimeline({ insideIds }: { insideIds: string[] }) {
   const { t } = useLang();
   const [day, setDay] = useState(istToday());
@@ -34,21 +37,24 @@ export function RegisterTimeline({ insideIds }: { insideIds: string[] }) {
   return (
     <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
       <input type="date" aria-label={t("sec.date")} value={day} max={istToday()} onChange={(e) => e.target.value && setDay(e.target.value)} className="h-12 w-full min-w-0 rounded-2xl border border-border bg-card px-4 text-base" />
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="relative"><div className="flex gap-2 overflow-x-auto pb-1 pr-10 [scrollbar-width:none]">
         {FILTERS.map((k) => (
           <button key={k} type="button" aria-pressed={f === k} onClick={() => setF(k)} className={`h-10 shrink-0 whitespace-nowrap rounded-full px-4 text-sm font-semibold ${f === k ? "bg-primary text-primary-foreground" : "bg-card text-foreground border border-border"}`}>{t(`sec.rf.${k}`)}</button>
         ))}
-      </div>
+      </div><span aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent" /></div>
       {rows === null && <Spinner label={t("c.loading")} />}
       {rows && !shown.length && <EmptyState icon={ClipboardList} text={t("sec.regEmpty")} />}
       {shown.map((r, i) => {
         const g = rowGroup(r); const out = r.kind.endsWith("_out");
+        const manual = g !== "trip" || /manual/.test(r.detail ?? "");
+        const name = r.vehicle_no && g !== "person" ? (g === "trip" ? `${shortTrip(r.title)} · ${r.vehicle_no}` : r.vehicle_no) : r.title;
+        const initials = (r.title || "").split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join("").toUpperCase();
+        const Icon = g === "trip" || g === "vehicle" ? Truck : Users;
         const body = (
           <div className="home-card flex items-center gap-3 p-3" data-testid="reg-row">
-            <span className="w-[4.5rem] shrink-0 whitespace-nowrap text-sm font-bold">{istDisplay(r.at, { hour: "numeric", minute: "2-digit" })}</span>
-            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-muted">{r.photo_path ? <PhotoImg path={r.photo_path} className="h-full w-full object-cover" /> : g === "trip" || g === "vehicle" ? <Truck className="m-3 h-6 w-6 text-muted-foreground" /> : <Users className="m-3 h-6 w-6 text-muted-foreground" />}</div>
-            <div className="min-w-0 flex-1"><p className="truncate font-bold">{r.vehicle_no && g !== "person" ? r.vehicle_no : r.title}</p><p className="truncate text-sm text-muted-foreground">{[g === "trip" ? r.title : null, r.by_name].filter(Boolean).join(" · ")}</p></div>
-            <span className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm font-semibold ${out ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>{t(out ? "sec.kind.entry_out" : "sec.kind.entry_in")}</span>
+            <span className="grid w-16 shrink-0 justify-items-start gap-1"><span className="whitespace-nowrap text-sm font-bold">{istDisplay(r.at, { hour: "numeric", minute: "2-digit" })}</span><span className={`chip ${out ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>{t(out ? "sec.kind.entry_out" : "sec.kind.entry_in")}</span></span>
+            <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-secondary/10 text-primary">{r.photo_path ? <PhotoImg path={r.photo_path} className="h-full w-full object-cover" /> : g === "person" && initials ? <span className="text-base font-bold">{initials}</span> : <Icon className="h-5 w-5" aria-hidden />}</div>
+            <div className="min-w-0 flex-1"><p className="text-base font-bold leading-snug [overflow-wrap:anywhere]">{name}</p><p className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground"><span className="truncate">{g === "trip" ? (r.detail ?? "").replace(/ · manual$/, "") || r.by_name : r.by_name}</span><span className="chip bg-muted text-muted-foreground">{manual ? t("sec.tagManual") : "QR"}</span></p></div>
           </div>);
         return r.entry_id && insideIds.includes(r.entry_id) ? <Link key={i} to="/security/$step" params={{ step: "out" }} search={{ entryId: r.entry_id }}>{body}</Link> : <div key={i}>{body}</div>;
       })}
