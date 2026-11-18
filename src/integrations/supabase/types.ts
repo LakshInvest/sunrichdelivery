@@ -6931,6 +6931,8 @@ export type Database = {
           longitude: number | null
           order_id: string
           otp_verified: boolean
+          payment_reason: string | null
+          payment_resolution: string | null
           photo_url: string | null
           seq: number
           signature_url: string | null
@@ -6954,6 +6956,8 @@ export type Database = {
           longitude?: number | null
           order_id: string
           otp_verified?: boolean
+          payment_reason?: string | null
+          payment_resolution?: string | null
           photo_url?: string | null
           seq?: number
           signature_url?: string | null
@@ -6977,6 +6981,8 @@ export type Database = {
           longitude?: number | null
           order_id?: string
           otp_verified?: boolean
+          payment_reason?: string | null
+          payment_resolution?: string | null
           photo_url?: string | null
           seq?: number
           signature_url?: string | null
@@ -10620,6 +10626,17 @@ export type Database = {
         Returns: undefined
       }
       close_query: { Args: { p_query_id: string }; Returns: undefined }
+      collect_delivery_payment: {
+        Args: {
+          p_amount: number
+          p_mode: string
+          p_photo_url?: string
+          p_reason?: string
+          p_reference?: string
+          p_stop_id: string
+        }
+        Returns: string
+      }
       collect_stop_payment: {
         Args: {
           p_amount: number
