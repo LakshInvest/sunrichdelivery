@@ -1,0 +1,4 @@
+DO $$ DECLARE d text; BEGIN SELECT pg_get_functiondef('public.receive_returns(uuid,jsonb,text)'::regprocedure) INTO d;
+d=replace(d,'if v_t.id is null then raise exception ''Trip not found''; end if;','if v_t.id is null OR v_t.company_id IS DISTINCT FROM public.my_company_id() then raise exception ''Trip not found''; end if;');
+d=replace(d,'insert into public.trip_returns (trip_id, product_id, kind, expected_qty, actual_qty, note)','IF coalesce((l->>''actual'')::numeric,0)<0 THEN RAISE EXCEPTION ''Quantity cannot be negative''; END IF; insert into public.trip_returns (trip_id, product_id, kind, expected_qty, actual_qty, note)');
+d=replace(d,'case when coalesce((l->>''expected'')::numeric,0)>0 then e.qty*coalesce((l->>''actual'')::numeric,0)/(l->>''expected'')::numeric else 0 end','e.qty*coalesce((l->>''actual'')::numeric,0)/nullif((SELECT sum(x.qty) FROM public.trip_expired_returns x WHERE x.trip_id=p_trip_id AND x.product_id=e.product_id),0)'); EXECUTE d;END $$;
