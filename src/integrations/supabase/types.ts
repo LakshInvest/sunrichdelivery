@@ -9698,6 +9698,15 @@ export type Database = {
         }[]
       }
       cc71_reorder_couriers: { Args: { p_ids: string[] }; Returns: undefined }
+      cc72_update_staff: {
+        Args: {
+          p_full_name?: string
+          p_photo_path?: string
+          p_set_photo?: boolean
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       check_pin: {
         Args: {
           p_device_id: string
