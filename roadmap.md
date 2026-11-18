@@ -136,5 +136,5 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 ## Prompt-46 profile corrections
 - [x] Camera/gallery sheet, shared cropper, Base64 Android conversion and restored-result handling.
 - [x] Own-name edit (two letters), own-photo removal and immutable history; current identities in Register/QR/scan.
-- [ ] Hindi 360px end-to-end checks, Android bridge tests and screenshots.
+- [x] Hindi 360px real QA gallery/crop/save/remove/name/QR/manual scan/Register checks; native bridge and cropper path tests; screenshots saved. QA name restored; test photo removed, history retained.
 - [ ] Physical Android camera/gallery and process-recreation check — Android device unavailable in sandbox.

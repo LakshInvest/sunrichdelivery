@@ -1,0 +1,1 @@
+ALTER TABLE public.staff_photo_history ALTER COLUMN new_photo_path DROP NOT NULL;

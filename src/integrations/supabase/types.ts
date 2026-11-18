@@ -5673,7 +5673,7 @@ export type Database = {
           changed_by: string
           company_id: string
           id: string
-          new_photo_path: string
+          new_photo_path: string | null
           old_photo_path: string | null
           user_id: string
         }
@@ -5682,7 +5682,7 @@ export type Database = {
           changed_by: string
           company_id: string
           id?: string
-          new_photo_path: string
+          new_photo_path?: string | null
           old_photo_path?: string | null
           user_id: string
         }
@@ -5691,7 +5691,7 @@ export type Database = {
           changed_by?: string
           company_id?: string
           id?: string
-          new_photo_path?: string
+          new_photo_path?: string | null
           old_photo_path?: string | null
           user_id?: string
         }
