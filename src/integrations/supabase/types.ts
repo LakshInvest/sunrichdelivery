@@ -1328,6 +1328,81 @@ export type Database = {
           },
         ]
       }
+      customer_crate_movements: {
+        Row: {
+          company_id: string
+          crates_left: number
+          crates_picked_up: number
+          created_at: string
+          created_by: string
+          customer_id: string
+          id: string
+          stop_id: string
+          trip_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          crates_left?: number
+          crates_picked_up?: number
+          created_at?: string
+          created_by?: string
+          customer_id: string
+          id?: string
+          stop_id: string
+          trip_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          crates_left?: number
+          crates_picked_up?: number
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          id?: string
+          stop_id?: string
+          trip_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_crate_movements_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_crate_movements_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: true
+            referencedRelation: "cc70_report_trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_crate_movements_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: true
+            referencedRelation: "trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_crate_movements_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_crate_movements_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_documents: {
         Row: {
           created_at: string
@@ -1957,6 +2032,9 @@ export type Database = {
           delivered_qty: number
           empties_returned: number
           order_line_id: string
+          reason_code: string | null
+          reason_note: string | null
+          reason_photo_url: string | null
           refused_qty: number
           short_qty: number
           stop_id: string
@@ -1966,6 +2044,9 @@ export type Database = {
           delivered_qty?: number
           empties_returned?: number
           order_line_id: string
+          reason_code?: string | null
+          reason_note?: string | null
+          reason_photo_url?: string | null
           refused_qty?: number
           short_qty?: number
           stop_id: string
@@ -1975,6 +2056,9 @@ export type Database = {
           delivered_qty?: number
           empties_returned?: number
           order_line_id?: string
+          reason_code?: string | null
+          reason_note?: string | null
+          reason_photo_url?: string | null
           refused_qty?: number
           short_qty?: number
           stop_id?: string
@@ -2019,24 +2103,28 @@ export type Database = {
           allow_pickup_only: boolean
           allow_spot_sale: boolean
           allow_upi: boolean
+          arrival_distance_limit_m: number
           arrived_button_enabled: boolean
           ask_office_no_reply: string
           ask_office_wait_minutes: number
           auto_credit_block_enabled: boolean
           collect_old_dues: boolean
           company_id: string
+          crates_at_customer_enabled: boolean
           default_language: string
           distributor_reply_minutes: number
           expense_bill_photo_required: boolean
           expense_limit_per_trip: number
           expense_types: string[]
           expenses_enabled: boolean
+          expired_returns_enabled: boolean
           failed_reasons: string[]
           gate_approval_wait_minutes: number
           gate_pass_print: boolean
           location_at_each_stop: boolean
           location_interval_minutes: number
           location_tracking_enabled: boolean
+          office_emergency_number: string | null
           photo_days_challan: number
           photo_days_cheque: number
           photo_days_delivery: number
@@ -2078,24 +2166,28 @@ export type Database = {
           allow_pickup_only?: boolean
           allow_spot_sale?: boolean
           allow_upi?: boolean
+          arrival_distance_limit_m?: number
           arrived_button_enabled?: boolean
           ask_office_no_reply?: string
           ask_office_wait_minutes?: number
           auto_credit_block_enabled?: boolean
           collect_old_dues?: boolean
           company_id: string
+          crates_at_customer_enabled?: boolean
           default_language?: string
           distributor_reply_minutes?: number
           expense_bill_photo_required?: boolean
           expense_limit_per_trip?: number
           expense_types?: string[]
           expenses_enabled?: boolean
+          expired_returns_enabled?: boolean
           failed_reasons?: string[]
           gate_approval_wait_minutes?: number
           gate_pass_print?: boolean
           location_at_each_stop?: boolean
           location_interval_minutes?: number
           location_tracking_enabled?: boolean
+          office_emergency_number?: string | null
           photo_days_challan?: number
           photo_days_cheque?: number
           photo_days_delivery?: number
@@ -2137,24 +2229,28 @@ export type Database = {
           allow_pickup_only?: boolean
           allow_spot_sale?: boolean
           allow_upi?: boolean
+          arrival_distance_limit_m?: number
           arrived_button_enabled?: boolean
           ask_office_no_reply?: string
           ask_office_wait_minutes?: number
           auto_credit_block_enabled?: boolean
           collect_old_dues?: boolean
           company_id?: string
+          crates_at_customer_enabled?: boolean
           default_language?: string
           distributor_reply_minutes?: number
           expense_bill_photo_required?: boolean
           expense_limit_per_trip?: number
           expense_types?: string[]
           expenses_enabled?: boolean
+          expired_returns_enabled?: boolean
           failed_reasons?: string[]
           gate_approval_wait_minutes?: number
           gate_pass_print?: boolean
           location_at_each_stop?: boolean
           location_interval_minutes?: number
           location_tracking_enabled?: boolean
+          office_emergency_number?: string | null
           photo_days_challan?: number
           photo_days_cheque?: number
           photo_days_delivery?: number
@@ -2422,6 +2518,54 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expired_scrap_stock: {
+        Row: {
+          company_id: string
+          created_at: string
+          expired_return_id: string
+          id: string
+          product_id: string
+          qty: number
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          expired_return_id: string
+          id?: string
+          product_id: string
+          qty: number
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          expired_return_id?: string
+          id?: string
+          product_id?: string
+          qty?: number
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expired_scrap_stock_expired_return_id_fkey"
+            columns: ["expired_return_id"]
+            isOneToOne: true
+            referencedRelation: "trip_expired_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expired_scrap_stock_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -5996,6 +6140,7 @@ export type Database = {
           bill_photo_url: string | null
           created_at: string
           created_by: string | null
+          diesel_litres: number | null
           expense_type: string
           id: string
           note: string | null
@@ -6008,6 +6153,7 @@ export type Database = {
           bill_photo_url?: string | null
           created_at?: string
           created_by?: string | null
+          diesel_litres?: number | null
           expense_type: string
           id?: string
           note?: string | null
@@ -6020,6 +6166,7 @@ export type Database = {
           bill_photo_url?: string | null
           created_at?: string
           created_by?: string | null
+          diesel_litres?: number | null
           expense_type?: string
           id?: string
           note?: string | null
@@ -6036,6 +6183,103 @@ export type Database = {
           },
           {
             foreignKeyName: "trip_expenses_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_expired_returns: {
+        Row: {
+          company_id: string
+          created_at: string
+          customer_id: string
+          driver_user_id: string
+          id: string
+          office_action: string | null
+          office_note: string | null
+          photo_url: string
+          product_id: string
+          qty: number
+          received_at: string | null
+          received_qty: number | null
+          stop_id: string
+          trip_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          customer_id: string
+          driver_user_id?: string
+          id?: string
+          office_action?: string | null
+          office_note?: string | null
+          photo_url: string
+          product_id: string
+          qty: number
+          received_at?: string | null
+          received_qty?: number | null
+          stop_id: string
+          trip_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          customer_id?: string
+          driver_user_id?: string
+          id?: string
+          office_action?: string | null
+          office_note?: string | null
+          photo_url?: string
+          product_id?: string
+          qty?: number
+          received_at?: string | null
+          received_qty?: number | null
+          stop_id?: string
+          trip_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_expired_returns_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_expired_returns_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_expired_returns_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_expired_returns_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "trip_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_expired_returns_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "cc70_report_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_expired_returns_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
@@ -6320,6 +6564,11 @@ export type Database = {
       }
       trip_stops: {
         Row: {
+          arrival_distance_m: number | null
+          arrival_latitude: number | null
+          arrival_longitude: number | null
+          arrival_note: string | null
+          arrival_reason: string | null
           arrived_at: string | null
           delivered_at: string | null
           do_later_at: string | null
@@ -6338,6 +6587,11 @@ export type Database = {
           trip_id: string
         }
         Insert: {
+          arrival_distance_m?: number | null
+          arrival_latitude?: number | null
+          arrival_longitude?: number | null
+          arrival_note?: string | null
+          arrival_reason?: string | null
           arrived_at?: string | null
           delivered_at?: string | null
           do_later_at?: string | null
@@ -6356,6 +6610,11 @@ export type Database = {
           trip_id: string
         }
         Update: {
+          arrival_distance_m?: number | null
+          arrival_latitude?: number | null
+          arrival_longitude?: number | null
+          arrival_note?: string | null
+          arrival_reason?: string | null
           arrived_at?: string | null
           delivered_at?: string | null
           do_later_at?: string | null
@@ -9371,6 +9630,17 @@ export type Database = {
         }
         Returns: string
       }
+      add_delivery_expense: {
+        Args: {
+          p_amount: number
+          p_bill_photo_url?: string
+          p_litres?: number
+          p_note?: string
+          p_trip_id: string
+          p_type: string
+        }
+        Returns: string
+      }
       add_trip_expense: {
         Args: {
           p_amount: number
@@ -9785,6 +10055,16 @@ export type Database = {
         Returns: undefined
       }
       close_query: { Args: { p_query_id: string }; Returns: undefined }
+      collect_stop_payment: {
+        Args: {
+          p_amount: number
+          p_mode: string
+          p_photo_url?: string
+          p_reference?: string
+          p_stop_id: string
+        }
+        Returns: string
+      }
       confirm_cash_handover: { Args: { p_id: string }; Returns: undefined }
       confirm_trip_crates_loaded: {
         Args: { p_crates: number; p_reason?: string; p_trip_id: string }
@@ -10225,24 +10505,28 @@ export type Database = {
           allow_pickup_only: boolean
           allow_spot_sale: boolean
           allow_upi: boolean
+          arrival_distance_limit_m: number
           arrived_button_enabled: boolean
           ask_office_no_reply: string
           ask_office_wait_minutes: number
           auto_credit_block_enabled: boolean
           collect_old_dues: boolean
           company_id: string
+          crates_at_customer_enabled: boolean
           default_language: string
           distributor_reply_minutes: number
           expense_bill_photo_required: boolean
           expense_limit_per_trip: number
           expense_types: string[]
           expenses_enabled: boolean
+          expired_returns_enabled: boolean
           failed_reasons: string[]
           gate_approval_wait_minutes: number
           gate_pass_print: boolean
           location_at_each_stop: boolean
           location_interval_minutes: number
           location_tracking_enabled: boolean
+          office_emergency_number: string | null
           photo_days_challan: number
           photo_days_cheque: number
           photo_days_delivery: number
@@ -10326,6 +10610,10 @@ export type Database = {
       my_session_is_valid: { Args: never; Returns: boolean }
       my_staff_qr: { Args: never; Returns: string }
       my_staff_session_verified: { Args: never; Returns: boolean }
+      my_trip_account: {
+        Args: { p_limit?: number; p_month: string; p_offset?: number }
+        Returns: Json
+      }
       next_document_number: {
         Args: {
           p_date?: string
@@ -10552,6 +10840,10 @@ export type Database = {
             }
             Returns: string
           }
+      record_customer_crates: {
+        Args: { p_left: number; p_picked_up: number; p_stop_id: string }
+        Returns: string
+      }
       record_due_collection: {
         Args: {
           p_amount: number
@@ -10561,6 +10853,15 @@ export type Database = {
           p_reference?: string
           p_stop_id?: string
           p_trip_id: string
+        }
+        Returns: string
+      }
+      record_expired_return: {
+        Args: {
+          p_photo_url: string
+          p_product_id: string
+          p_qty: number
+          p_stop_id: string
         }
         Returns: string
       }
@@ -10616,6 +10917,16 @@ export type Database = {
           p_qty: number
           p_type: string
           p_unit_id: string
+        }
+        Returns: number
+      }
+      record_stop_arrival: {
+        Args: {
+          p_latitude?: number
+          p_longitude?: number
+          p_note?: string
+          p_reason?: string
+          p_stop_id: string
         }
         Returns: number
       }
@@ -10865,6 +11176,7 @@ export type Database = {
         Args: { p_customer_id: string; p_trip_id: string }
         Returns: Json
       }
+      stop_payment_totals: { Args: { p_stop_id: string }; Returns: Json }
       stop_take_udhaar: {
         Args: { p_amount: number; p_stop_id: string }
         Returns: boolean

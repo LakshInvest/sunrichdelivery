@@ -13,7 +13,9 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
+import { Route as AuthenticatedDriverAccountRouteImport } from './routes/_authenticated/driver-account'
 import { Route as AuthenticatedMyQrRouteImport } from './routes/_authenticated/my-qr'
+import { Route as AuthenticatedPendingSyncRouteImport } from './routes/_authenticated/pending-sync'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedDriverIndexRouteImport } from './routes/_authenticated/driver.index'
@@ -47,11 +49,23 @@ const AuthenticatedDriverRoute = AuthenticatedDriverRouteImport.update({
   path: '/driver',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDriverAccountRoute =
+  AuthenticatedDriverAccountRouteImport.update({
+    id: '/driver-account',
+    path: '/driver-account',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMyQrRoute = AuthenticatedMyQrRouteImport.update({
   id: '/my-qr',
   path: '/my-qr',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPendingSyncRoute =
+  AuthenticatedPendingSyncRouteImport.update({
+    id: '/pending-sync',
+    path: '/pending-sync',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -132,7 +146,9 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/driver': typeof AuthenticatedDriverRouteWithChildren
+  '/driver-account': typeof AuthenticatedDriverAccountRoute
   '/my-qr': typeof AuthenticatedMyQrRoute
+  '/pending-sync': typeof AuthenticatedPendingSyncRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/security': typeof AuthenticatedSecurityRouteWithChildren
   '/driver/$tripId': typeof AuthenticatedDriverTripIdRouteWithChildren
@@ -149,7 +165,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/driver-account': typeof AuthenticatedDriverAccountRoute
   '/my-qr': typeof AuthenticatedMyQrRoute
+  '/pending-sync': typeof AuthenticatedPendingSyncRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/': typeof AuthenticatedIndexRoute
   '/security/$step': typeof AuthenticatedSecurityStepRoute
@@ -167,7 +185,9 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/driver': typeof AuthenticatedDriverRouteWithChildren
+  '/_authenticated/driver-account': typeof AuthenticatedDriverAccountRoute
   '/_authenticated/my-qr': typeof AuthenticatedMyQrRoute
+  '/_authenticated/pending-sync': typeof AuthenticatedPendingSyncRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRouteWithChildren
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -189,7 +209,9 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/driver'
+    | '/driver-account'
     | '/my-qr'
+    | '/pending-sync'
     | '/profile'
     | '/security'
     | '/driver/$tripId'
@@ -206,7 +228,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/driver-account'
     | '/my-qr'
+    | '/pending-sync'
     | '/profile'
     | '/'
     | '/security/$step'
@@ -223,7 +247,9 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/_authenticated/driver'
+    | '/_authenticated/driver-account'
     | '/_authenticated/my-qr'
+    | '/_authenticated/pending-sync'
     | '/_authenticated/profile'
     | '/_authenticated/security'
     | '/_authenticated/'
@@ -276,11 +302,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDriverRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/driver-account': {
+      id: '/_authenticated/driver-account'
+      path: '/driver-account'
+      fullPath: '/driver-account'
+      preLoaderRoute: typeof AuthenticatedDriverAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/my-qr': {
       id: '/_authenticated/my-qr'
       path: '/my-qr'
       fullPath: '/my-qr'
       preLoaderRoute: typeof AuthenticatedMyQrRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pending-sync': {
+      id: '/_authenticated/pending-sync'
+      path: '/pending-sync'
+      fullPath: '/pending-sync'
+      preLoaderRoute: typeof AuthenticatedPendingSyncRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile': {
@@ -439,7 +479,9 @@ const AuthenticatedLoaderTripIdRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDriverRoute: typeof AuthenticatedDriverRouteWithChildren
+  AuthenticatedDriverAccountRoute: typeof AuthenticatedDriverAccountRoute
   AuthenticatedMyQrRoute: typeof AuthenticatedMyQrRoute
+  AuthenticatedPendingSyncRoute: typeof AuthenticatedPendingSyncRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -449,7 +491,9 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDriverRoute: AuthenticatedDriverRouteWithChildren,
+  AuthenticatedDriverAccountRoute: AuthenticatedDriverAccountRoute,
   AuthenticatedMyQrRoute: AuthenticatedMyQrRoute,
+  AuthenticatedPendingSyncRoute: AuthenticatedPendingSyncRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,

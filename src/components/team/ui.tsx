@@ -3,6 +3,8 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { LANGS, useLang } from "@/lib/l10n";
 import { pendingCount, subscribe } from "@/lib/offline";
+import { deliveryCopy } from '@/lib/delivery-copy';
+import { Button } from '@/components/ui/button';
 import { supabase } from "@/integrations/supabase/client";
 import { fileToDataUrl, photoUrl, uploadPhoto } from "@/lib/photo";
 import { isNative, takeNativePhoto, haptic } from "@/lib/native";
@@ -68,7 +70,7 @@ export function LanguageChips({ className = "" }: { className?: string }) {
 
 /** Offline + pending-sync pill; always visible while work is unsent. */
 export function SyncBadge() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [n, setN] = useState(pendingCount());
   useEffect(() => subscribe(() => setN(pendingCount())), []);
   const [online, setOnline] = useState(true);
@@ -85,14 +87,14 @@ export function SyncBadge() {
   }, []);
   if (n === 0 && online) return null;
   return (
-    <span
+    <Button asChild variant="ghost" className="h-auto p-0"><Link to="/pending-sync"
       className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
-        !online ? "bg-destructive/10 text-destructive" : "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+        !online ? "bg-destructive/10 text-destructive" : "bg-warning/15 text-warning"
       }`}
     >
       <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
-      {!online && n === 0 ? t("c.offline") : t("c.pendingSync", { n })}
-    </span>
+      {!online && n === 0 ? t("c.offline") : `${deliveryCopy(lang,'pending')} (${n})`}
+    </Link></Button>
   );
 }
 

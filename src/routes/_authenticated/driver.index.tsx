@@ -7,6 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/l10n";
 import { istToday } from "@/lib/ist";
 import { useTeamAuth } from "@/lib/team-auth";
+import { Button } from '@/components/ui/button';
+import { deliveryCopy } from '@/lib/delivery-copy';
+import { readTripCache,saveTripCache } from '@/lib/trip-cache';
 import { ErrorCard, Spinner, StatusBadge, SyncBadge } from "@/components/team/ui";
 
 export const Route = createFileRoute("/_authenticated/driver/")({
@@ -27,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/driver/")({
 type TripRow = { id: string; trip_no: string; trip_date: string; status: string; vehicles: { reg_no: string } | null; trip_stops: { status: string }[] };
 
 function DriverHome() {
-  const { t } = useLang();
+  const { t,lang } = useLang();
   const { staff } = useTeamAuth();
   const { view } = Route.useSearch();
   const [rows, setRows] = useState<TripRow[] | null>(null);
@@ -36,6 +39,8 @@ function DriverHome() {
 
   const load = useCallback(async () => {
     if (!staff) return;
+    const cached=readTripCache<TripRow[]>(staff.id,'today-list');
+    if(!navigator.onLine){setRows(cached ?? []);return;}
     setError(null);
     const { data, error: e } = await supabase
       .from("trips")
@@ -47,6 +52,7 @@ function DriverHome() {
       .limit(30);
     if (e) { setError(e.message); setRows([]); return; }
     setRows((data ?? []) as unknown as TripRow[]);
+    saveTripCache(staff.id,'today-list',data ?? []);
   }, [staff]);
 
   // Load as soon as the signed-in profile arrives; the live channel's first refresh can run before it.
@@ -73,6 +79,7 @@ function DriverHome() {
         <>
           {error && <ErrorCard message={error} onRetry={() => void load()} />}
           <SummaryCard title={t("sum.today")} items={[{ label: t("sum.open"), value: todays.length }, { label: t("sum.stopsLeft"), value: stopsLeft }]} />
+          <Button asChild variant="outline" className="h-14 text-lg"><Link to="/driver-account">{deliveryCopy(lang,'account')}</Link></Button>
           <ListFilter value={filter} onChange={setFilter} />
           <div className="grid gap-3">
             {list.length > 0 ? list.map((r) => {

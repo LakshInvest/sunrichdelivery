@@ -11,6 +11,7 @@ import { Stepper, Spinner } from "@/components/team/ui";
 import { EmptyState } from "@/components/team/role-home";
 import { Undo2 } from "lucide-react";
 import { istDisplay } from "@/lib/ist";
+import { deliveryCopy } from '@/lib/delivery-copy';
 type Prod={name:string;name_hi:string|null;name_mr:string|null;pack_label:string|null;pack_label_hi:string|null;pack_label_mr:string|null;sell_unit:string|null};
 type Row={product_id:string;planned_qty:number;loaded_qty:number|null;crates_count:number|null;products:Prod|null};
 type Ret={product_id:string|null;kind:string;expected_qty:number};
@@ -32,7 +33,7 @@ export function LoaderWorkflowProvider({tripId,children}:{tripId:string;children
  }catch{setError(t("c.error"));return false;}finally{setBusy(false);}};
  return <Ctx.Provider value={{tripId,trip,rows,returns,cratePlan,draft,setDraft,reason,setReason,loading,error,setError,busy,save}}>{children}</Ctx.Provider>;
 }
-const RET_ORDER=["empties","crates","refused","damaged","undelivered"];
+const RET_ORDER=["empties","crates","expired","refused","damaged","undelivered"];
 const RET_KEY:Record<string,string>={undelivered:"ld.undelivered",damaged:"ld.damagedR",refused:"ld.returnedPacks",empties:"ld.emptiesR",crates:"ld.cratesR"};
 export function LoaderTaskPage({step="load"}:{step?:string}){
  const w=useContext(Ctx);if(!w)throw new Error("Loading context missing");const {t,lang}=useLang();const navigate=useNavigate();const isReturns=step.startsWith("returns");const edit=step.endsWith("counts");
@@ -61,7 +62,7 @@ export function LoaderTaskPage({step="load"}:{step?:string}){
   </section>
   {lines.length>0&&<div className="home-card min-w-0 overflow-hidden" data-testid="count-list">
    <div className="grid grid-cols-[minmax(0,1fr)_3.5rem_auto] items-center gap-2 whitespace-nowrap border-b border-border bg-muted/50 px-4 py-2 text-sm font-bold text-muted-foreground"><span className="truncate">{t("ld.product")}</span><span className="text-center">{lead}</span><span className={`text-center ${edit&&!done?"w-[8.5rem]":"w-12"}`}>{got}</span></div>
-   {lines.map(l=>{const v=val(l);const changed=v!==l.plan;const head=isReturns&&l.group!==lastGroup?(lastGroup=l.group ?? "",<p key={`g-${l.group}`} className="bg-secondary/10 px-4 py-1.5 text-xs font-bold text-primary">{t(RET_KEY[l.group ?? ""] ?? "ld.returns")}</p>):null;return <div key={l.key}>{head}<div data-changed={changed||undefined} className={`grid grid-cols-[minmax(0,1fr)_3.5rem_auto] items-center gap-2 border-b border-border px-4 py-3 last:border-0 ${changed?"bg-warning/10":""}`}><div className="min-w-0"><p className="truncate text-base font-semibold">{l.title}</p>{l.sub&&<p className="truncate text-xs text-muted-foreground">{l.sub}</p>}</div><span className="text-center text-lg text-muted-foreground">{(l as {unset?:boolean}).unset?"—":l.plan}</span>{edit&&!done?<div className="w-[8.5rem]"><Stepper value={v} onChange={n=>w.setDraft({...w.draft,[l.key]:Math.max(0,n)})}/></div>:<strong className={`w-12 text-center text-2xl ${changed?"text-warning-foreground":""}`}>{v}</strong>}</div></div>;})}
+   {lines.map(l=>{const v=val(l);const changed=v!==l.plan;const head=isReturns&&l.group!==lastGroup?(lastGroup=l.group ?? "",<p key={`g-${l.group}`} className="bg-secondary/10 px-4 py-1.5 text-xs font-bold text-primary">{l.group==='expired'?deliveryCopy(lang,'expired'):t(RET_KEY[l.group ?? ""] ?? "ld.returns")}</p>):null;return <div key={l.key}>{head}<div data-changed={changed||undefined} className={`grid grid-cols-[minmax(0,1fr)_3.5rem_auto] items-center gap-2 border-b border-border px-4 py-3 last:border-0 ${changed?"bg-warning/10":""}`}><div className="min-w-0"><p className="truncate text-base font-semibold">{l.title}</p>{l.sub&&<p className="truncate text-xs text-muted-foreground">{l.sub}</p>}</div><span className="text-center text-lg text-muted-foreground">{(l as {unset?:boolean}).unset?"—":l.plan}</span>{edit&&!done?<div className="w-[8.5rem]"><Stepper value={v} onChange={n=>w.setDraft({...w.draft,[l.key]:Math.max(0,n)})}/></div>:<strong className={`w-12 text-center text-2xl ${changed?"text-warning-foreground":""}`}>{v}</strong>}</div></div>;})}
   </div>}
   {isReturns&&!lines.length&&!done&&<EmptyState icon={Undo2} text={w.trip?.gate_in_at?t("ld.nothingBack"):t("ld.notBack")}/>}
   {diff&&!done&&<div className="grid gap-2" data-testid="reason-chips"><p className="text-base font-semibold">{t("ld.whyDiff")}</p><div className="flex flex-wrap gap-2">{REASONS.map(r=><button key={r} type="button" className={chip(r==="other"?other&&!picked:picked===r)} onClick={()=>{w.setError(null);if(r==="other"){setOther(true);w.setReason("");}else{setOther(false);w.setReason(reasonLabel(r));}}}>{reasonLabel(r)}</button>)}</div>{(other||(!picked&&w.reason!==""))&&<input aria-label={t("ld.diffReason")} placeholder={t("ld.reasonNote")} className={taskInput} value={w.reason} onChange={e=>w.setReason(e.target.value)} autoFocus/>}</div>}

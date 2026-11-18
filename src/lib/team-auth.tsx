@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { staffLogin, myRoleCodes } from "@/lib/staff-login.functions";
 import { getDeviceId, getDeviceLabel, initDeviceId } from "@/lib/device";
 import { installReplayListeners } from "@/lib/offline";
+import { readDisplayStaff, saveDisplayStaff } from "@/lib/trip-cache";
 import type { Lang } from "@/lib/l10n";
 
 export type Staff = {
@@ -43,6 +44,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
   const [staff, setStaff] = useState<Staff | null>(null);
 
   const loadStaff = useCallback(async (userId: string): Promise<Staff | null> => {
+    if (!navigator.onLine) return readDisplayStaff<Staff>(userId);
     const [profileRes, permRes, roleCodes] = await Promise.all([
       supabase
         .from("user_profiles")
@@ -59,7 +61,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
       (x) => `${x.module}:${x.action}`,
     );
     const lang = LANGS.has(String(p.preferred_language)) ? (p.preferred_language as Lang) : "hi";
-    return {
+    const result: Staff = {
       id: p.id,
       fullName: p.full_name ?? "",
       mobile: p.mobile ?? "",
@@ -71,6 +73,8 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
       firmId: p.firm_id ?? null,
       photo: p.photo_url ?? null,
     };
+    saveDisplayStaff(userId,result);
+    return result;
   }, []);
 
   useEffect(() => {
@@ -80,9 +84,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
       const { data } = await supabase.auth.getSession();
       const uid = data.session?.user?.id;
       if (uid && !cancelled) {
-        const s = await loadStaff(uid);
-        if (s && !cancelled) setStaff(s);
-        if (data.session) {
+        if (data.session && navigator.onLine) {
           // Record the session before anything gated on has_perm/my_session_is_valid runs.
           const { error: loginErr } = await supabase.rpc("record_login", {
             p_login_method: "pin",
@@ -90,6 +92,8 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
           });
           if (loginErr) console.warn("[auth] record_login failed", loginErr.message);
         }
+        const s = await loadStaff(uid);
+        if (s && !cancelled) setStaff(s);
       }
       if (!cancelled) setReady(true);
     };

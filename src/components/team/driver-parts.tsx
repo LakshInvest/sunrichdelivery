@@ -47,6 +47,10 @@ function useVehicleCheckNames(): CheckNames {
 }
 
 export type Settings = {
+  arrival_distance_limit_m?: number;
+  office_emergency_number?: string | null;
+  crates_at_customer_enabled?: boolean;
+  expired_returns_enabled?: boolean;
   require_start_selfie: boolean;
   require_start_odometer: boolean;
   require_start_odometer_photo: boolean;

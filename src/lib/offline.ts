@@ -4,7 +4,7 @@
 // their final storage path and uploaded first when the network returns.
 import { supabase } from "@/integrations/supabase/client";
 
-type QueuedCall = { id: string; rpc: string; args: Record<string, unknown>; createdAt: number };
+export type QueuedCall = { id: string; rpc: string; args: Record<string, unknown>; createdAt: number; error?: string };
 type QueuedPhoto = { path: string; dataUrl: string; type: string };
 
 const KEY = "sunrich_rpc_queue";
@@ -25,7 +25,7 @@ function writeJson(key: string, v: unknown) {
   try {
     window.localStorage.setItem(key, JSON.stringify(v));
   } catch {
-    // ignore storage failures
+    throw new Error("Device storage is full. Entry was not saved.");
   }
   listeners.forEach((fn) => fn());
 }
@@ -33,6 +33,7 @@ function writeJson(key: string, v: unknown) {
 export function pendingCount(): number {
   return typeof window === "undefined" ? 0 : read().length + readPhotos().length;
 }
+export function pendingEntries(): QueuedCall[] { return typeof window === 'undefined' ? [] : read(); }
 
 export function subscribe(fn: () => void): () => void {
   listeners.add(fn);
@@ -111,7 +112,7 @@ export function queuedPhotoData(path: string): string | null {
 let replaying = false;
 
 /** Upload queued photos, then replay every queued action in order. */
-export async function replayQueue(): Promise<{ ok: number; failed: number }> {
+export async function replayQueue(onlyId?: string): Promise<{ ok: number; failed: number }> {
   if (replaying) return { ok: 0, failed: 0 };
   replaying = true;
   try {
@@ -119,25 +120,28 @@ export async function replayQueue(): Promise<{ ok: number; failed: number }> {
       try {
         const blob = await (await fetch(ph.dataUrl)).blob();
         const { error } = await supabase.storage.from("operations").upload(ph.path, blob, { contentType: ph.type, upsert: true });
-        if (error && isNetworkError(error)) return { ok: 0, failed: 0 };
+        if (error) return { ok: 0, failed: 1 };
         writeJson(PKEY, readPhotos().filter((p) => p.path !== ph.path));
       } catch (err) {
-        if (isNetworkError(err)) return { ok: 0, failed: 0 };
+        return { ok: 0, failed: 1 };
       }
     }
     let ok = 0;
     let failed = 0;
     for (const item of read()) {
+      if (onlyId && item.id !== onlyId) continue;
       try {
         const { error } = await runOp(item.id, item.rpc, item.args);
         if (error && isNetworkError(error)) break; // still offline — keep the rest
         if (error) {
           failed += 1;
-          console.warn("[offline] replay failed permanently", item.rpc, error.message);
+          writeJson(KEY, read().map(x=>x.id===item.id?{...x,error:error.message}:x));
+          break;
         } else ok += 1;
       } catch (err) {
         if (isNetworkError(err)) break;
         failed += 1;
+        break;
       }
       writeJson(KEY, read().filter((x) => x.id !== item.id));
     }

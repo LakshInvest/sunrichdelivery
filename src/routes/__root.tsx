@@ -156,6 +156,7 @@ function NativeBridge() {
   const { staff } = useTeamAuth();
   useEffect(() => {
     capFontScale();
+    if ('serviceWorker' in navigator && !import.meta.env.DEV) void navigator.serviceWorker.register('/delivery-offline.js');
     void document.fonts?.ready.then(() => capFontScale());
     void initNative((path) => void router.navigate({ to: path }));
   }, [router]);
