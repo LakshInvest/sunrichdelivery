@@ -8354,9 +8354,12 @@ export type Database = {
           delivery_charge_per_pack: number | null
           deposit_per_unit: number | null
           deposit_total: number | null
+          discount_amount: number | null
+          gross_total: number | null
           gst_rate: number | null
           hsn_code: string | null
           id: string | null
+          is_free: boolean | null
           line_total: number | null
           mrp: number | null
           new_containers: number | null
@@ -8366,6 +8369,7 @@ export type Database = {
           product_id: string | null
           product_name: string | null
           qty: number | null
+          scheme_info: Json | null
           sort_order: number | null
           tax_amount: number | null
           taxable_value: number | null
@@ -8375,9 +8379,12 @@ export type Database = {
           delivery_charge_per_pack?: number | null
           deposit_per_unit?: number | null
           deposit_total?: number | null
+          discount_amount?: number | null
+          gross_total?: number | null
           gst_rate?: number | null
           hsn_code?: string | null
           id?: string | null
+          is_free?: boolean | null
           line_total?: number | null
           mrp?: number | null
           new_containers?: number | null
@@ -8387,6 +8394,7 @@ export type Database = {
           product_id?: string | null
           product_name?: string | null
           qty?: number | null
+          scheme_info?: Json | null
           sort_order?: number | null
           tax_amount?: number | null
           taxable_value?: number | null
@@ -8396,9 +8404,12 @@ export type Database = {
           delivery_charge_per_pack?: number | null
           deposit_per_unit?: number | null
           deposit_total?: number | null
+          discount_amount?: number | null
+          gross_total?: number | null
           gst_rate?: number | null
           hsn_code?: string | null
           id?: string | null
+          is_free?: boolean | null
           line_total?: number | null
           mrp?: number | null
           new_containers?: number | null
@@ -8408,6 +8419,7 @@ export type Database = {
           product_id?: string | null
           product_name?: string | null
           qty?: number | null
+          scheme_info?: Json | null
           sort_order?: number | null
           tax_amount?: number | null
           taxable_value?: number | null
