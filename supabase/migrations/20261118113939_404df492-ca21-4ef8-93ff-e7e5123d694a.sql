@@ -1,0 +1,7 @@
+DO $$ DECLARE o public.orders;l public.order_lines;BEGIN
+SELECT * INTO o FROM orders WHERE id='f5300000-0000-4000-8000-000000000001';o.id:='f5400000-0000-4000-8000-000000000001';o.order_no:='QA-TEST-PROMPT54';o.order_group_id:=gen_random_uuid();o.status:='delivered';o.amount_paid:=0;o.payment_status:='unpaid';o.notes:='QA-TEST Prompt54 payment recovery';o.created_at:=now();o.updated_at:=now();INSERT INTO orders SELECT o.*;
+SELECT * INTO l FROM order_lines WHERE id='f5300000-0000-4000-8000-000000000002';l.id:='f5400000-0000-4000-8000-000000000002';l.order_id:=o.id;INSERT INTO order_lines SELECT l.*;
+INSERT INTO trips(id,company_id,trip_no,unit_id,vehicle_id,driver_user_id,status,trip_date,gate_out_at,driver_started_at,gate_in_at,start_odometer) VALUES('f5400000-0000-4000-8000-000000000010',o.company_id,'QA-TEST/261118/PROMPT54','d447a17f-266c-43ad-bc38-693a9ee7d5ed','f5000000-0000-4000-8000-000000000020','130c6cf5-ddeb-460b-af61-edfba33e7506','in_progress',CURRENT_DATE,now(),now(),now(),1000);
+INSERT INTO trip_stops(id,trip_id,order_id,seq,status,delivered_at) VALUES('f5400000-0000-4000-8000-000000000003','f5400000-0000-4000-8000-000000000010',o.id,1,'delivered',now());
+INSERT INTO delivery_lines(stop_id,order_line_id,delivered_qty,short_qty,damaged_qty,refused_qty,empties_returned) VALUES('f5400000-0000-4000-8000-000000000003',l.id,3,0,0,0,0);
+END $$;

@@ -1,10 +1,11 @@
 # Roadmap — Sunrich Delivery
 
 ## Prompt-54 — Payment completion and cash hand-over
-- [ ] Trace TRP/261117/0002 missing collection without changing its records.
-- [ ] Require recorded COD payment, eligible khata, or partial amount/reason; retain FREE/credit and sync behavior.
-- [ ] Cash hand-over from cash collections minus cash expenses; require a persisted mismatch reason.
-- [ ] Test Hindi QA payment/hand-over and regression rules; report verification and APK requirement.
+- [x] Trace TRP/261117/0002 read-only: customer-app ₹1600 UPI receipt posted before loading, allocated to invoice; due zero skipped driver collection correctly. COD cash expectation stale; ₹880 hand-over unsupported by trip cash.
+- [x] Require recorded COD payment, eligible khata, or partial amount/reason; retain FREE/credit and sync behavior. Server end guard rejects unresolved payment.
+- [x] Cash hand-over from cash collections minus cash expenses; persist mismatch reason.
+- [x] Hindi 360px QA: Done redirects to payment; reasonless partial blocked, ₹300 + reason saved; ₹250 hand-over against ₹300 requires reason. 74 tests, report/screenshots saved; no APK rebuild.
+- [ ] Physical APK check unavailable without Android hardware; live khata save not repeated this round. QA trip and hand-over await normal office confirmation.
 
 ## Prompt-53 — Sync reporting and FREE lines
 - [x] Report queue changes and online two-minute heartbeats through existing driver_report_sync; report zero after replay, never block work.
