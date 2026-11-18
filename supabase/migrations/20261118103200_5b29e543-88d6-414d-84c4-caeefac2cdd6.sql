@@ -1,0 +1,1 @@
+UPDATE public.user_profiles SET preferred_language='hi' WHERE id=(SELECT driver_user_id FROM public.trips WHERE false) OR mobile='9999900014';
