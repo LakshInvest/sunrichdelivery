@@ -1,5 +1,11 @@
 # Roadmap — Sunrich Delivery
 
+## Prompt-50 — Feature Index gaps
+- [ ] Arrival GPS and reason; durable offline trip cache/queue; old dues FIFO.
+- [ ] Monthly driver account, SOS call, product reasons and diesel litres.
+- [ ] Customer crates, separate expired returns and editable delivery settings.
+- [ ] Hindi 360px QA Driver 2 end-to-end checks and final inventory.
+
 ## Prompt-20 follow-ups
 - [x] Follow-up sweep: read driver/loader/guard/cashier/list subscriptions, role counts, offline replay, payment/receipt/settlement/proof functions and photo job. All subscribed tables published; role counts now use realtime with their original 30-second fallback. 108 phone/desktop light/dark page checks, no runtime/subscription errors; completed payment stops correctly show done, not a second save. External office/customer UI and physical APK not exercised. 34 tests passed; no records/settings/permissions changed in sweep.
 - [x] QA Loader has Dispatch/Loader/Security; missing Dispatch/Security restored and verified.
