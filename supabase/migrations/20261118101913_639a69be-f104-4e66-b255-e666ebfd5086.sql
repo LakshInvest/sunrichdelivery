@@ -1,0 +1,2 @@
+GRANT UPDATE(office_action,office_note) ON public.trip_expired_returns TO authenticated;
+CREATE POLICY expired_office_decision ON public.trip_expired_returns FOR UPDATE TO authenticated USING(company_id=public.my_company_id() AND public.has_perm('finance','update')) WITH CHECK(company_id=public.my_company_id() AND public.has_perm('finance','update'));

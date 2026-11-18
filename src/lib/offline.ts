@@ -5,7 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type QueuedCall = { id: string; rpc: string; args: Record<string, unknown>; createdAt: number; error?: string };
-type QueuedPhoto = { path: string; dataUrl: string; type: string };
+type QueuedPhoto = { path: string; dataUrl: string; type: string; error?: string };
 
 const KEY = "sunrich_rpc_queue";
 const PKEY = "sunrich_photo_queue";
@@ -37,6 +37,7 @@ export function pendingCount(): number {
   return typeof window === "undefined" ? 0 : read().length + readPhotos().length;
 }
 export function pendingEntries(): QueuedCall[] { return typeof window === 'undefined' ? [] : read(); }
+export function pendingPhotos(): {path:string;error?:string}[] { return typeof window==='undefined'?[]:readPhotos().map(({path,error})=>({path,error})); }
 
 export function subscribe(fn: () => void): () => void {
   listeners.add(fn);
@@ -123,7 +124,7 @@ export async function replayQueue(onlyId?: string): Promise<{ ok: number; failed
       try {
         const blob = await (await fetch(ph.dataUrl)).blob();
         const { error } = await supabase.storage.from("operations").upload(ph.path, blob, { contentType: ph.type, upsert: true });
-        if (error) return { ok: 0, failed: 1 };
+        if (error) {writeJson(PKEY,readPhotos().map(p=>p.path===ph.path?{...p,error:error.message}:p));return { ok: 0, failed: 1 };}
         writeJson(PKEY, readPhotos().filter((p) => p.path !== ph.path));
       } catch (err) {
         return { ok: 0, failed: 1 };

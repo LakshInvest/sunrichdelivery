@@ -105,7 +105,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
       if (event === "SIGNED_IN" || event === "USER_UPDATED") {
         void supabase.auth.getSession().then(({ data: d }: { data: { session: { user?: { id: string } } | null } }) => {
           const uid = d.session?.user?.id;
-          if (uid) void loadStaff(uid).then((s) => s && setStaff(s));
+          if (uid) void (async()=>{if(event==='SIGNED_IN'&&navigator.onLine)await supabase.rpc('record_login',{p_login_method:'pin',p_user_agent:navigator.userAgent});bindQueueUser(uid);const s=await loadStaff(uid);if(s)setStaff(s);})();
         });
       }
     });
@@ -126,20 +126,21 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
         if (typeof res.attemptsLeft === "number") out.attemptsLeft = res.attemptsLeft;
         return out;
       }
+      if(res.method==='sms'&&!res.phone || res.method!=='sms'&&!res.email)return {ok:false,code:'verify_failed'};
       const verify =
         res.method === "sms"
-          ? await supabase.auth.verifyOtp({ phone: res.phone!, token: res.token, type: "sms" })
-          : await supabase.auth.verifyOtp({ email: res.email!, token: res.token, type: "magiclink" });
+          ? await supabase.auth.verifyOtp({ phone: res.phone ?? '', token: res.token, type: "sms" })
+          : await supabase.auth.verifyOtp({ email: res.email ?? '', token: res.token, type: "magiclink" });
       if (verify.error) {
         console.warn("[auth] verifyOtp failed", verify.error.message);
         return { ok: false, code: "verify_failed" };
       }
+      const { error: loginErr } = await supabase.rpc("record_login", { p_login_method: "pin", p_user_agent: navigator.userAgent });
+      if (loginErr) return {ok:false,code:'verify_failed'};
       const s = await loadStaff(res.staff.id);
       if (!s) return { ok: false, code: "verify_failed" };
       setStaff(s);
       bindQueueUser(s.id);
-      const { error: loginErr } = await supabase.rpc("record_login", { p_login_method: "pin", p_user_agent: navigator.userAgent });
-      if (loginErr) console.warn("[auth] record_login failed", loginErr.message);
       return { ok: true };
     },
     [loadStaff],
