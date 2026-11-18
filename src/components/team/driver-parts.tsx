@@ -309,6 +309,8 @@ export type StopRow = {
   id: string;
   seq: number;
   status: string;
+  payment_resolution?: string | null;
+  payment_reason?: string | null;
   fail_reason: string | null;
   do_later_at?: string | null;
   arrived_at: string | null;

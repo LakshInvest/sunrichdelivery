@@ -1,5 +1,6 @@
 import type { Lang } from "./l10n";
 const copy = {
+ partialReason:['Reason for partial payment','कम भुगतान का कारण','अंशतः भरण्याचे कारण'],handoverReason:['Reason for cash difference','नकद में फ़र्क का कारण','रोख फरकाचे कारण'],handoverDue:['Cash to hand over','सौंपने के लिए नकद','सोपवायची रोख'],khata:['Not paid – add to khata','नहीं मिला – खाते में जोड़ें','मिळाले नाही – खात्यात जोडा'],paymentPending:['Payment pending','भुगतान बाकी','भरणा बाकी'],
  arrival: ["Arrival location", "पहुँचने की जगह", "पोहोचण्याचे ठिकाण"], far: ["You are {n} metres from the customer", "आप ग्राहक से {n} मीटर दूर हैं", "तुम्ही ग्राहकापासून {n} मीटर दूर आहात"],
  wrong_address:["Wrong address","पता गलत","पत्ता चुकीचा"], different_place:["Customer called elsewhere","ग्राहक ने दूसरी जगह बुलाया","ग्राहकाने दुसरीकडे बोलावले"], gps:["GPS inaccurate","GPS ठीक नहीं","GPS बरोबर नाही"], other:["Other","दूसरा","इतर"],
  short:["Short loaded","कम निकला","कमी निघाले"],damaged:["Damaged","टूटा-फूटा","खराब झाले"],refused:["Customer refused","ग्राहक ने मना किया","ग्राहकाने नाकारले"],reason:["Reason","कारण","कारण"],note:["Note","नोट","नोंद"],continue:["Continue","आगे बढ़ें","पुढे जा"],
