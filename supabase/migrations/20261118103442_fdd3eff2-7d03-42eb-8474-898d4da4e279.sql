@@ -1,0 +1,1 @@
+UPDATE public.delivery_settings SET crates_at_customer_enabled=false,expired_returns_enabled=false,office_emergency_number=NULL WHERE company_id='ebd6f904-55a0-46f1-b4c9-2324c5b61aea'; UPDATE public.user_profiles SET preferred_language='en' WHERE right(mobile,10)='9999900014';

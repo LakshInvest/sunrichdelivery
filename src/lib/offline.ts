@@ -37,7 +37,7 @@ export function pendingCount(): number {
   return typeof window === "undefined" ? 0 : read().length + readPhotos().length;
 }
 export function pendingEntries(): QueuedCall[] { return typeof window === 'undefined' ? [] : read(); }
-export function pendingPhotos(): {path:string;error?:string}[] { return typeof window==='undefined'?[]:readPhotos().map(({path,error})=>({path,error})); }
+export function pendingPhotos(): {path:string;error?:string}[] { return typeof window==='undefined'?[]:readPhotos().map(({path,error})=>({path,...(error?{error}:{})})); }
 
 export function subscribe(fn: () => void): () => void {
   listeners.add(fn);
