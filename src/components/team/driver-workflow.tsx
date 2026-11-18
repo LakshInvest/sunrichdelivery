@@ -53,12 +53,12 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
   
   const restore = () => {
     if (!staff) return false;
-    const saved=readTripCache<{trip:Trip;stops:StopRow[];lines:Record<string,LineRow[]>;settings:Settings;products:Workflow['products'];token:string|null;upi:Workflow['upi'];cash:number;cashiers:Workflow['cashiers'];drafts:Record<string,Draft>}>(staff.id,tripId);
+    const saved=readTripCache<{trip:Trip;stops:StopRow[];lines:Record<string,LineRow[]>;settings:Settings;products:Workflow['products'];token:string|null;upi:Workflow['upi'];cash:number;cashiers:Workflow['cashiers'];drafts:Record<string,Draft>;form?:Workflow['form']}>(staff.id,tripId);
     if(!saved)return false;
-    setTrip(saved.trip);setStops(saved.stops);setLines(saved.lines);setSettings(saved.settings);setProducts(saved.products);setToken(saved.token);setUpi(saved.upi);setCash(saved.cash);setCashiers(saved.cashiers);setDrafts(saved.drafts);setLoading(false);return true;
+    setTrip(saved.trip);setStops(saved.stops);setLines(saved.lines);setSettings(saved.settings);setProducts(saved.products);setToken(saved.token);setUpi(saved.upi);setCash(saved.cash);setCashiers(saved.cashiers);setDrafts(saved.drafts);if(saved.form)setFormState(saved.form);setLoading(false);return true;
   };
   useEffect(()=>{restore();},[staff?.id,tripId]);
-  useEffect(()=>{if(staff&&trip&&!loading)saveTripCache(staff.id,tripId,{trip,stops,lines,settings,products,token,upi,cash,cashiers,drafts});},[staff?.id,trip,stops,lines,settings,products,token,upi,cash,cashiers,drafts,loading]);
+  useEffect(()=>{if(staff&&trip&&!loading)saveTripCache(staff.id,tripId,{trip,stops,lines,settings,products,token,upi,cash,cashiers,drafts,form});},[staff?.id,trip,stops,lines,settings,products,token,upi,cash,cashiers,drafts,form,loading]);
   const load = async () => {
     if(isOffline()){restore();setLoading(false);return;}
     const [tr, st, se, gp, cc, ex, ca, ch, pr, extra, spots] = await Promise.all([

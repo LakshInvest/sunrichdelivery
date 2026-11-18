@@ -1,10 +1,11 @@
 # Roadmap — Sunrich Delivery
 
 ## Prompt-50 — Feature Index gaps
-- [ ] Arrival GPS and reason; durable offline trip cache/queue; old dues FIFO.
-- [ ] Monthly driver account, SOS call, product reasons and diesel litres.
-- [ ] Customer crates, separate expired returns and editable delivery settings.
-- [ ] Hindi 360px QA Driver 2 end-to-end checks and final inventory.
+- [x] Arrival GPS/reason and no-location bypass; offline queue and fresh offline reopening; current-bill-first collection (₹480 + ₹120 old dues).
+- [x] Monthly driver account and handover summary, SOS dial link, saved product reasons/photo and diesel litres (₹200 / 2 litres).
+- [x] Customer crates (20 − 5 + 2 = 17), separately received expired return (1 scrap, zero sellable-stock movements), four settings restored to defaults.
+- [x] Hindi 360px QA Driver 2 checks, QA Loader receiving, 57 tests and screenshot/inventory report.
+- [ ] Physical APK airplane mode and dialer — Android hardware unavailable. Cashier-confirmed FIFO settlement and settled-trip/pagination stress test remain unverified; Supabase management connection expired during final checks.
 
 ## Prompt-20 follow-ups
 - [x] Follow-up sweep: read driver/loader/guard/cashier/list subscriptions, role counts, offline replay, payment/receipt/settlement/proof functions and photo job. All subscribed tables published; role counts now use realtime with their original 30-second fallback. 108 phone/desktop light/dark page checks, no runtime/subscription errors; completed payment stops correctly show done, not a second save. External office/customer UI and physical APK not exercised. 34 tests passed; no records/settings/permissions changed in sweep.

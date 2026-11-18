@@ -7,7 +7,7 @@ self.addEventListener('fetch',event=>{
  if(request.method!=='GET'||url.origin!==self.location.origin||url.pathname.startsWith('/api/')||url.pathname.startsWith('/_serverFn'))return;
  if(request.mode==='navigate'){
   event.respondWith(fetch(request).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE).then(c=>c.put('/__delivery_shell',copy));}return response;}).catch(async()=> (await caches.match('/__delivery_shell'))||Response.error()));
- }else if(['script','style','font','image'].includes(request.destination)){
-  event.respondWith(caches.match(request).then(cached=>cached||fetch(request).then(response=>{if(response.ok)caches.open(CACHE).then(c=>c.put(request,response.clone()));return response;})));
+  }else if(['script','style','font','image'].includes(request.destination)||/\.(js|jsx|ts|tsx|css|woff2?|png|webp|jpg)(\?|$)/.test(url.pathname)||url.pathname.startsWith('/@')){
+  event.respondWith(fetch(request).then(response=>{if(response.ok)caches.open(CACHE).then(c=>c.put(request,response.clone()));return response;}).catch(async()=>await caches.match(request)||Response.error()));
  }
 });

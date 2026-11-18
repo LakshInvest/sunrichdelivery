@@ -156,7 +156,7 @@ function NativeBridge() {
   const { staff } = useTeamAuth();
   useEffect(() => {
     capFontScale();
-    if ('serviceWorker' in navigator) void navigator.serviceWorker.register('/delivery-offline.js');
+    if ('serviceWorker' in navigator) void navigator.serviceWorker.register('/delivery-offline.js').then(async()=>{await navigator.serviceWorker.ready;const cache=await caches.open('sunrich-delivery-shell-v1');const shell=await fetch(window.location.href);if(shell.ok)await cache.put('/__delivery_shell',shell);await Promise.all(performance.getEntriesByType('resource').map(async entry=>{const url=new URL(entry.name,location.href);if(url.origin!==location.origin||url.pathname.startsWith('/_serverFn')||url.pathname.startsWith('/api/'))return;try{const response=await fetch(url.href);if(response.ok)await cache.put(url.href,response);}catch{}}));}).catch(()=>{});
     void document.fonts?.ready.then(() => capFontScale());
     void initNative((path) => void router.navigate({ to: path }));
   }, [router]);
