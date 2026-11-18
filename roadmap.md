@@ -1,5 +1,11 @@
 # Roadmap — Sunrich Delivery
 
+## Prompt-54 — Payment completion and cash hand-over
+- [ ] Trace TRP/261117/0002 missing collection without changing its records.
+- [ ] Require recorded COD payment, eligible khata, or partial amount/reason; retain FREE/credit and sync behavior.
+- [ ] Cash hand-over from cash collections minus cash expenses; require a persisted mismatch reason.
+- [ ] Test Hindi QA payment/hand-over and regression rules; report verification and APK requirement.
+
 ## Prompt-53 — Sync reporting and FREE lines
 - [x] Report queue changes and online two-minute heartbeats through existing driver_report_sync; report zero after replay, never block work.
 - [x] Loader FREE quantities/tags; driver scheme/replacement labels and line-total-based amounts, with regression tests.
