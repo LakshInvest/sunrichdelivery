@@ -112,7 +112,12 @@ export function DriverWorkflowProvider({ tripId, children }: { tripId: string; c
   },[trip?.driver_started_at,trip?.ended_at,settings.location_tracking_enabled,tripId]);
   const write: Workflow["write"] = async (rpc,args) => {
     setBusy(true);setError(null);
-    try { const r=await queueRpc(rpc,args); if(r.error && !r.queued) {setError(/wrong.*otp/i.test(r.error)?taskCopy(lang,"wrongOtp"):friendlyKey(r.error)?friendlyError(r.error,t):t("c.error"));return {ok:false,data:null,queued:false};} if(!r.queued)await load();return {ok:true,data:r.data,queued:!!r.queued}; }
+    try { const r=await queueRpc(rpc,args); if(r.error && !r.queued) {setError(/wrong.*otp/i.test(r.error)?taskCopy(lang,"wrongOtp"):friendlyKey(r.error)?friendlyError(r.error,t):t("c.error"));return {ok:false,data:null,queued:false};}
+      if(r.queued){
+        if(rpc==='deliver_stop')setStops(list=>list.map(s=>s.id===args['p_stop_id']?{...s,status:args['p_fail_reason']?'failed':'delivered'}:s));
+        if(rpc==='collect_stop_payment')setStops(list=>list.map(s=>s.id===args['p_stop_id']&&s.orders?{...s,orders:{...s.orders,amount_paid:Number(s.orders.amount_paid ?? 0)+Number(args['p_amount'])}}:s));
+        if(rpc==='end_trip')setTrip(v=>v?{...v,ended_at:new Date().toISOString()}:v);
+      }else await load();return {ok:true,data:r.data,queued:!!r.queued}; }
     catch { setError(t("c.error")); return {ok:false,data:null,queued:false}; } finally {setBusy(false);}
   };
   const update=(id:string,value:Partial<Draft>)=>setDrafts(all=>({...all,[id]:{...(all[id] ?? emptyDraft()),...value}}));

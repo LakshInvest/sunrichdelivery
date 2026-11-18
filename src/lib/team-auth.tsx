@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { supabase } from "@/integrations/supabase/client";
 import { staffLogin, myRoleCodes } from "@/lib/staff-login.functions";
 import { getDeviceId, getDeviceLabel, initDeviceId } from "@/lib/device";
-import { installReplayListeners } from "@/lib/offline";
+import { bindQueueUser, installReplayListeners } from "@/lib/offline";
 import { readDisplayStaff, saveDisplayStaff } from "@/lib/trip-cache";
 import type { Lang } from "@/lib/l10n";
 
@@ -83,6 +83,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
       await initDeviceId().catch(() => {});
       const { data } = await supabase.auth.getSession();
       const uid = data.session?.user?.id;
+      bindQueueUser(uid ?? null);
       if (uid && !cancelled) {
         if (data.session && navigator.onLine) {
           // Record the session before anything gated on has_perm/my_session_is_valid runs.
@@ -136,6 +137,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
       const s = await loadStaff(res.staff.id);
       if (!s) return { ok: false, code: "verify_failed" };
       setStaff(s);
+      bindQueueUser(s.id);
       const { error: loginErr } = await supabase.rpc("record_login", { p_login_method: "pin", p_user_agent: navigator.userAgent });
       if (loginErr) console.warn("[auth] record_login failed", loginErr.message);
       return { ok: true };
@@ -152,6 +154,7 @@ export function TeamAuthProvider({ children }: { children: ReactNode }) {
       // best effort — sign out regardless
     }
     await supabase.auth.signOut();
+    bindQueueUser(null);
     setStaff(null);
     window.location.replace("/login");
   }, []);

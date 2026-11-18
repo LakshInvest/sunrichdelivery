@@ -10098,6 +10098,10 @@ export type Database = {
         Args: { p_customer_id: string; p_firm_id?: string }
         Returns: number
       }
+      customer_crate_balance: {
+        Args: { p_customer_id: string }
+        Returns: number
+      }
       customer_location: {
         Args: { p_customer_id: string }
         Returns: Record<string, unknown>

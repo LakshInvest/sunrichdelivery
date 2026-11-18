@@ -1,0 +1,20 @@
+ALTER TABLE public.trip_returns DROP CONSTRAINT trip_returns_kind_check;
+CREATE OR REPLACE FUNCTION public.delivery_return_kind_validate() RETURNS trigger LANGUAGE plpgsql SET search_path=public AS $$ BEGIN IF NEW.kind NOT IN ('undelivered','damaged','refused','empties','crates','expired') THEN RAISE EXCEPTION 'Invalid return kind'; END IF; RETURN NEW; END $$;
+CREATE TRIGGER delivery_return_kind BEFORE INSERT OR UPDATE ON public.trip_returns FOR EACH ROW EXECUTE FUNCTION public.delivery_return_kind_validate();
+REVOKE ALL ON FUNCTION public.delivery_return_kind_validate() FROM PUBLIC,anon,authenticated;
+CREATE INDEX ON public.customer_crate_movements(customer_id); CREATE INDEX ON public.customer_crate_movements(trip_id); CREATE INDEX ON public.trip_expired_returns(trip_id); CREATE INDEX ON public.trip_expired_returns(stop_id); CREATE INDEX ON public.trip_expired_returns(customer_id); CREATE INDEX ON public.trip_expired_returns(product_id); CREATE INDEX ON public.expired_scrap_stock(product_id);
+CREATE OR REPLACE FUNCTION public.customer_crate_balance(p_customer_id uuid) RETURNS bigint LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$ SELECT coalesce(sum(crates_left-crates_picked_up),0)::bigint FROM public.customer_crate_movements WHERE customer_id=p_customer_id $$;
+REVOKE ALL ON FUNCTION public.customer_crate_balance(uuid) FROM PUBLIC,anon; GRANT EXECUTE ON FUNCTION public.customer_crate_balance(uuid) TO authenticated,service_role;
+CREATE OR REPLACE FUNCTION public.delivery_goods_validate() RETURNS trigger LANGUAGE plpgsql SET search_path=public AS $$ BEGIN IF NEW.reason_code IS NOT NULL AND NEW.reason_code NOT IN ('short','damaged','refused','other') THEN RAISE EXCEPTION 'Invalid product reason'; END IF; IF NEW.reason_code='other' AND nullif(trim(NEW.reason_note),'') IS NULL THEN RAISE EXCEPTION 'Reason note required'; END IF; RETURN NEW; END $$;
+CREATE TRIGGER delivery_goods_reason BEFORE INSERT ON public.delivery_lines FOR EACH ROW EXECUTE FUNCTION public.delivery_goods_validate(); REVOKE ALL ON FUNCTION public.delivery_goods_validate() FROM PUBLIC,anon,authenticated;
+DO $$ DECLARE t public.trips;o public.orders;l public.order_lines;d text; BEGIN
+ SELECT * INTO t FROM public.trips WHERE id='f4100000-0000-4000-8000-000000000010';
+ INSERT INTO public.vehicles(id,company_id,unit_id,reg_no,ownership,vehicle_type,is_active) SELECT 'f5000000-0000-4000-8000-000000000020',company_id,unit_id,'MH24QA0050',ownership,vehicle_type,true FROM public.vehicles WHERE id=t.vehicle_id;
+ t.id='f5000000-0000-4000-8000-000000000010';t.trip_no='QA-TEST/261118/PROMPT50';t.trip_date=current_date;t.status='in_progress';t.vehicle_id='f5000000-0000-4000-8000-000000000020';t.gate_out_at=now();t.driver_started_at=now();t.ended_at=NULL;t.gate_in_at=NULL;t.returns_received_at=NULL;t.start_odometer=1000;t.end_odometer=NULL;t.crates_loaded=20;t.crates_returned=NULL;t.created_at=now();t.updated_at=now();
+ INSERT INTO public.trips SELECT t.*;
+ SELECT * INTO o FROM public.orders WHERE id='f4100000-0000-4000-8000-000000000001';o.id='f5000000-0000-4000-8000-000000000001';o.order_no='QA-TEST-PROMPT50';o.status='dispatched';o.notes='QA-TEST Prompt50 feature verification';o.delivery_latitude=18.4;o.delivery_longitude=76.57;o.delivery_address_text='QA test street, Latur';o.grand_total=480;o.items_total=480;o.amount_paid=0;o.delivery_otp='1234';o.created_at=now();o.updated_at=now();INSERT INTO public.orders SELECT o.*;
+ SELECT * INTO l FROM public.order_lines WHERE order_id='f4100000-0000-4000-8000-000000000001' LIMIT 1;l.id='f5000000-0000-4000-8000-000000000002';l.order_id=o.id;l.qty=3;l.line_total=480;l.taxable_value=457.14;l.tax_amount=22.86;INSERT INTO public.order_lines SELECT l.*;
+ INSERT INTO public.trip_stops(id,trip_id,order_id,seq) VALUES('f5000000-0000-4000-8000-000000000003',t.id,o.id,1);
+ INSERT INTO public.trip_loading(trip_id,product_id,planned_qty,loaded_qty) VALUES(t.id,l.product_id,3,3);
+ SELECT pg_get_functiondef('public.stop_payment_totals(uuid)'::regprocedure) INTO d; d=replace(d,'IF s.id IS NULL','IF s.id IS NULL'); EXECUTE d;
+END $$;

@@ -9,11 +9,14 @@ type QueuedPhoto = { path: string; dataUrl: string; type: string };
 
 const KEY = "sunrich_rpc_queue";
 const PKEY = "sunrich_photo_queue";
+let queueUser: string | null = null;
+export function bindQueueUser(userId: string | null) { queueUser=userId; listeners.forEach(fn=>fn()); }
+const scopedKey=(key:string)=>queueUser?`${key}:${queueUser}`:key;
 const listeners = new Set<() => void>();
 
 function readJson<T>(key: string): T[] {
   try {
-    return JSON.parse(window.localStorage.getItem(key) ?? "[]") as T[];
+    return JSON.parse(window.localStorage.getItem(scopedKey(key)) ?? "[]") as T[];
   } catch {
     return [];
   }
@@ -23,7 +26,7 @@ const readPhotos = () => readJson<QueuedPhoto>(PKEY);
 
 function writeJson(key: string, v: unknown) {
   try {
-    window.localStorage.setItem(key, JSON.stringify(v));
+    window.localStorage.setItem(scopedKey(key), JSON.stringify(v));
   } catch {
     throw new Error("Device storage is full. Entry was not saved.");
   }
@@ -129,7 +132,6 @@ export async function replayQueue(onlyId?: string): Promise<{ ok: number; failed
     let ok = 0;
     let failed = 0;
     for (const item of read()) {
-      if (onlyId && item.id !== onlyId) continue;
       try {
         const { error } = await runOp(item.id, item.rpc, item.args);
         if (error && isNetworkError(error)) break; // still offline — keep the rest
@@ -154,13 +156,13 @@ export async function replayQueue(onlyId?: string): Promise<{ ok: number; failed
 export function installReplayListeners() {
   if (typeof window === "undefined") return () => {};
   const onOnline = () => {
-    void replayQueue();
+    if(queueUser)void replayQueue();
   };
   window.addEventListener("online", onOnline);
   const timer = window.setInterval(() => {
-    if (navigator.onLine && pendingCount() > 0) void replayQueue();
+    if (queueUser && navigator.onLine && pendingCount() > 0) void replayQueue();
   }, 30_000);
-  if (navigator.onLine && pendingCount() > 0) void replayQueue();
+  if (queueUser && navigator.onLine && pendingCount() > 0) void replayQueue();
   return () => {
     window.removeEventListener("online", onOnline);
     window.clearInterval(timer);
