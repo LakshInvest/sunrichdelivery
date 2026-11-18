@@ -1,0 +1,1 @@
+UPDATE public.delivery_settings SET expense_types=CASE WHEN 'Diesel'=ANY(expense_types) THEN expense_types ELSE array_append(expense_types,'Diesel') END WHERE company_id='ebd6f904-55a0-46f1-b4c9-2324c5b61aea';
