@@ -3,9 +3,10 @@
 // the same action is done only once. Photos taken offline are kept locally under
 // their final storage path and uploaded first when the network returns.
 import { supabase } from "@/integrations/supabase/client";
+import { syncReportPayload, SYNC_REPORT_INTERVAL } from './sync-report-policy';
 
 export type QueuedCall = { id: string; rpc: string; args: Record<string, unknown>; createdAt: number; error?: string };
-type QueuedPhoto = { path: string; dataUrl: string; type: string; error?: string };
+type QueuedPhoto = { path: string; dataUrl: string; type: string; createdAt?: number; error?: string };
 
 const KEY = "sunrich_rpc_queue";
 const PKEY = "sunrich_photo_queue";
@@ -42,6 +43,44 @@ export function pendingPhotos(): {path:string;error?:string}[] { return typeof w
 export function subscribe(fn: () => void): () => void {
   listeners.add(fn);
   return () => listeners.delete(fn);
+}
+
+// Keep trip reporting alive after navigating away and across offline reopening.
+export function registerSyncTrip(tripId: string) {
+  if (!queueUser) return;
+  const trips = readJson<string>('sunrich_sync_trips');
+  if (!trips.includes(tripId)) writeJson('sunrich_sync_trips', [...trips, tripId]);
+  else listeners.forEach(fn => fn());
+}
+
+export function installSyncReporting() {
+  let running = false;
+  let dirty = false;
+  let disposed = false;
+  const report = async () => {
+    dirty = true;
+    if (disposed || running || !queueUser || isOffline()) return;
+    running = true;
+    const owner = queueUser;
+    try {
+      do {
+        dirty = false;
+        for (const tripId of readJson<string>('sunrich_sync_trips')) {
+          if (disposed || queueUser !== owner || isOffline()) return;
+          const payload = syncReportPayload(tripId, read(), readPhotos());
+          // Telemetry is best-effort, never queued behind or allowed to block work.
+          await supabase.rpc('driver_report_sync', payload as never);
+        }
+      } while (dirty && !disposed && queueUser === owner && !isOffline());
+    } catch { /* Retry on the next queue change, reconnect or heartbeat. */ }
+    finally { running = false; }
+  };
+  const changed = () => { void report(); };
+  const unsubscribe = subscribe(changed);
+  window.addEventListener('online', changed);
+  const timer = window.setInterval(changed, SYNC_REPORT_INTERVAL);
+  changed();
+  return () => { disposed = true; unsubscribe(); window.removeEventListener('online', changed); window.clearInterval(timer); };
 }
 
 export function isNetworkError(err: unknown): boolean {
@@ -103,8 +142,9 @@ function enqueue(id: string, name: string, args: Record<string, unknown>) {
 
 /** Keep a photo locally under its final path; uploaded by replayQueue. */
 export function queuePhoto(path: string, dataUrl: string, type: string) {
-  const q = readPhotos().filter((p) => p.path !== path);
-  q.push({ path, dataUrl, type });
+  const old = readPhotos();
+  const q = old.filter((p) => p.path !== path);
+  q.push({ path, dataUrl, type, createdAt: old.find(p => p.path === path)?.createdAt ?? Date.now() });
   writeJson(PKEY, q);
 }
 
@@ -156,6 +196,7 @@ export async function replayQueue(onlyId?: string): Promise<{ ok: number; failed
 
 export function installReplayListeners() {
   if (typeof window === "undefined") return () => {};
+  const stopReporting = installSyncReporting();
   const onOnline = () => {
     if(queueUser)void replayQueue();
   };
@@ -165,6 +206,7 @@ export function installReplayListeners() {
   }, 30_000);
   if (queueUser && navigator.onLine && pendingCount() > 0) void replayQueue();
   return () => {
+    stopReporting();
     window.removeEventListener("online", onOnline);
     window.clearInterval(timer);
   };

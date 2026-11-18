@@ -7,6 +7,7 @@ import { UpiQrCode } from "@/components/team/upi-qr";
 import { PhotoInput, StatusBadge } from "@/components/team/ui";
 import { uploadDataUrl } from "@/lib/photo";
 import { makeChallan } from "@/lib/challan";
+import { deliveredLineTotal } from '@/lib/delivery-lines';
 
 /** Vehicle-check labels keyed by the English name; missing/empty → English. */
 type CheckNames = Record<string, { name_hi?: string | undefined; name_mr?: string | undefined }>;
@@ -329,11 +330,11 @@ export type StopRow = {
   } | null;
 };
 
-export type LineRow = { id: string; product_name: string; pack_label: string | null; qty: number; value?: number; line_total?: number | null; deposit_total?: number | null; kept?: number };
+export type LineRow = { id: string; product_name: string; pack_label: string | null; qty: number; value?: number; line_total?: number | null; deposit_total?: number | null; kept?: number; is_free?: boolean; scheme_info?: unknown };
 
-/** Value of what the customer keeps: delivered good qty × order price (short/refused/damaged not charged). */
+/** Proportion of the stored line total kept; short/refused/damaged are not charged. */
 export function keptValue(lines: LineRow[], keptQty: (l: LineRow) => number) {
-  return Math.round(lines.reduce((a, l) => a + (l.qty > 0 ? (Number(l.value ?? 0) * Math.max(0, Math.min(l.qty, keptQty(l)))) / l.qty : 0), 0) * 100) / 100;
+  return Math.round(lines.reduce((a, l) => a + deliveredLineTotal(l, keptQty(l)), 0) * 100) / 100;
 }
 
 export function StopCard({
