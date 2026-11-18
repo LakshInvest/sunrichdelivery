@@ -132,3 +132,9 @@ Prompt-5 (WhatsApp OTP delivery via AiSensy): code complete, tested; awaiting us
 - [ ] 8 Appearance from Command Center
 - [~] 9 Leftovers: splash images compressed to 100 KB (done); gap, EmptyState, role names open
 - [ ] Final QA data + SCAN tests (gate out/in, pickup, material pass)
+
+## Prompt-46 profile corrections
+- [x] Camera/gallery sheet, shared cropper, Base64 Android conversion and restored-result handling.
+- [x] Own-name edit (two letters), own-photo removal and immutable history; current identities in Register/QR/scan.
+- [ ] Hindi 360px end-to-end checks, Android bridge tests and screenshots.
+- [ ] Physical Android camera/gallery and process-recreation check — Android device unavailable in sandbox.

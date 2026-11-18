@@ -5598,6 +5598,36 @@ export type Database = {
           },
         ]
       }
+      staff_name_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          company_id: string
+          id: string
+          new_name: string | null
+          old_name: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          company_id: string
+          id?: string
+          new_name?: string | null
+          old_name?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          company_id?: string
+          id?: string
+          new_name?: string | null
+          old_name?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       staff_notifications: {
         Row: {
           body: string | null
@@ -10597,6 +10627,7 @@ export type Database = {
         Args: { p_order_id: string; p_reason: string }
         Returns: undefined
       }
+      remove_my_photo: { Args: never; Returns: undefined }
       remove_order_from_trip: {
         Args: { p_order_id: string; p_reason?: string; p_trip_id: string }
         Returns: undefined
@@ -10698,6 +10729,7 @@ export type Database = {
         Args: { p_product_id: string; p_qty: number; p_trip_id: string }
         Returns: undefined
       }
+      set_my_name: { Args: { p_name: string }; Returns: string }
       set_my_order_address: {
         Args: { p_address_id: string; p_order_ids: string[] }
         Returns: undefined

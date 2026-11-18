@@ -5,6 +5,7 @@ import { useTeamAuth } from "@/lib/team-auth";
 import { LANGS, useLang } from "@/lib/l10n";
 import { BrandLogo, NoRoleScreen, Spinner } from "@/components/team/ui";
 import { ProfilePhoto } from "@/components/team/profile-photo";
+import { ProfileName } from "@/components/team/profile-name";
 import { BottomNav, type TabRole } from "@/components/team/role-home";
 import { availableRoles, formatStaffMobile, readLastRole } from "@/lib/role-home";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
@@ -62,10 +63,9 @@ function Profile() {
               <div className="flex items-center gap-4">
                 <ProfilePhoto name={name} />
                 <div className="min-w-0 flex-1">
-                  <p className="line-clamp-2 break-words text-lg font-bold leading-tight text-primary-foreground">{name}</p>
+                  <ProfileName name={name} />
                   <p className="text-sm text-primary-foreground/75">{formatStaffMobile(staff.mobile)}</p>
                   {currentRole && <p className="mt-1 text-sm font-semibold text-aqua">{t(`role.${currentRole.code}`)}</p>}
-                  <p className="mt-1 text-xs text-primary-foreground/70">{t("pf.nameNote")}</p>
                 </div>
               </div>
             </div>
@@ -90,7 +90,7 @@ function Profile() {
           </section>
         </div>
       </div>
-      {(currentRole ?? roles[0]) && <BottomNav role={tabRole[(currentRole ?? roles[0])!.code] ?? "driver"} active="profile" />}
+      {(currentRole ?? roles[0]) && <BottomNav role={tabRole[(currentRole ?? roles[0])?.code ?? "DRIVER"] ?? "driver"} active="profile" />}
       <AlertDialog open={confirm} onOpenChange={setConfirm}>
         <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-sm">
           <AlertDialogHeader><AlertDialogTitle>{t("profile.signOutTitle")}</AlertDialogTitle><AlertDialogDescription>{t("profile.signOutConfirm")}</AlertDialogDescription></AlertDialogHeader>

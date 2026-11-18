@@ -387,6 +387,39 @@ export async function deleteOfflinePhoto(name: string) {
   }
 }
 
+/** Convert plugin data without fetch(data:), which can be blocked by WebView policy. */
+function cameraFile(p: { base64String?: string; dataUrl?: string; format: string }): File {
+  const encoded = p.base64String ?? p.dataUrl?.split(",")[1];
+  if (!encoded) throw new Error("Camera returned no image");
+  const raw = atob(encoded);
+  const bytes = Uint8Array.from(raw, (c) => c.charCodeAt(0));
+  return new File([bytes], `photo-${Date.now()}.${p.format || "jpeg"}`, { type: `image/${p.format === "jpg" ? "jpeg" : p.format || "jpeg"}` });
+}
+
+/** Profile camera and gallery always return an unedited image to the same cropper. */
+export async function chooseNativeProfilePhoto(source: "camera" | "gallery"): Promise<File | null> {
+  if (!isNative()) return null;
+  try {
+    const { Camera, CameraResultType, CameraSource, CameraDirection } = await import("@capacitor/camera");
+    const photo = await Camera.getPhoto({ resultType: CameraResultType.Base64, source: source === "camera" ? CameraSource.Camera : CameraSource.Photos, direction: CameraDirection.Front, allowEditing: false, quality: 90, width: 1600 });
+    return cameraFile(photo);
+  } catch (error) {
+    if (/cancel/i.test(String((error as { message?: string })?.message ?? error))) return null;
+    throw error;
+  }
+}
+
+/** Recover the camera result if Android recreates the WebView while the camera is open. */
+export async function onProfilePhotoRestored(onPhoto: (file: File) => void): Promise<() => void> {
+  if (!isNative()) return () => {};
+  const { App } = await import("@capacitor/app");
+  const listener = await App.addListener("appRestoredResult", (result) => {
+    if (result.pluginId !== "Camera" || result.methodName !== "getPhoto" || !result.success) return;
+    try { onPhoto(cameraFile(result.data)); } catch { /* A failed result stays on Profile for retry. */ }
+  });
+  return () => { void listener.remove(); };
+}
+
 /** Take a photo with the native camera; returns a File, or null in a browser (use <input capture>). */
 export async function takeNativePhoto(front = false): Promise<File | null> {
   if (!isNative()) return null;
