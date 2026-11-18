@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
+- Share stored-line-total pricing across delivery amounts so scheme discounts and free replacements stay intact.
 - Offline trip snapshots and queues are user-scoped; replay preserves action order, server authorization and stable operation IDs. Failed photos/actions remain queued; expired returns use a separate scrap ledger and never increase sellable stock.
 - Profile camera/gallery use Base64 conversion and Android restored-result handling before the shared cropper; own-name/photo RPCs audit immutable history so device recreation and removal cannot lose edits or history.
 - Delivery role navigation uses a shared browser-safe policy with per-user last-role storage; explicit chooser navigation bypasses automatic selection so Profile always provides access.

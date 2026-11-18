@@ -4,11 +4,12 @@
 // conjuncts correctly) and placed in the PDF as sharp images, so nothing is ever dropped.
 import { supabase } from "@/integrations/supabase/client";
 import { sharePdf } from "@/lib/native";
+import { deliveredLineTotal } from './delivery-lines';
 import deva400 from "@fontsource/noto-sans-devanagari/files/noto-sans-devanagari-devanagari-400-normal.woff2?url";
 import deva700 from "@fontsource/noto-sans-devanagari/files/noto-sans-devanagari-devanagari-700-normal.woff2?url";
 import type { jsPDF as JsPDF } from "jspdf";
 
-export type ChallanLine = { product_name: string | null; pack_label?: string | null | undefined; qty: number; kept?: number | undefined; value?: number | null | undefined };
+export type ChallanLine = { product_name: string | null; pack_label?: string | null | undefined; qty: number; kept?: number | undefined; value?: number | null | undefined; line_total?: number | null; is_free?: boolean };
 export type ChallanInput = {
   orderNo: string;
   firmId?: string | null | undefined;
@@ -114,7 +115,7 @@ export async function makeChallan(c: ChallanInput): Promise<void> {
   let total = 0;
   for (const l of c.lines) {
     const q = l.kept ?? l.qty;
-    const amt = l.qty > 0 ? (Number(l.value ?? 0) * q) / l.qty : 0;
+    const amt = deliveredLineTotal({qty:l.qty,line_total:l.line_total ?? l.value ?? 0,is_free:l.is_free ?? false},q);
     total += amt;
     const h = put(doc, `${l.product_name || "Item"}${l.pack_label ? ` (${l.pack_label})` : ""}`, 10, y, { maxW: W - 65 });
     put(doc, String(q), W - 45, y, { align: "right" });

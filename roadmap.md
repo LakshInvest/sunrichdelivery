@@ -1,9 +1,10 @@
 # Roadmap — Sunrich Delivery
 
 ## Prompt-53 — Sync reporting and FREE lines
-- [ ] Report queue changes and online two-minute heartbeats through existing driver_report_sync; report zero after replay, never block work.
-- [ ] Loader FREE quantities/tags; driver scheme/replacement labels and line-total-based amounts, with regression tests.
-- [ ] Hindi 360px QA Driver 2 mixed paid/FREE load → deliver → collect and offline → online reporting; screenshots and APK requirement table.
+- [x] Report queue changes and online two-minute heartbeats through existing driver_report_sync; report zero after replay, never block work.
+- [x] Loader FREE quantities/tags; driver scheme/replacement labels and line-total-based amounts, with regression tests.
+- [x] Hindi 360px QA Driver 2 mixed paid/FREE load (3 paid + 1 FREE) → deliver → collect ₹480 offline → online reports 1 then 0; no sellable stock movements. Screenshots and APK requirement table saved.
+- [ ] Physical APK airplane mode — Android hardware unavailable; browser offline/reconnect passed. Replacement-only delivery not separately exercised end-to-end.
 
 ## Prompt-50 — Feature Index gaps
 - [x] Arrival GPS/reason and no-location bypass; offline queue and fresh offline reopening; current-bill-first collection (₹480 + ₹120 old dues).
