@@ -1,0 +1,2 @@
+UPDATE public.delivery_settings SET crates_at_customer_enabled=true,expired_returns_enabled=true,office_emergency_number='+919999900011' WHERE company_id='ebd6f904-55a0-46f1-b4c9-2324c5b61aea';
+INSERT INTO public.customer_opening_balances(id,company_id,firm_id,customer_id,as_of,amount,amount_paid) VALUES('f5000000-0000-4000-8000-000000000030','ebd6f904-55a0-46f1-b4c9-2324c5b61aea','b0ee7348-8f8a-4380-aea2-80284a7cd2b2','4acc284b-f57b-418d-bcc1-5c93caa7cfd7','2026-01-01',150,0);
