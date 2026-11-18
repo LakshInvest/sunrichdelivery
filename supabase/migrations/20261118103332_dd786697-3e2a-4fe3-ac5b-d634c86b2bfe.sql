@@ -1,0 +1,1 @@
+UPDATE public.user_profiles SET preferred_language='hi' WHERE right(mobile,10)='9999900014';
